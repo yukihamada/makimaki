@@ -94,7 +94,7 @@ function render() {
           <span class="order-id">#${o.id}</span>
           <span class="pickup-badge">${o.pickup_time}</span>
         </div>
-        <div class="order-name">${esc(o.name)}</div>
+        <div class="order-name">${esc(o.name)} ${o.paid ? '<span style="background:#38A169;color:#fff;padding:1px 6px;border-radius:3px;font-size:.6rem;margin-left:4px">PAID</span>' : '<span style="background:#E53E3E;color:#fff;padding:1px 6px;border-radius:3px;font-size:.6rem;margin-left:4px">未払</span>'}</div>
         <div class="order-meta">${esc(o.phone)} &middot; ${o.created_at}</div>
         <ul class="order-items">
           ${o.items.map(i => `<li>${esc(i.name)} x${i.qty} &nbsp; ¥${(i.price * i.qty).toLocaleString()}</li>`).join('')}

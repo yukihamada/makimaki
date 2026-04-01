@@ -112,6 +112,12 @@ section{padding:7rem 3rem;max-width:1100px;margin:0 auto}
 .menu-item-desc{font-size:.75rem;color:var(--fg-muted);line-height:1.7;margin-top:.6rem}
 .menu-item-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:.8rem}
 .menu-item-price{font-family:var(--serif);font-size:1rem;color:var(--accent)}
+.menu-cat-title{font-family:var(--serif);font-size:1.4rem;font-weight:400;margin:3rem auto 1.5rem;max-width:960px;text-align:center;letter-spacing:.08em}
+.set-grid{grid-template-columns:repeat(2,1fr)!important;max-width:640px!important}
+.menu-item.set-item{text-align:center;padding:2rem 1.5rem}
+.menu-item.set-item .set-dots{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.menu-item.set-item .set-dots span{width:14px;height:14px;background:var(--accent);border-radius:50%;display:block}
+.menu-item.set-item .menu-item-desc{font-size:.7rem;margin-top:.8rem}
 .qty-ctrl{display:flex;align-items:center;gap:.5rem}
 .qty-btn{width:28px;height:28px;border:1px solid var(--border);background:var(--white);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;border-radius:2px;color:var(--fg)}
 .qty-btn:hover{background:var(--fg);color:var(--white);border-color:var(--fg)}
@@ -264,8 +270,16 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
 <section id="menu" class="menu-sec">
   <span class="section-label reveal">Menu</span>
   <h2 class="section-title reveal" data-ja="お好みの一本を。" data-en="Choose your roll.">お好みの一本を。</h2>
-  <p class="section-text reveal" data-ja="タップして数量を選び、オーダーへ進んでください。" data-en="Tap to select quantity, then proceed to order.">タップして数量を選び、オーダーへ進んでください。</p>
+  <p class="section-text reveal" data-ja="1本＝6カット。2本からご注文いただけます。<br>価格は税別です。箱代 ¥200を頂戴しております。" data-en="1 roll = 6 cuts. Minimum order: 2 rolls.<br>Prices exclude tax. Box charge ¥200.">1本＝6カット。2本からご注文いただけます。<br>価格は税別です。箱代 ¥200を頂戴しております。</p>
+
+  <!-- SET MENU -->
+  <h3 class="menu-cat-title reveal" data-ja="セットメニュー" data-en="Set Menu">セットメニュー</h3>
+  <div class="menu-grid set-grid" id="setGrid"></div>
+
+  <!-- OKONOMI -->
+  <h3 class="menu-cat-title reveal" data-ja="おこのみ（日替わり）" data-en="À la carte (daily)">おこのみ（日替わり）</h3>
   <div class="menu-grid" id="menuGrid"></div>
+  <p class="menu-note reveal" data-ja="※ 本日の巻き物は店頭でご確認ください。" data-en="* Please check today's special at the shop.">※ 本日の巻き物は店頭でご確認ください。</p>
 </section>
 
 <!-- PHOTO: STRAW -->
@@ -328,36 +342,74 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
 </div>
 
 <script>
-// MENU DATA
+// REAL MENU DATA (prices tax-excluded)
+const SETS = [
+  {id:'makimaki_box', name:'makimaki Box', jp:'makimaki Box', price:3500, dots:8,
+   desc_ja:'赤身鉄火、とろたく、日替わり2種が入ったおすすめセット。',
+   desc_en:'Akami tekka, torotaku, and 2 daily specials.'},
+  {id:'maguro_box', name:'Maguro Box', jp:'まぐろBox', price:5000, dots:12,
+   desc_ja:'赤身鉄火、中トロ鉄火、ネギトロ、とろたくが入ったマグロづくしセット。',
+   desc_en:'All-tuna set: akami, chutoro, negitoro, and torotaku.'},
+];
+
 const MENU = [
-  {id:'toro',    name:'Toro',        jp:'トロ',          price:800, desc_ja:'本鮪の大トロを贅沢に。', desc_en:'Premium bluefin tuna belly.'},
-  {id:'salmon',  name:'Salmon',      jp:'サーモン',      price:600, desc_ja:'脂ののった厚切りサーモン。', desc_en:'Thick-cut fatty salmon.'},
-  {id:'negitoro',name:'Negitoro',    jp:'ねぎとろ',      price:700, desc_ja:'たたきトロにたっぷり葱。', desc_en:'Minced tuna with scallion.'},
-  {id:'uni',     name:'Uni',         jp:'うに',          price:800, desc_ja:'北海道産の濃厚うに。', desc_en:'Rich Hokkaido sea urchin.'},
-  {id:'ikura',   name:'Ikura',       jp:'いくら',        price:750, desc_ja:'醤油漬けの自家製いくら。', desc_en:'House-marinated salmon roe.'},
-  {id:'ebi',     name:'Ebi',         jp:'海老',          price:650, desc_ja:'ぷりぷりの茹で海老。', desc_en:'Plump boiled shrimp.'},
-  {id:'tamago',  name:'Tamago',      jp:'玉子',          price:600, desc_ja:'出汁が香るふわふわ玉子。', desc_en:'Fluffy dashi egg.'},
-  {id:'natto',   name:'Natto',       jp:'納豆',          price:600, desc_ja:'国産小粒納豆に大葉を添えて。', desc_en:'Fermented soybeans with shiso.'},
-  {id:'cucumber',name:'Kappa',       jp:'かっぱ巻き',    price:600, desc_ja:'シンプルに胡瓜とシャリ。', desc_en:'Classic cucumber roll.'},
-  {id:'anago',   name:'Anago',       jp:'穴子',          price:750, desc_ja:'ふっくら煮穴子に甘だれ。', desc_en:'Simmered conger eel, sweet glaze.'},
-  {id:'hotate',  name:'Hotate',      jp:'帆立',          price:750, desc_ja:'北海道産の甘い帆立。', desc_en:'Sweet Hokkaido scallop.'},
-  {id:'umeshiso',name:'Ume Shiso',   jp:'梅しそ',        price:600, desc_ja:'爽やかな梅と大葉の組合せ。', desc_en:'Plum paste with shiso leaf.'},
+  {id:'akami',     name:'Akami Tekka',     jp:'赤身鉄火',           price:1400, desc_ja:'赤身の鉄火巻き。', desc_en:'Lean tuna roll.'},
+  {id:'chutoro',   name:'Chutoro Tekka',   jp:'中とろ鉄火',         price:1600, desc_ja:'中トロの鉄火巻き。', desc_en:'Medium-fatty tuna roll.'},
+  {id:'negitoro',  name:'Negitoro',        jp:'ネギトロ',           price:1400, desc_ja:'たたきトロにたっぷり葱。', desc_en:'Minced tuna with scallion.'},
+  {id:'torotaku',  name:'Torotaku',        jp:'とろたく',           price:1400, desc_ja:'トロとたくあんの組合せ。', desc_en:'Tuna belly & pickled radish.'},
+  {id:'salmon',    name:'Salmon',          jp:'サーモン',           price:900,  desc_ja:'脂ののったサーモン。', desc_en:'Rich salmon.'},
+  {id:'salmon_cc', name:'Salmon Cream Cheese',jp:'サーモンクリームチーズ',price:900,desc_ja:'サーモンとクリームチーズ。',desc_en:'Salmon & cream cheese.'},
+  {id:'ebimayo_p', name:'Ebi Mayo Pakuchi',jp:'エビマヨパクチー',    price:800,  desc_ja:'エビマヨとパクチーの新感覚。', desc_en:'Shrimp mayo with coriander.'},
+  {id:'ika_shiso', name:'Ika Shiso',       jp:'いか大葉',           price:800,  desc_ja:'いかと大葉のさっぱり巻き。', desc_en:'Squid with shiso leaf.'},
+  {id:'nama_ebi',  name:'Nama Ebi Mayo',   jp:'生エビマヨ',         price:900,  desc_ja:'生海老のマヨネーズ巻き。', desc_en:'Raw shrimp with mayo.'},
+  {id:'kohada',    name:'Kohada Gari',     jp:'小肌ガリ大葉',       price:900,  desc_ja:'小肌とガリと大葉。', desc_en:'Gizzard shad, ginger, shiso.'},
+  {id:'anakyu',    name:'Anakyu',          jp:'あなきゅう',         price:900,  desc_ja:'穴子と胡瓜。', desc_en:'Conger eel & cucumber.'},
+  {id:'mentai',    name:'Mentai Cucumber', jp:'明太きゅうり',       price:700,  desc_ja:'明太子と胡瓜のピリ辛。', desc_en:'Spicy cod roe & cucumber.'},
+  {id:'tuna_mayo', name:'Tuna Mayo',       jp:'ツナマヨ',           price:700,  desc_ja:'定番のツナマヨネーズ。', desc_en:'Classic tuna mayo.'},
+  {id:'ume_shiso', name:'Ume Shiso Kyu',   jp:'梅しそきゅう',       price:650,  desc_ja:'梅としそと胡瓜。', desc_en:'Plum, shiso & cucumber.'},
+  {id:'kappa',     name:'Kappa',           jp:'かっぱ',             price:600,  desc_ja:'シンプルな胡瓜巻き。', desc_en:'Classic cucumber roll.'},
+  {id:'wasabi_kyu',name:'Wasabi Mayo Kyu', jp:'わさびマヨきゅうり', price:600,  desc_ja:'わさびマヨと胡瓜。', desc_en:'Wasabi mayo & cucumber.'},
+  {id:'natto',     name:'Natto Negi',      jp:'納豆白ねぎ',         price:600,  desc_ja:'納豆と白ねぎ。', desc_en:'Natto & white scallion.'},
+  {id:'ume_katsuo',name:'Ume Katsuo',      jp:'梅きゅうかつお高菜', price:600,  desc_ja:'梅・かつお・高菜の三重奏。', desc_en:'Plum, bonito & pickled greens.'},
+  {id:'tamago_m',  name:'Tamago Mayo',     jp:'たまごマヨ',         price:600,  desc_ja:'玉子とマヨネーズ。', desc_en:'Egg with mayo.'},
+  {id:'tamago_i',  name:'Tamago Inari',    jp:'たまごいなり',       price:600,  desc_ja:'玉子といなり。', desc_en:'Egg & sweet tofu.'},
+  {id:'kanpyo',    name:'Kanpyo',          jp:'かんぴょう',         price:600,  desc_ja:'甘辛く煮たかんぴょう。', desc_en:'Sweet simmered gourd.'},
+  {id:'oshinko',   name:'Oshinko',         jp:'おしんこ',           price:500,  desc_ja:'お漬物の巻き。', desc_en:'Pickled radish roll.'},
 ];
 
 let cart = {};
 let lang = 'ja';
 
 function renderMenu() {
+  // Set menu
+  const setGrid = document.getElementById('setGrid');
+  setGrid.innerHTML = SETS.map(item => {
+    const qty = cart[item.id] || 0;
+    const dots = Array(item.dots).fill('<span></span>').join('');
+    return `
+    <div class="menu-item set-item reveal ${qty > 0 ? 'in-cart' : ''}">
+      <div class="set-dots">${dots}</div>
+      <div class="menu-item-name">${item.name}</div>
+      <div class="menu-item-price" style="margin:.5rem 0">&yen;${item.price.toLocaleString()}<small style="font-size:.6rem;color:var(--fg-muted)"> (税別)</small></div>
+      <div class="menu-item-desc" data-ja="${item.desc_ja}" data-en="${item.desc_en}">${lang==='ja'?item.desc_ja:item.desc_en}</div>
+      <div class="qty-ctrl" style="justify-content:center;margin-top:1rem">
+        <button class="qty-btn" onclick="changeQty('${item.id}',-1)">−</button>
+        <span class="qty-num">${qty}</span>
+        <button class="qty-btn" onclick="changeQty('${item.id}',1)">+</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // A la carte
   const grid = document.getElementById('menuGrid');
   grid.innerHTML = MENU.map(item => {
     const qty = cart[item.id] || 0;
     return `
-    <div class="menu-item reveal ${qty > 0 ? 'in-cart' : ''}" id="item-${item.id}">
-      <div class="menu-item-name">${item.name}</div>
-      <div class="menu-item-name-jp">${item.jp}</div>
-      <div class="menu-item-desc" data-ja="${item.desc_ja}" data-en="${item.desc_en}">${lang === 'ja' ? item.desc_ja : item.desc_en}</div>
+    <div class="menu-item reveal ${qty > 0 ? 'in-cart' : ''}">
+      <div class="menu-item-name">${item.jp}</div>
+      <div class="menu-item-name-jp">${item.name}</div>
       <div class="menu-item-bottom">
-        <div class="menu-item-price">&yen;${item.price}</div>
+        <div class="menu-item-price">&yen;${item.price.toLocaleString()}</div>
         <div class="qty-ctrl">
           <button class="qty-btn" onclick="changeQty('${item.id}',-1)">−</button>
           <span class="qty-num">${qty}</span>
@@ -366,7 +418,6 @@ function renderMenu() {
       </div>
     </div>`;
   }).join('');
-  // re-observe reveals
   document.querySelectorAll('.menu-item.reveal:not(.visible)').forEach(el => observer.observe(el));
 }
 
@@ -374,14 +425,15 @@ function changeQty(id, delta) {
   const cur = cart[id] || 0;
   const next = Math.max(0, cur + delta);
   if (next === 0) delete cart[id]; else cart[id] = next;
-  updateCart();
-  renderMenu();
+  updateCart(); renderMenu();
 }
+
+function allItems() { return [...SETS, ...MENU]; }
 
 function updateCart() {
   let count = 0, total = 0;
   for (const [id, qty] of Object.entries(cart)) {
-    const item = MENU.find(m => m.id === id);
+    const item = allItems().find(m => m.id === id);
     if (item) { count += qty; total += item.price * qty; }
   }
   document.getElementById('cartCount').textContent = count;
@@ -391,36 +443,42 @@ function updateCart() {
 
 function openModal() {
   const items = Object.entries(cart).map(([id, qty]) => {
-    const m = MENU.find(x => x.id === id);
-    return { name: `${m.name} (${m.jp})`, price: m.price, qty };
+    const m = allItems().find(x => x.id === id);
+    return { name: `${m.jp}`, price: m.price, qty };
   });
-  const total = items.reduce((s, i) => s + i.price * i.qty, 0);
+  const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
+  const tax = Math.ceil(subtotal * 0.1);
+  const boxCharge = 200;
+  const total = subtotal + tax + boxCharge;
 
   document.getElementById('modalContent').innerHTML = `
     <button class="modal-close" onclick="closeModal()">&times;</button>
-    <h2 data-ja="ご注文" data-en="Your Order">${lang==='ja'?'ご注文':'Your Order'}</h2>
+    <h2>${lang==='ja'?'ご注文':'Your Order'}</h2>
     <ul class="modal-items">
       ${items.map(i => `<li><span>${i.name} &times;${i.qty}</span><span>&yen;${(i.price*i.qty).toLocaleString()}</span></li>`).join('')}
+      <li style="color:var(--fg-muted);font-size:.8rem"><span>${lang==='ja'?'消費税 (10%)':'Tax (10%)'}</span><span>&yen;${tax.toLocaleString()}</span></li>
+      <li style="color:var(--fg-muted);font-size:.8rem"><span>${lang==='ja'?'箱代':'Box charge'}</span><span>&yen;${boxCharge}</span></li>
     </ul>
-    <div class="modal-total" data-ja="合計" data-en="Total">${lang==='ja'?'合計':'Total'} &yen;${total.toLocaleString()}</div>
+    <div class="modal-total">${lang==='ja'?'合計':'Total'} &yen;${total.toLocaleString()}</div>
     <form onsubmit="submitOrder(event)">
       <div class="form-group">
-        <label data-ja="お名前" data-en="Name">${lang==='ja'?'お名前':'Name'}</label>
+        <label>${lang==='ja'?'お名前':'Name'}</label>
         <input type="text" id="oName" required placeholder="${lang==='ja'?'山田 太郎':'Taro Yamada'}">
       </div>
       <div class="form-group">
-        <label data-ja="電話番号" data-en="Phone">${lang==='ja'?'電話番号':'Phone'}</label>
+        <label>${lang==='ja'?'電話番号':'Phone'}</label>
         <input type="tel" id="oPhone" required placeholder="090-1234-5678">
       </div>
       <div class="form-group">
-        <label data-ja="受取時間" data-en="Pickup Time">${lang==='ja'?'受取時間':'Pickup Time'}</label>
+        <label>${lang==='ja'?'受取時間':'Pickup Time'}</label>
         <select id="oTime">${generateTimeSlots()}</select>
       </div>
       <div class="form-group">
-        <label data-ja="備考" data-en="Note">${lang==='ja'?'備考（任意）':'Note (optional)'}</label>
+        <label>${lang==='ja'?'備考（任意）':'Note (optional)'}</label>
         <textarea id="oNote" placeholder="${lang==='ja'?'わさび抜き など':'No wasabi, etc.'}"></textarea>
       </div>
-      <button type="submit" class="modal-submit" data-ja="注文を確定する" data-en="Confirm Order">${lang==='ja'?'注文を確定する':'Confirm Order'}</button>
+      <button type="submit" class="modal-submit" style="background:var(--accent)">${lang==='ja'?'カード決済で注文する':'Pay & Order with Card'}</button>
+      <button type="button" class="modal-submit" style="background:var(--fg);margin-top:.5rem" onclick="submitOrderNoPay()">${lang==='ja'?'店頭払いで予約する':'Reserve — Pay at Shop'}</button>
     </form>`;
   document.getElementById('modalBg').classList.add('show');
 }
@@ -428,49 +486,80 @@ function openModal() {
 function closeModal() { document.getElementById('modalBg').classList.remove('show'); }
 
 function generateTimeSlots() {
-  const now = new Date();
-  const slots = [];
+  const now = new Date(); const slots = [];
   let h = now.getHours(), m = now.getMinutes();
-  m = Math.ceil(m / 15) * 15 + 30; // 30min from now minimum
-  if (m >= 60) { h++; m -= 60; }
-  while (h < 20) {
-    const t = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  m = Math.ceil(m/15)*15+30; if(m>=60){h++;m-=60;}
+  while(h<20){
+    const t=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
     slots.push(`<option value="${t}">${t}</option>`);
-    m += 15; if (m >= 60) { h++; m = 0; }
+    m+=15;if(m>=60){h++;m=0;}
   }
-  if (slots.length === 0) slots.push(`<option value="11:00">${lang==='ja'?'明日 11:00〜':'Tomorrow 11:00~'}</option>`);
+  if(!slots.length) slots.push(`<option value="11:00">${lang==='ja'?'明日 11:00〜':'Tomorrow 11:00~'}</option>`);
   return slots.join('');
+}
+
+function getOrderBody() {
+  return {
+    name: document.getElementById('oName').value,
+    phone: document.getElementById('oPhone').value,
+    pickup_time: document.getElementById('oTime').value,
+    items: Object.entries(cart).map(([id, qty]) => {
+      const m = allItems().find(x => x.id === id);
+      return { name: m.jp, price: m.price, qty };
+    }),
+    note: document.getElementById('oNote').value,
+  };
 }
 
 async function submitOrder(e) {
   e.preventDefault();
-  const items = Object.entries(cart).map(([id, qty]) => {
-    const m = MENU.find(x => x.id === id);
-    return { name: `${m.name} (${m.jp})`, price: m.price, qty };
-  });
-  const body = {
-    name: document.getElementById('oName').value,
-    phone: document.getElementById('oPhone').value,
-    pickup_time: document.getElementById('oTime').value,
-    items,
-    note: document.getElementById('oNote').value,
-  };
+  const body = getOrderBody();
   try {
-    const res = await fetch('/api/orders', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const res = await fetch('/api/checkout', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const data = await res.json();
-    document.getElementById('modalContent').innerHTML = `
-      <button class="modal-close" onclick="closeModal();resetCart()">&times;</button>
-      <div class="success-msg">
-        <h3 data-ja="ご注文ありがとうございます" data-en="Thank you!">${lang==='ja'?'ご注文ありがとうございます':'Thank you!'}</h3>
-        <div class="order-id">#${data.id}</div>
-        <p data-ja="受取時間にお越しください。<br>合計 ¥${data.total.toLocaleString()}" data-en="Please pick up at your selected time.<br>Total ¥${data.total.toLocaleString()}">${lang==='ja'?`受取時間にお越しください。<br>合計 ¥${data.total.toLocaleString()}`:`Please pick up at your selected time.<br>Total ¥${data.total.toLocaleString()}`}</p>
-      </div>`;
+    if (data.url) { window.location.href = data.url; }
+    else { showSuccess(data); }
   } catch(err) {
-    alert(lang==='ja'?'送信に失敗しました。もう一度お試しください。':'Failed to submit. Please try again.');
+    alert(lang==='ja'?'決済の開始に失敗しました。店頭払いをお試しください。':'Payment failed. Please try pay-at-shop.');
   }
 }
 
+async function submitOrderNoPay() {
+  const body = getOrderBody();
+  try {
+    const res = await fetch('/api/orders', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const data = await res.json();
+    showSuccess(data);
+  } catch(err) {
+    alert(lang==='ja'?'送信に失敗しました。':'Failed to submit.');
+  }
+}
+
+function showSuccess(data) {
+  document.getElementById('modalContent').innerHTML = `
+    <button class="modal-close" onclick="closeModal();resetCart()">&times;</button>
+    <div class="success-msg">
+      <h3>${lang==='ja'?'ご注文ありがとうございます':'Thank you!'}</h3>
+      <div class="order-id">#${data.id}</div>
+      <p>${lang==='ja'?`受取時間にお越しください。<br>合計 ¥${data.total.toLocaleString()}`:`Please pick up at your selected time.<br>Total ¥${data.total.toLocaleString()}`}</p>
+    </div>`;
+}
+
 function resetCart() { cart = {}; updateCart(); renderMenu(); }
+
+// Check if returned from Stripe
+if (location.search.includes('paid=1')) {
+  setTimeout(() => {
+    document.getElementById('modalContent').innerHTML = `
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <div class="success-msg">
+        <h3>${'お支払い完了'}</h3>
+        <p>ご注文ありがとうございます。<br>受取時間にお越しください。</p>
+      </div>`;
+    document.getElementById('modalBg').classList.add('show');
+    history.replaceState(null,'','/');
+  }, 300);
+}
 
 // PARALLAX
 const parallaxBgs = document.querySelectorAll('.parallax-bg');

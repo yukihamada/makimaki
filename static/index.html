@@ -234,12 +234,12 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
 <div class="takeout">
   <div class="takeout-inner">
     <span class="section-label reveal">How to Order</span>
-    <h2 class="section-title reveal" style="text-align:center" data-ja="3つのステップで、<br>巻きたてをお持ち帰り。" data-en="Three simple steps<br>to fresh temaki.">3つのステップで、<br>巻きたてをお持ち帰り。</h2>
+    <h2 class="section-title reveal" style="text-align:center" data-ja="3つのステップで、<br>巻きたてをお持ち帰り。" data-en="Three simple steps<br>to fresh hosomaki.">3つのステップで、<br>巻きたてをお持ち帰り。</h2>
     <div class="takeout-steps">
       <div class="takeout-step reveal rd1">
         <div class="takeout-step-num">1</div>
         <div class="takeout-step-title" data-ja="メニューを選ぶ" data-en="Choose">メニューを選ぶ</div>
-        <div class="takeout-step-desc" data-ja="店頭またはオンラインで<br>お好みの手巻きをお選びください。" data-en="Pick your temaki at the shop<br>or order online below.">店頭またはオンラインで<br>お好みの手巻きをお選びください。</div>
+        <div class="takeout-step-desc" data-ja="店頭またはオンラインで<br>お好みの細巻きをお選びください。" data-en="Pick your hosomaki at the shop<br>or order online below.">店頭またはオンラインで<br>お好みの細巻きをお選びください。</div>
       </div>
       <div class="takeout-step reveal rd2">
         <div class="takeout-step-num">2</div>
@@ -295,7 +295,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
       <div class="access-info">
         <dl>
           <dt data-ja="住所" data-en="Address">住所</dt>
-          <dd data-ja="東京都港区麻布十番2-19-1<br>オフィスエイトビル 1F" data-en="2-19-1 Azabu-Juban, Minato-ku, Tokyo<br>Office Eight Bldg. 1F">東京都港区麻布十番2-19-1<br>オフィスエイトビル 1F</dd>
+          <dd><a href="https://maps.google.com/?q=東京都港区麻布十番2-19-1+オフィスエイトビル1F" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent-light)" data-ja="東京都港区麻布十番2-19-1<br>オフィスエイトビル 1F" data-en="2-19-1 Azabu-Juban, Minato-ku, Tokyo<br>Office Eight Bldg. 1F">東京都港区麻布十番2-19-1<br>オフィスエイトビル 1F</a></dd>
           <dt data-ja="最寄駅" data-en="Station">最寄駅</dt>
           <dd data-ja="麻布十番駅より徒歩1分<br>南北線・大江戸線" data-en="1 min walk from Azabu-Juban Sta.<br>Namboku Line / Oedo Line">麻布十番駅より徒歩1分<br>南北線・大江戸線</dd>
           <dt data-ja="営業時間" data-en="Hours">営業時間</dt>
@@ -435,20 +435,38 @@ function updateCart() {
     const item = allItems().find(m => m.id === id);
     if (item) { count += qty; total += item.price * qty; }
   }
-  document.getElementById('cartCount').textContent = count;
+  const setCount = Object.entries(cart).reduce((s,[id,q]) => s + (SETS.some(x=>x.id===id)?q:0), 0);
+  const rollCount = count - setCount;
+  const label = setCount > 0 && rollCount > 0 ? `${setCount}set + ${rollCount}${lang==='ja'?'本':'pcs'}` :
+    setCount > 0 ? `${setCount} set` : `${count}${lang==='ja'?'本':'pcs'}`;
+  document.getElementById('cartCount').textContent = label;
   document.getElementById('cartTotal').textContent = total.toLocaleString();
   document.getElementById('cartBar').classList.toggle('show', count > 0);
 }
 
 function openModal() {
+  // Minimum order validation: 2本以上（セットは除く）
+  const totalRolls = Object.entries(cart).reduce((sum, [id, qty]) => {
+    const isSet = SETS.some(s => s.id === id);
+    return sum + (isSet ? 0 : qty);
+  }, 0);
+  const totalSets = Object.entries(cart).reduce((sum, [id, qty]) => {
+    return sum + (SETS.some(s => s.id === id) ? qty : 0);
+  }, 0);
+  if (totalRolls < 2 && totalSets === 0) {
+    alert(lang==='ja'?'単品は2本からご注文いただけます。':'Minimum order is 2 rolls for individual items.');
+    return;
+  }
+
   const items = Object.entries(cart).map(([id, qty]) => {
     const m = allItems().find(x => x.id === id);
     return { name: `${m.jp}`, price: m.price, qty };
   });
   const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
-  const tax = Math.ceil(subtotal * 0.1);
+  const tax = Math.floor(subtotal * 0.1); // floor to match backend ceil on total
   const boxCharge = 200;
   const total = subtotal + tax + boxCharge;
+  // Note: actual charge is calculated server-side. This is display only.
 
   document.getElementById('modalContent').innerHTML = `
     <button class="modal-close" onclick="closeModal()">&times;</button>
@@ -487,12 +505,23 @@ function generateTimeSlots() {
   const now = new Date(); const slots = [];
   let h = now.getHours(), m = now.getMinutes();
   m = Math.ceil(m/15)*15+30; if(m>=60){h++;m-=60;}
-  while(h<20){
-    const t=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
-    slots.push(`<option value="${t}">${t}</option>`);
-    m+=15;if(m>=60){h++;m=0;}
+  // Today's slots
+  const startH = Math.max(h, 11);
+  if (h < 20) {
+    for (let sh = startH, sm = (sh===h?m:0); sh < 20; sm+=15) {
+      if(sm>=60){sh++;sm=0;continue;}
+      if(sh>=20) break;
+      const t=`${String(sh).padStart(2,'0')}:${String(sm).padStart(2,'0')}`;
+      slots.push(`<option value="${lang==='ja'?'本日':'Today'} ${t}">${lang==='ja'?'本日':'Today'} ${t}</option>`);
+    }
   }
-  if(!slots.length) slots.push(`<option value="11:00">${lang==='ja'?'明日 11:00〜':'Tomorrow 11:00~'}</option>`);
+  // Tomorrow's slots (always show)
+  for (let th = 11; th < 20; th++) {
+    for (let tm = 0; tm < 60; tm += 30) {
+      const t=`${String(th).padStart(2,'0')}:${String(tm).padStart(2,'0')}`;
+      slots.push(`<option value="${lang==='ja'?'明日':'Tomorrow'} ${t}">${lang==='ja'?'明日':'Tomorrow'} ${t}</option>`);
+    }
+  }
   return slots.join('');
 }
 
@@ -555,19 +584,21 @@ function resetCart() { cart = {}; updateCart(); renderMenu(); }
 if (location.search.includes('paid=1')) {
   cart = {};
   setTimeout(() => {
+    const isJa = lang === 'ja';
     document.getElementById('modalContent').innerHTML = `
       <button class="modal-close" onclick="closeModal()">&times;</button>
       <div class="success-msg">
-        <h3 style="color:var(--accent)">ご注文ありがとうございます</h3>
+        <h3 style="color:var(--accent)">${isJa?'ご注文ありがとうございます':'Thank you for your order!'}</h3>
         <p style="font-size:2.5rem;color:var(--accent);margin:.5rem 0">&#10003;</p>
-        <p style="font-size:.95rem;line-height:1.9;margin-bottom:1.5rem">お支払いが完了しました。<br>受取時間に合わせて巻きたてをご用意してお待ちしております。</p>
+        <p style="font-size:.95rem;line-height:1.9;margin-bottom:1.5rem">${isJa?'お支払いが完了しました。<br>受取時間に合わせて巻きたてをご用意してお待ちしております。':'Payment complete.<br>Your fresh rolls will be ready at your selected time.'}</p>
         <div style="background:var(--accent-bg,#EDF2EE);padding:1.2rem;border-radius:4px;text-align:left;font-size:.82rem;line-height:1.9;margin-bottom:1rem">
           <strong style="font-size:.7rem;letter-spacing:.1em;color:var(--accent)">SHOP INFO</strong><br>
-          <strong>makimaki</strong> — 麻布十番<br>
-          麻布十番2-19-1 オフィスエイトビル1F（徒歩1分）<br>
-          営業時間 11:00 - 20:00
+          <strong>makimaki</strong> — ${isJa?'麻布十番':'Azabu-Juban'}<br>
+          ${isJa?'麻布十番2-19-1 オフィスエイトビル1F（徒歩1分）':'2-19-1 Azabu-Juban, Office Eight Bldg. 1F (1 min walk)'}<br>
+          ${isJa?'営業時間':'Hours'} 11:00 - 20:00<br>
+          <a href="https://maps.google.com/?q=東京都港区麻布十番2-19-1+オフィスエイトビル1F" target="_blank" style="color:var(--accent);font-size:.75rem">${isJa?'Google Mapsで見る':'View on Google Maps'}</a>
         </div>
-        <p style="font-size:.78rem;color:#78716C;line-height:1.8">お気をつけてお越しくださいませ。<br>巻きたてのお鮨を楽しんでいただけたら幸いです。</p>
+        <p style="font-size:.78rem;color:#78716C;line-height:1.8">${isJa?'お気をつけてお越しくださいませ。<br>巻きたてのお鮨を楽しんでいただけたら幸いです。':'We look forward to seeing you.<br>Enjoy your freshly rolled sushi!'}</p>
         <div style="margin-top:1.5rem;display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap">
           <a href="https://www.instagram.com/maki_maki_tokyo/" target="_blank" style="font-size:.7rem;color:var(--accent);text-decoration:none;border:1px solid var(--accent);padding:.4rem 1rem;border-radius:2px">Instagram</a>
           <a href="https://line.me/R/ti/p/@061xfqki" target="_blank" style="font-size:.7rem;color:var(--accent);text-decoration:none;border:1px solid var(--accent);padding:.4rem 1rem;border-radius:2px">LINE</a>
@@ -615,8 +646,9 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
 // HAMBURGER
 document.getElementById('hamburger').addEventListener('click', () => document.getElementById('navLinks').classList.toggle('show'));
 
-// MODAL BG CLICK
+// MODAL
 document.getElementById('modalBg').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 // LANG SWITCH
 document.getElementById('langSwitch').addEventListener('click', () => {

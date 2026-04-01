@@ -90,6 +90,14 @@ fn init_db(conn: &Connection) {
         CREATE TABLE IF NOT EXISTS store_config (
             key TEXT PRIMARY KEY,
             value TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            body TEXT NOT NULL,
+            author TEXT DEFAULT '',
+            status TEXT DEFAULT 'open',
+            created_at TEXT NOT NULL,
+            resolved_at TEXT DEFAULT ''
         );",
     )
     .expect("Failed to create tables");
@@ -132,7 +140,10 @@ async fn main() {
         .route("/api/store-config", get(get_store_config).post(update_store_config))
         .route("/api/stats", get(get_stats))
         .route("/api/auth", post(check_auth))
+        .route("/api/requests", get(list_requests).post(create_request))
+        .route("/api/requests/{id}/status", post(update_request_status))
         .route("/admin", get(admin_page))
+        .route("/guide", get(guide_page))
         .fallback_service(ServeDir::new("static"))
         .with_state(state);
 
@@ -399,4 +410,81 @@ async fn get_stats(
 
 async fn admin_page() -> Html<&'static str> {
     Html(include_str!("../static/admin.html"))
+}
+
+async fn guide_page() -> Html<&'static str> {
+    Html(include_str!("../static/guide.html"))
+}
+
+// --- Requests (feature requests / feedback) ---
+
+#[derive(Serialize)]
+struct FeatureRequest {
+    id: i64,
+    body: String,
+    author: String,
+    status: String,
+    created_at: String,
+    resolved_at: String,
+}
+
+#[derive(Deserialize)]
+struct CreateRequest {
+    body: String,
+    author: String,
+}
+
+#[derive(Deserialize)]
+struct UpdateRequestStatus {
+    status: String,
+}
+
+async fn list_requests(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    let db = state.db.lock().unwrap();
+    let mut stmt = db.prepare("SELECT id,body,author,status,created_at,resolved_at FROM requests ORDER BY id DESC LIMIT 100").unwrap();
+    let reqs: Vec<FeatureRequest> = stmt.query_map([], |row| {
+        Ok(FeatureRequest {
+            id: row.get(0)?, body: row.get(1)?, author: row.get(2)?,
+            status: row.get(3)?, created_at: row.get(4)?, resolved_at: row.get::<_,String>(5).unwrap_or_default(),
+        })
+    }).unwrap().filter_map(|r| r.ok()).collect();
+    Json(reqs)
+}
+
+async fn create_request(
+    State(state): State<Arc<AppState>>,
+    Json(input): Json<CreateRequest>,
+) -> impl IntoResponse {
+    let now = chrono::Utc::now()
+        .with_timezone(&chrono::FixedOffset::east_opt(9 * 3600).unwrap())
+        .format("%Y-%m-%d %H:%M").to_string();
+    let db = state.db.lock().unwrap();
+    match db.execute(
+        "INSERT INTO requests (body, author, status, created_at) VALUES (?1, ?2, 'open', ?3)",
+        rusqlite::params![input.body, input.author, now],
+    ) {
+        Ok(_) => StatusCode::CREATED,
+        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+    }
+}
+
+async fn update_request_status(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Path(id): Path<i64>,
+    Json(input): Json<UpdateRequestStatus>,
+) -> impl IntoResponse {
+    if !check_admin(&state, &headers) { return StatusCode::UNAUTHORIZED; }
+    let db = state.db.lock().unwrap();
+    let now = chrono::Utc::now()
+        .with_timezone(&chrono::FixedOffset::east_opt(9 * 3600).unwrap())
+        .format("%Y-%m-%d %H:%M").to_string();
+    let resolved = if input.status == "resolved" { &now } else { "" };
+    match db.execute(
+        "UPDATE requests SET status=?1, resolved_at=?2 WHERE id=?3",
+        rusqlite::params![input.status, resolved, id],
+    ) {
+        Ok(n) if n > 0 => StatusCode::OK,
+        _ => StatusCode::NOT_FOUND,
+    }
 }

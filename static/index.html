@@ -29,8 +29,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--fg);font-weight:30
 /* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1.5rem 3rem;display:flex;justify-content:space-between;align-items:center;transition:all .5s var(--ease)}
 nav.scrolled{background:rgba(253,251,248,.95);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);padding:1rem 3rem;border-bottom:1px solid var(--border)}
-.nav-logo{text-decoration:none;display:flex;align-items:center;gap:.6rem}
-.nav-logo img{height:18px;transition:opacity .5s}
+.nav-logo{text-decoration:none;display:flex;align-items:center}
+.nav-logo img{height:22px;transition:opacity .4s}
 .nav-logo .logo-dark{display:none}
 nav.scrolled .nav-logo .logo-white{display:none}
 nav.scrolled .nav-logo .logo-dark{display:block}
@@ -66,7 +66,7 @@ nav.scrolled .nav-ham span{background:var(--fg)}
 .hero .parallax-overlay{background:linear-gradient(170deg,rgba(0,0,0,.05)0%,rgba(0,0,0,.25)50%,rgba(0,0,0,.6)100%)}
 .hero .parallax-content{text-align:left;max-width:640px;padding:0}
 .hero-title{opacity:0;transform:translateY(30px);animation:fadeUp 1s var(--ease) .2s forwards}
-.hero-title img{height:clamp(40px,6vw,70px)}
+.hero-title img{height:clamp(50px,8vw,90px)}
 .hero-tagline{margin-top:1.2rem;font-size:clamp(.85rem,2vw,1.05rem);color:rgba(255,255,255,.8);font-weight:300;line-height:1.7;opacity:0;transform:translateY(20px);animation:fadeUp .8s var(--ease) .6s forwards}
 .hero-badge{display:inline-block;margin-top:1.5rem;padding:.4rem 1.2rem;border:1px solid rgba(255,255,255,.35);font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:rgba(255,255,255,.8);opacity:0;transform:translateY(20px);animation:fadeUp .8s var(--ease) .9s forwards}
 @keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
@@ -166,7 +166,7 @@ section{padding:7rem 3rem;max-width:1100px;margin:0 auto}
 /* FOOTER */
 footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color:#fff}
 .footer-logo{margin-bottom:1.2rem}
-.footer-logo img{height:22px}
+.footer-logo img{height:28px}
 .footer-links{display:flex;justify-content:center;gap:2rem;margin-bottom:1.5rem}
 .footer-links a{text-decoration:none;color:rgba(255,255,255,.4);font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;transition:color .3s}
 .footer-links a:hover{color:rgba(255,255,255,.8)}
@@ -192,7 +192,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
 <body>
 
 <nav>
-  <a href="#" class="nav-logo"><img src="/logo-white.png" alt="makimaki" class="logo-white"><img src="/logo-dark.png" alt="makimaki" class="logo-dark"></a>
+  <a href="#" class="nav-logo"><img src="/logo-dots-white.svg" alt="makimaki" class="logo-white"><img src="/logo-dots-dark.svg" alt="makimaki" class="logo-dark"></a>
   <div class="nav-right">
     <ul class="nav-links" id="navLinks">
       <li><a href="#concept">Concept</a></li>
@@ -210,7 +210,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
   <div class="parallax-bg"></div>
   <div class="parallax-overlay"></div>
   <div class="parallax-content">
-    <h1 class="hero-title"><img src="/logo-white.png" alt="MAKIMAKI"></h1>
+    <h1 class="hero-title"><img src="/logo-dots-white.svg" alt="MAKIMAKI"></h1>
     <p class="hero-tagline" data-ja="どこでも美味しい、細巻き専門店。<br>麻布十番から届けます。" data-en="Hosomaki sushi, delicious anywhere.<br>From Azabu-Juban, Tokyo.">どこでも美味しい、細巻き専門店。<br>麻布十番から届けます。</p>
     <span class="hero-badge" data-ja="テイクアウト専門" data-en="Takeout Only">テイクアウト専門</span>
   </div>
@@ -309,6 +309,8 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
           <dd data-ja="不定休" data-en="Irregular holidays">不定休</dd>
           <dt>Instagram</dt>
           <dd><a href="https://www.instagram.com/maki_maki_tokyo/" target="_blank" rel="noopener">@maki_maki_tokyo</a></dd>
+          <dt>LINE</dt>
+          <dd><a href="https://line.me/R/ti/p/@061xfqki" target="_blank" rel="noopener">公式LINE</a></dd>
         </dl>
       </div>
     </div>
@@ -325,6 +327,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
   <div class="footer-logo"><img src="/logo-white.png" alt="makimaki"></div>
   <div class="footer-links">
     <a href="https://www.instagram.com/maki_maki_tokyo/" target="_blank">Instagram</a>
+    <a href="https://line.me/R/ti/p/@061xfqki" target="_blank">LINE</a>
     <a href="#concept">Concept</a>
     <a href="#menu">Menu</a>
     <a href="#access">Access</a>

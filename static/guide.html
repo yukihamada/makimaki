@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>makimaki — スタッフガイド</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans JP',-apple-system,sans-serif;background:#FDFBF8;color:#1C1917;font-weight:300;line-height:1.9;font-size:15px}
+.top-bar{background:#3A5A40;color:#fff;padding:.6rem 2rem;font-size:.7rem;letter-spacing:.1em;text-align:center}
+.container{max-width:720px;margin:0 auto;padding:3rem 2rem 4rem}
+h1{font-size:1.6rem;font-weight:400;letter-spacing:.08em;margin-bottom:.3rem}
+.subtitle{font-size:.8rem;color:#78716C;margin-bottom:3rem}
+h2{font-size:1.1rem;font-weight:500;margin:2.5rem 0 1rem;padding-bottom:.5rem;border-bottom:1px solid #E7E0D8;color:#3A5A40}
+h3{font-size:.9rem;font-weight:500;margin:1.5rem 0 .5rem}
+p,li{font-size:.88rem;line-height:2}
+ul,ol{padding-left:1.2rem;margin-bottom:1rem}
+li{margin-bottom:.3rem}
+code{background:#F0EDE8;padding:.15rem .4rem;border-radius:3px;font-size:.8rem;font-family:monospace}
+a{color:#3A5A40;text-decoration:none;border-bottom:1px solid #D4B896}
+a:hover{border-bottom-color:#3A5A40}
+.card{background:#fff;border:1px solid #E7E0D8;padding:1.5rem;margin:1rem 0;border-radius:4px}
+.card-title{font-weight:500;font-size:.9rem;margin-bottom:.5rem}
+.badge{display:inline-block;padding:.1rem .5rem;border-radius:3px;font-size:.6rem;font-weight:500;letter-spacing:.05em}
+.badge-green{background:#C6F6D5;color:#22543D}
+.badge-yellow{background:#FEFCBF;color:#744210}
+.badge-red{background:#FED7D7;color:#9B2C2C}
+table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.82rem}
+th,td{text-align:left;padding:.5rem .8rem;border-bottom:1px solid #E7E0D8}
+th{font-weight:500;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#78716C}
+hr{border:none;border-top:1px solid #E7E0D8;margin:3rem 0}
+
+/* FEEDBACK FORM */
+.feedback-section{margin-top:3rem;padding:2rem;background:#F5F0EA;border-radius:4px}
+.feedback-section h2{border:none;margin-top:0}
+.fb-form{display:grid;gap:.8rem;margin-top:1rem}
+.fb-form input,.fb-form textarea{width:100%;padding:.6rem .8rem;border:1px solid #E7E0D8;font-family:inherit;font-size:.85rem;background:#fff;border-radius:2px}
+.fb-form textarea{height:80px;resize:vertical}
+.fb-form button{padding:.7rem 1.5rem;background:#3A5A40;color:#fff;border:none;cursor:pointer;font-size:.82rem;border-radius:2px;justify-self:start}
+.fb-form button:hover{background:#2E4833}
+.fb-list{margin-top:1.5rem}
+.fb-item{background:#fff;padding:1rem;margin-bottom:.6rem;border-radius:4px;border-left:3px solid #3A5A40}
+.fb-item.resolved{border-left-color:#A0AEC0;opacity:.5}
+.fb-item .fb-body{font-size:.85rem;margin-bottom:.3rem}
+.fb-item .fb-meta{font-size:.7rem;color:#78716C}
+.fb-item .fb-status{float:right}
+.fb-confirmed{display:none}
+.success-toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#38A169;color:#fff;padding:.6rem 1.5rem;border-radius:4px;font-size:.8rem;display:none;z-index:100}
+</style>
+</head>
+<body>
+
+<div class="top-bar">makimaki Staff Guide</div>
+
+<div class="container">
+  <h1>makimaki 運営ガイド</h1>
+  <p class="subtitle">スタッフ・関係者向けの操作マニュアルです</p>
+
+  <!-- OVERVIEW -->
+  <h2>1. サイト全体の構成</h2>
+  <table>
+    <tr><th>URL</th><th>用途</th><th>対象</th></tr>
+    <tr><td><a href="/">makimaki.fly.dev</a></td><td>お客様向けサイト（メニュー・注文）</td><td>お客様</td></tr>
+    <tr><td><a href="/admin">makimaki.fly.dev/admin</a></td><td>管理画面（注文・在庫・設定）</td><td>スタッフ</td></tr>
+    <tr><td><a href="/guide">makimaki.fly.dev/guide</a></td><td>このガイドページ</td><td>スタッフ</td></tr>
+  </table>
+
+  <h2>2. 管理画面の使い方</h2>
+
+  <h3>ログイン</h3>
+  <p>管理画面（<code>/admin</code>）にアクセスすると、管理キーの入力が求められます。URLにキーをつけて直接アクセスすることもできます：</p>
+  <p><code>/admin?key=YOUR_ADMIN_KEY</code></p>
+  <p>一度ログインすると、ブラウザに記憶されます。</p>
+
+  <h3>Dashboard タブ</h3>
+  <div class="card">
+    <div class="card-title">できること</div>
+    <ul>
+      <li><strong>本日の注文数・売上・累計</strong>がひと目で確認できます</li>
+      <li><strong>営業ON/OFF</strong> — OFFにするとお客様は注文できなくなります</li>
+      <li><strong>お知らせ</strong> — 「本日売り切れ」などのメッセージをサイトに表示できます</li>
+      <li><strong>最新の注文</strong> — アクティブな注文が表示されます</li>
+    </ul>
+  </div>
+
+  <h3>注文タブ</h3>
+  <div class="card">
+    <div class="card-title">注文のフロー</div>
+    <ol>
+      <li><span class="badge badge-red">新規</span> 注文が入る（通知音が鳴ります）</li>
+      <li><span class="badge badge-yellow">準備中</span> 「準備開始」ボタンを押す</li>
+      <li><span class="badge badge-green">出来上がり</span> 「出来上がり」ボタンを押す</li>
+      <li>お客様に渡したら「受渡済」→ 完了</li>
+    </ol>
+    <p style="margin-top:.5rem;font-size:.8rem;color:#78716C">フィルターで「新規」「準備中」など絞り込めます。</p>
+  </div>
+
+  <h3>メニュー管理タブ</h3>
+  <div class="card">
+    <div class="card-title">在庫切れの管理</div>
+    <ul>
+      <li>各メニューのトグルを<strong>OFF</strong>にすると、お客様のサイトで「売切」と表示されます</li>
+      <li>仕入れ状況に応じて、営業前に確認してください</li>
+      <li>セットメニュー（makimaki Box / まぐろBox）も個別に管理できます</li>
+    </ul>
+  </div>
+
+  <h2>3. お客様の注文フロー</h2>
+  <ol>
+    <li>サイトでメニューを選び、数量を + / - で調整</li>
+    <li>「注文する」→ 名前・電話番号・受取時間を入力</li>
+    <li><strong>カード決済</strong>（Stripe）または<strong>店頭払い</strong>を選択</li>
+    <li>注文完了 → 注文番号が発行される</li>
+    <li>管理画面に新規注文として表示される</li>
+  </ol>
+
+  <h2>4. LINE連携</h2>
+  <p>公式LINEのリッチメニューやメッセージに、以下のリンクを貼ることで直接注文ページに誘導できます：</p>
+  <div class="card">
+    <code>https://makimaki.fly.dev/#menu</code>
+    <p style="margin-top:.5rem;font-size:.8rem;color:#78716C">メニュー・注文セクションに直接ジャンプします。</p>
+  </div>
+
+  <h2>5. 困ったときは</h2>
+  <table>
+    <tr><th>症状</th><th>対処</th></tr>
+    <tr><td>管理画面に入れない</td><td>キーが正しいか確認。ブラウザのキャッシュをクリアして再試行</td></tr>
+    <tr><td>通知音が鳴らない</td><td>ブラウザの音声自動再生を許可してください（画面を一度タップ）</td></tr>
+    <tr><td>注文が来ない</td><td>Dashboardで「営業中」がONになっているか確認</td></tr>
+    <tr><td>カード決済エラー</td><td>Stripeのキーが正しく設定されているか確認</td></tr>
+  </table>
+
+  <hr>
+
+  <!-- FEEDBACK / REQUESTS -->
+  <div class="feedback-section" id="feedbackSection">
+    <h2>要望・改善リクエスト</h2>
+    <p style="font-size:.82rem;color:#78716C">サイトや管理画面への要望をお聞かせください。改善されると「改善済み」に変わります。</p>
+
+    <div class="fb-form">
+      <input type="text" id="fbAuthor" placeholder="お名前（任意）">
+      <textarea id="fbBody" placeholder="改善してほしいこと、追加してほしい機能など"></textarea>
+      <button onclick="submitFeedback()">送信する</button>
+    </div>
+
+    <div class="fb-list" id="fbList"></div>
+  </div>
+</div>
+
+<div class="success-toast" id="toast">送信しました！</div>
+
+<script>
+async function loadFeedback() {
+  const res = await fetch('/api/requests');
+  const data = await res.json();
+  const list = document.getElementById('fbList');
+  const visible = data.filter(r => r.status !== 'confirmed');
+  if (!visible.length) {
+    list.innerHTML = '<p style="font-size:.8rem;color:#999;margin-top:1rem">まだ要望はありません</p>';
+    return;
+  }
+  list.innerHTML = visible.map(r => `
+    <div class="fb-item ${r.status === 'resolved' ? 'resolved' : ''}">
+      <div class="fb-status">
+        ${r.status === 'open' ? '<span class="badge badge-yellow">検討中</span>' : ''}
+        ${r.status === 'resolved' ? '<span class="badge badge-green">改善済み</span> <button onclick="confirmRequest('+r.id+')" style="font-size:.65rem;border:1px solid #ccc;background:#fff;padding:.15rem .5rem;cursor:pointer;border-radius:2px;margin-left:.3rem">確認</button>' : ''}
+      </div>
+      <div class="fb-body">${esc(r.body)}</div>
+      <div class="fb-meta">${r.author ? esc(r.author) + ' — ' : ''}${r.created_at}</div>
+    </div>
+  `).join('');
+}
+
+async function submitFeedback() {
+  const body = document.getElementById('fbBody').value.trim();
+  if (!body) return;
+  const author = document.getElementById('fbAuthor').value.trim();
+  await fetch('/api/requests', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({body, author})});
+  document.getElementById('fbBody').value = '';
+  document.getElementById('fbAuthor').value = '';
+  const toast = document.getElementById('toast');
+  toast.style.display = 'block';
+  setTimeout(() => toast.style.display = 'none', 2500);
+  loadFeedback();
+}
+
+async function confirmRequest(id) {
+  // Admin key from URL or localStorage
+  const key = new URLSearchParams(location.search).get('key') || localStorage.getItem('makimaki_admin_key') || '';
+  await fetch(`/api/requests/${id}/status`, {
+    method:'POST', headers:{'Content-Type':'application/json','x-admin-key':key},
+    body:JSON.stringify({status:'confirmed'})
+  });
+  loadFeedback();
+}
+
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+loadFeedback();
+</script>
+</body>
+</html>

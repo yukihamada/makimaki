@@ -123,6 +123,7 @@ body{font-family:-apple-system,'Noto Sans JP',sans-serif;background:#F5F3F0;colo
     <button class="active" data-tab="dashboard">Dashboard</button>
     <button data-tab="orders">注文</button>
     <button data-tab="menu">メニュー管理</button>
+    <button data-tab="requests">要望</button>
   </div>
 
   <!-- DASHBOARD -->
@@ -158,6 +159,12 @@ body{font-family:-apple-system,'Noto Sans JP',sans-serif;background:#F5F3F0;colo
   <div class="panel" id="panel-menu">
     <p style="font-size:.75rem;color:#78716C;margin-bottom:1rem">トグルで在庫切れの管理ができます。OFFにするとお客様のメニューに「売切」と表示されます。</p>
     <div class="menu-manager" id="menuManager"></div>
+  </div>
+
+  <!-- REQUESTS -->
+  <div class="panel" id="panel-requests">
+    <p style="font-size:.75rem;color:#78716C;margin-bottom:1rem">スタッフからの要望・改善リクエスト。「改善済み」にすると要望者が確認して消えます。</p>
+    <div id="requestsList"></div>
   </div>
 </div>
 
@@ -220,14 +227,21 @@ function showApp() {
   setInterval(loadAll, 5000);
 }
 
-// Auto-login
-const savedKey = localStorage.getItem('makimaki_admin_key');
-if (savedKey) { adminKey = savedKey; showApp(); }
+// Auto-login from URL or localStorage
+const urlKey = new URLSearchParams(location.search).get('key');
+const savedKey = urlKey || localStorage.getItem('makimaki_admin_key');
+if (savedKey) {
+  adminKey = savedKey;
+  localStorage.setItem('makimaki_admin_key', savedKey);
+  // Clean URL
+  if (urlKey) history.replaceState(null, '', '/admin');
+  showApp();
+}
 
 function headers() { return {'Content-Type':'application/json','x-admin-key':adminKey}; }
 
 async function loadAll() {
-  loadOrders(); loadStats(); loadStoreConfig(); loadMenuStatus();
+  loadOrders(); loadStats(); loadStoreConfig(); loadMenuStatus(); loadRequests();
 }
 
 async function loadOrders() {
@@ -349,6 +363,36 @@ async function toggleMenuItem(id, available) {
   await fetch('/api/menu-status', {method:'POST', headers:headers(), body:JSON.stringify([{id,available}])});
   menuAvailability[id] = available;
   renderMenuManager();
+}
+
+// Requests management
+async function loadRequests() {
+  const res = await fetch('/api/requests');
+  const data = await res.json();
+  const open = data.filter(r => r.status !== 'confirmed');
+  const el = document.getElementById('requestsList');
+  if (!open.length) { el.innerHTML = '<div class="empty">要望なし</div>'; return; }
+  el.innerHTML = open.map(r => `
+    <div class="order-card" data-s="${r.status==='resolved'?'ready':'new'}" style="margin-bottom:.6rem">
+      <div>
+        <div class="o-head">
+          <span class="o-id">#${r.id}</span>
+          <span class="o-paid ${r.status==='resolved'?'yes':'no'}">${r.status==='open'?'未対応':'改善済み'}</span>
+        </div>
+        <div class="o-name" style="font-size:.9rem">${esc(r.body)}</div>
+        <div class="o-phone">${r.author?esc(r.author)+' — ':''}${r.created_at}</div>
+      </div>
+      <div class="o-actions">
+        ${r.status==='open'?`<button class="g" onclick="setRequestStatus(${r.id},'resolved')">改善済み</button>`:''}
+        ${r.status==='resolved'?`<button onclick="setRequestStatus(${r.id},'confirmed')">消去</button>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function setRequestStatus(id, status) {
+  await fetch(`/api/requests/${id}/status`, {method:'POST', headers:headers(), body:JSON.stringify({status})});
+  loadRequests();
 }
 
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}

@@ -48,6 +48,24 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;background:#000;color:#fff;ove
 .mv-close{position:fixed;top:1.5rem;right:1.5rem;z-index:20;background:none;border:none;color:rgba(255,255,255,.5);font-size:1.5rem;cursor:pointer;transition:color .3s}
 .mv-close:hover{color:#fff}
 
+/* VISUALIZER */
+.visualizer{position:fixed;bottom:0;left:0;right:0;height:80px;z-index:3;display:flex;align-items:flex-end;justify-content:center;gap:2px;padding:0 10%;pointer-events:none}
+.viz-bar{width:4px;background:rgba(58,90,64,.7);border-radius:2px 2px 0 0;transition:height .05s linear;min-height:2px}
+
+/* PARTICLES */
+.particles{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.particle{position:absolute;border-radius:50%;background:rgba(255,255,255,.3);animation:float linear infinite}
+@keyframes float{
+  0%{transform:translateY(100vh) scale(0);opacity:0}
+  10%{opacity:1}
+  90%{opacity:.5}
+  100%{transform:translateY(-20vh) scale(1);opacity:0}
+}
+
+/* BEAT FLASH */
+.beat-flash{position:fixed;inset:0;z-index:1;background:rgba(58,90,64,.15);opacity:0;pointer-events:none;transition:opacity .1s}
+.beat-flash.on{opacity:1}
+
 @media(max-width:600px){
   .lyric{font-size:clamp(1.1rem,5vw,1.8rem)}
 }
@@ -69,6 +87,9 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;background:#000;color:#fff;ove
 <div class="mv-bg" id="bg10" style="background-image:url('/img1107.jpg')"></div>
 <div class="mv-bg" id="bg11" style="background-image:url('/sushi-original-2.jpg')"></div>
 <div class="mv-overlay"></div>
+<div class="beat-flash" id="beatFlash"></div>
+<div class="particles" id="particles"></div>
+<div class="visualizer" id="visualizer"></div>
 
 <!-- LOGO -->
 <div class="mv-logo">
@@ -165,14 +186,60 @@ const lyricEl = document.getElementById('lyric');
 const progressEl = document.getElementById('progress');
 const ctaEl = document.getElementById('cta');
 const bgs = document.querySelectorAll('.mv-bg');
+const beatFlash = document.getElementById('beatFlash');
 let currentBg = 0;
 let currentLyricIdx = -1;
 
+// Audio Analyser
+let analyser, dataArray, vizBars = [];
+const NUM_BARS = 48;
+
+function initVisualizer() {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const source = ctx.createMediaElementSource(audio);
+  analyser = ctx.createAnalyser();
+  analyser.fftSize = 128;
+  source.connect(analyser);
+  analyser.connect(ctx.destination);
+  dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+  // Create bars
+  const vizEl = document.getElementById('visualizer');
+  for (let i = 0; i < NUM_BARS; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'viz-bar';
+    vizEl.appendChild(bar);
+    vizBars.push(bar);
+  }
+}
+
+// Particles
+function spawnParticle() {
+  const el = document.createElement('div');
+  el.className = 'particle';
+  const size = 3 + Math.random() * 8;
+  const x = Math.random() * 100;
+  const dur = 4 + Math.random() * 6;
+  const colors = ['rgba(58,90,64,.4)', 'rgba(255,255,255,.2)', 'rgba(184,146,106,.3)'];
+  el.style.cssText = `left:${x}%;width:${size}px;height:${size}px;background:${colors[Math.floor(Math.random()*3)]};animation-duration:${dur}s;animation-delay:${Math.random()*2}s`;
+  document.getElementById('particles').appendChild(el);
+  setTimeout(() => el.remove(), (dur + 2) * 1000);
+}
+
+let particleInterval;
+
 function startMV() {
   document.getElementById('playOverlay').classList.add('hidden');
+  initVisualizer();
   audio.play();
+  // Spawn particles periodically
+  particleInterval = setInterval(() => {
+    for (let i = 0; i < 3; i++) spawnParticle();
+  }, 600);
   requestAnimationFrame(tick);
 }
+
+let prevBass = 0;
 
 function tick() {
   if (audio.paused && audio.currentTime > 0) return;
@@ -181,6 +248,26 @@ function tick() {
   // Progress bar
   if (audio.duration) {
     progressEl.style.width = (t / audio.duration * 100) + '%';
+  }
+
+  // Visualizer bars
+  if (analyser) {
+    analyser.getByteFrequencyData(dataArray);
+    const step = Math.floor(dataArray.length / NUM_BARS);
+    for (let i = 0; i < NUM_BARS; i++) {
+      const val = dataArray[i * step] || 0;
+      vizBars[i].style.height = (val / 255 * 70 + 2) + 'px';
+      const intensity = val / 255;
+      vizBars[i].style.background = `rgba(58,90,64,${0.3 + intensity * 0.5})`;
+    }
+
+    // Beat detection (bass frequencies)
+    const bass = (dataArray[0] + dataArray[1] + dataArray[2]) / 3;
+    if (bass > 180 && bass - prevBass > 40) {
+      beatFlash.classList.add('on');
+      setTimeout(() => beatFlash.classList.remove('on'), 120);
+    }
+    prevBass = bass;
   }
 
   // Find current lyric
@@ -209,6 +296,11 @@ function tick() {
       bgs[currentBg].classList.add('active');
     }
 
+    // Burst particles on chorus
+    if (lyric.text.includes('MAKIMAKI!') || lyric.text.includes('巻き込んじゃえ')) {
+      for (let i = 0; i < 10; i++) spawnParticle();
+    }
+
     // Show CTA at end
     if (lyric.cta) {
       ctaEl.classList.add('show');
@@ -219,10 +311,11 @@ function tick() {
 }
 
 audio.addEventListener('ended', () => {
+  clearInterval(particleInterval);
   ctaEl.classList.add('show');
   lyricEl.classList.remove('active');
   setTimeout(() => {
-    lyricEl.textContent = 'makimaki';
+    lyricEl.textContent = 'オーダーする？';
     lyricEl.classList.add('active');
   }, 500);
 });

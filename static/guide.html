@@ -111,19 +111,71 @@ hr{border:none;border-top:1px solid #E7E0D8;margin:3rem 0}
   <ol>
     <li>サイトでメニューを選び、数量を + / - で調整</li>
     <li>「注文する」→ 名前・電話番号・受取時間を入力</li>
-    <li><strong>カード決済</strong>（Stripe）または<strong>店頭払い</strong>を選択</li>
-    <li>注文完了 → 注文番号が発行される</li>
-    <li>管理画面に新規注文として表示される</li>
+    <li><strong>カード決済</strong>（Stripe Checkout）で支払い</li>
+    <li>決済完了 → 店舗案内が表示される</li>
+    <li>管理画面に「PAID」として注文が表示される</li>
   </ol>
 
   <h2>4. LINE連携</h2>
   <p>公式LINEのリッチメニューやメッセージに、以下のリンクを貼ることで直接注文ページに誘導できます：</p>
   <div class="card">
-    <code>https://makimaki.fly.dev/#menu</code>
+    <code>https://makimaki.tokyo/#menu</code>
     <p style="margin-top:.5rem;font-size:.8rem;color:#78716C">メニュー・注文セクションに直接ジャンプします。</p>
   </div>
 
-  <h2>5. 困ったときは</h2>
+  <h2>5. Stripe（カード決済）の設定方法</h2>
+  <p>makimakiのオンライン決済は <a href="https://stripe.com/jp" target="_blank">Stripe</a> を使っています。以下の手順でアカウントを作成し、APIキーを取得してください。</p>
+
+  <h3>Step 1: Stripeアカウントを作る</h3>
+  <div class="card">
+    <ol>
+      <li><a href="https://dashboard.stripe.com/register" target="_blank">Stripe 登録ページ</a> にアクセス</li>
+      <li>メールアドレス、名前、パスワードを入力して「アカウントを作成」</li>
+      <li>メール認証を済ませる</li>
+      <li>ダッシュボードで「ビジネス情報」を入力（事業者名、住所、銀行口座）</li>
+    </ol>
+    <p style="margin-top:.5rem;font-size:.8rem;color:#78716C">個人事業主でもOK。審査は通常1〜2営業日です。</p>
+  </div>
+
+  <h3>Step 2: APIキーを取得する</h3>
+  <div class="card">
+    <ol>
+      <li>Stripeダッシュボード左メニュー →「<strong>開発者</strong>」→「<strong>APIキー</strong>」</li>
+      <li>「<strong>シークレットキー</strong>」の「表示」をクリック</li>
+      <li><code>sk_live_</code> で始まるキーをコピー</li>
+    </ol>
+    <p style="margin-top:.5rem;font-size:.8rem;color:#78716C"><strong>注意</strong>: シークレットキーは絶対に他人に見せないでください。LINEやメールで送らないこと。</p>
+  </div>
+
+  <h3>Step 3: テストモードで試す（推奨）</h3>
+  <div class="card">
+    <ol>
+      <li>ダッシュボード右上の「<strong>テストモード</strong>」をONにする</li>
+      <li>テスト用シークレットキー（<code>sk_test_</code>で始まる）を取得</li>
+      <li>テスト用カード番号: <code>4242 4242 4242 4242</code>（有効期限・CVC は適当でOK）</li>
+    </ol>
+    <p style="margin-top:.5rem;font-size:.8rem;color:#78716C">テストモードでは実際の決済は発生しません。動作確認が終わったら本番キー（sk_live_）に切り替えてください。</p>
+  </div>
+
+  <h3>Step 4: キーをサーバーに設定する</h3>
+  <div class="card">
+    <div class="card-title">設定方法（開発者向け）</div>
+    <p>ターミナルで以下のコマンドを実行：</p>
+    <code style="display:block;margin-top:.5rem;padding:.5rem;background:#1C1917;color:#fff;border-radius:3px;font-size:.8rem;overflow-x:auto">fly secrets set STRIPE_SECRET_KEY=sk_live_あなたのキー -a makimaki</code>
+    <p style="margin-top:.5rem;font-size:.8rem;color:#78716C">設定後、自動的にサーバーが再起動し、カード決済が有効になります。</p>
+  </div>
+
+  <h3>Stripeダッシュボードでできること</h3>
+  <table>
+    <tr><th>機能</th><th>場所</th></tr>
+    <tr><td>売上確認</td><td>ダッシュボード → 支払い</td></tr>
+    <tr><td>入金スケジュール</td><td>残高 → 入金</td></tr>
+    <tr><td>返金処理</td><td>支払い → 該当の支払い → 返金</td></tr>
+    <tr><td>売上レポート</td><td>レポート → 概要</td></tr>
+    <tr><td>テスト/本番切替</td><td>右上トグル</td></tr>
+  </table>
+
+  <h2>6. 困ったときは</h2>
   <table>
     <tr><th>症状</th><th>対処</th></tr>
     <tr><td>管理画面に入れない</td><td>キーが正しいか確認。ブラウザのキャッシュをクリアして再試行</td></tr>

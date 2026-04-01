@@ -175,13 +175,96 @@ hr{border:none;border-top:1px solid #E7E0D8;margin:3rem 0}
     <tr><td>テスト/本番切替</td><td>右上トグル</td></tr>
   </table>
 
-  <h2>6. 困ったときは</h2>
+  <h2 id="printer">6. レシートプリンター（Star CloudPRNT）の設定</h2>
+  <p>注文が入ると自動でレシートが印刷される仕組みです。Star mC-Print3（WiFi版）を使います。</p>
+
+  <h3>Step 1: プリンターを購入する</h3>
+  <div class="card">
+    <div class="card-title">推奨機種</div>
+    <p><strong>Star mC-Print3</strong>（型番: MCP31LB WT JP または MCP31LB BK JP）</p>
+    <ul>
+      <li>WiFi対応モデルを選んでください（Bluetooth版はCloudPRNT非対応）</li>
+      <li>価格: 約4〜5万円</li>
+      <li>購入先: <a href="https://www.amazon.co.jp/s?k=Star+mC-Print3+WiFi" target="_blank">Amazon</a> / <a href="https://www.star-m.jp/products/s_print/mcprint3/index.html" target="_blank">Star公式サイト</a></li>
+      <li>レシート用紙（感熱紙 80mm幅）も一緒に購入してください</li>
+    </ul>
+  </div>
+
+  <h3>Step 2: WiFiに接続する</h3>
+  <div class="card">
+    <ol>
+      <li>プリンターの電源を入れる</li>
+      <li>用紙をセットする（フタを開けて感熱紙のロールを入れる）</li>
+      <li>プリンターの <strong>FEED</strong> ボタンを長押し（約5秒）→ 設定情報が印刷される</li>
+      <li>印刷された紙に <strong>IPアドレス</strong> が書いてあるので控える（例: 192.168.1.50）</li>
+      <li>PCまたはスマホのブラウザで <code>http://192.168.1.50</code>（プリンターのIP）にアクセス</li>
+      <li>設定画面が表示されたら「<strong>Network</strong>」→ WiFi設定でお店のWiFiに接続</li>
+      <li>「Submit」を押して再起動 → 新しいIPアドレスが割り当てられる</li>
+      <li>もう一度FEEDボタン長押しで新しいIPを確認</li>
+    </ol>
+    <p style="margin-top:.5rem;font-size:.8rem;color:#78716C"><strong>ポイント</strong>: プリンターとお店のPCが同じWiFiネットワークにいる必要があります。</p>
+  </div>
+
+  <h3>Step 3: CloudPRNTを設定する</h3>
+  <div class="card">
+    <ol>
+      <li>ブラウザで <code>http://プリンターのIP</code> にアクセス</li>
+      <li>左メニューの「<strong>CloudPRNT</strong>」をクリック</li>
+      <li>以下を設定：</li>
+    </ol>
+    <table style="margin-top:.8rem">
+      <tr><th>項目</th><th>設定値</th></tr>
+      <tr><td>CloudPRNT Service</td><td><strong>ENABLE</strong></td></tr>
+      <tr><td>Server URL</td><td><code>https://makimaki.tokyo/api/cloudprnt</code></td></tr>
+      <tr><td>Polling Interval</td><td><strong>5</strong>（秒）</td></tr>
+      <tr><td>User</td><td>（空欄でOK）</td></tr>
+      <tr><td>Password</td><td>（空欄でOK）</td></tr>
+    </table>
+    <ol start="4" style="margin-top:.8rem">
+      <li>「<strong>Submit</strong>」をクリック</li>
+      <li>プリンターが自動的に再起動</li>
+    </ol>
+  </div>
+
+  <h3>Step 4: makimaki管理画面で有効化する</h3>
+  <div class="card">
+    <ol>
+      <li><a href="/admin">管理画面</a> にログイン</li>
+      <li>「<strong>プリンター</strong>」タブを開く</li>
+      <li>「プリンター有効」トグルを <strong>ON</strong> にする</li>
+      <li>「レシートプレビュー」ボタンでテスト</li>
+    </ol>
+    <p style="margin-top:.5rem;font-size:.8rem;color:#78716C">ONにすると、新しい注文が入るたびに自動でレシートが印刷されます。</p>
+  </div>
+
+  <h3>トラブルシューティング</h3>
+  <table>
+    <tr><th>症状</th><th>対処</th></tr>
+    <tr><td>レシートが出ない</td><td>管理画面の「プリンター有効」がONか確認。プリンターのCloudPRNT設定のURLが正しいか確認</td></tr>
+    <tr><td>プリンターの設定画面が開けない</td><td>プリンターとPCが同じWiFiか確認。FEEDボタン長押しでIPを再確認</td></tr>
+    <tr><td>文字化けする</td><td>プリンター設定画面の「Character Set」で「Japanese」を選択</td></tr>
+    <tr><td>二重印刷される</td><td>ポーリング間隔を10秒に増やす</td></tr>
+    <tr><td>用紙が出てこない</td><td>用紙の表裏を確認（ツルツルした面が表）。フタがカチッと閉まっているか確認</td></tr>
+  </table>
+
+  <h3>ランニングコスト</h3>
+  <div class="card">
+    <ul>
+      <li>レシート用紙（80mm x 80m）: 約200円/ロール</li>
+      <li>1ロールで約500枚のレシートが印刷可能</li>
+      <li>電気代: ほぼゼロ（待機時1W以下）</li>
+      <li>月額費用: なし（CloudPRNTは無料）</li>
+    </ul>
+  </div>
+
+  <h2>7. 困ったときは</h2>
   <table>
     <tr><th>症状</th><th>対処</th></tr>
     <tr><td>管理画面に入れない</td><td>キーが正しいか確認。ブラウザのキャッシュをクリアして再試行</td></tr>
     <tr><td>通知音が鳴らない</td><td>ブラウザの音声自動再生を許可してください（画面を一度タップ）</td></tr>
     <tr><td>注文が来ない</td><td>Dashboardで「営業中」がONになっているか確認</td></tr>
     <tr><td>カード決済エラー</td><td>Stripeのキーが正しく設定されているか確認</td></tr>
+    <tr><td>レシートが出ない</td><td>管理画面「プリンター」タブでON確認。<a href="#printer">詳細はこちら</a></td></tr>
   </table>
 
   <hr>

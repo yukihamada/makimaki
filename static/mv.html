@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAKIMAKI DAYS — makimaki</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Zen Kaku Gothic New',sans-serif;background:#000;color:#fff;overflow:hidden;height:100vh;width:100vw}
+
+/* BACKGROUNDS */
+.mv-bg{position:fixed;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.5s ease;z-index:0}
+.mv-bg.active{opacity:1}
+.mv-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1}
+
+/* CONTENT */
+.mv-content{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:2;text-align:center;padding:2rem}
+
+/* LYRICS */
+.lyric{font-size:clamp(1.4rem,4vw,2.8rem);font-weight:500;letter-spacing:.06em;line-height:1.6;opacity:0;transform:translateY(20px) scale(.95);transition:all .6s cubic-bezier(.22,1,.36,1);max-width:700px;text-shadow:0 2px 20px rgba(0,0,0,.5)}
+.lyric.active{opacity:1;transform:translateY(0) scale(1)}
+.lyric.fade{opacity:0;transform:translateY(-15px) scale(.98)}
+
+/* LOGO */
+.mv-logo{position:fixed;top:2rem;left:50%;transform:translateX(-50%);z-index:10}
+.mv-logo svg{height:24px}
+
+/* PROGRESS */
+.mv-progress{position:fixed;bottom:0;left:0;height:3px;background:#3A5A40;z-index:10;transition:width .3s linear}
+
+/* CTA */
+.mv-cta{position:fixed;bottom:3rem;left:50%;transform:translateX(-50%);z-index:10;opacity:0;transition:all .8s;pointer-events:none}
+.mv-cta.show{opacity:1;pointer-events:auto}
+.mv-cta a{display:inline-block;padding:.8rem 2.5rem;background:#3A5A40;color:#fff;text-decoration:none;font-size:.9rem;letter-spacing:.15em;border-radius:2px;transition:background .3s}
+.mv-cta a:hover{background:#2E4833}
+
+/* PLAY BUTTON */
+.play-overlay{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:20;background:rgba(0,0,0,.7);cursor:pointer;transition:opacity .5s}
+.play-overlay.hidden{opacity:0;pointer-events:none}
+.play-btn{width:80px;height:80px;border:2px solid rgba(255,255,255,.6);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .3s}
+.play-btn:hover{border-color:#fff;transform:scale(1.1)}
+.play-btn svg{width:30px;height:30px;fill:#fff;margin-left:4px}
+.play-title{margin-top:1.5rem;font-size:1.2rem;font-weight:300;letter-spacing:.2em;opacity:.7}
+.play-sub{margin-top:.5rem;font-size:.75rem;opacity:.4;letter-spacing:.1em}
+
+/* CLOSE */
+.mv-close{position:fixed;top:1.5rem;right:1.5rem;z-index:20;background:none;border:none;color:rgba(255,255,255,.5);font-size:1.5rem;cursor:pointer;transition:color .3s}
+.mv-close:hover{color:#fff}
+
+@media(max-width:600px){
+  .lyric{font-size:clamp(1.1rem,5vw,1.8rem)}
+}
+</style>
+</head>
+<body>
+
+<!-- BACKGROUNDS (cycle through photos) -->
+<div class="mv-bg active" id="bg0" style="background-image:url('/img1110.jpg')"></div>
+<div class="mv-bg" id="bg1" style="background-image:url('/sushi-concept.png')"></div>
+<div class="mv-bg" id="bg2" style="background-image:url('/img1112.jpg')"></div>
+<div class="mv-bg" id="bg3" style="background-image:url('/sushi-mood.png')"></div>
+<div class="mv-bg" id="bg4" style="background-image:url('/img1108.jpg')"></div>
+<div class="mv-bg" id="bg5" style="background-image:url('/sushi-hero.png')"></div>
+<div class="mv-bg" id="bg6" style="background-image:url('/img1114.jpg')"></div>
+<div class="mv-bg" id="bg7" style="background-image:url('/img1111.jpg')"></div>
+<div class="mv-bg" id="bg8" style="background-image:url('/img1109.jpg')"></div>
+<div class="mv-bg" id="bg9" style="background-image:url('/sushi-original-1.jpg')"></div>
+<div class="mv-bg" id="bg10" style="background-image:url('/img1107.jpg')"></div>
+<div class="mv-bg" id="bg11" style="background-image:url('/sushi-original-2.jpg')"></div>
+<div class="mv-overlay"></div>
+
+<!-- LOGO -->
+<div class="mv-logo">
+  <svg viewBox="0 0 120 80" fill="white"><circle cx="20" cy="20" r="14"/><circle cx="60" cy="20" r="14"/><circle cx="100" cy="20" r="14"/><circle cx="20" cy="60" r="14"/><circle cx="60" cy="60" r="14"/><circle cx="100" cy="60" r="14"/></svg>
+</div>
+
+<!-- CLOSE -->
+<a href="/" class="mv-close">&times;</a>
+
+<!-- CONTENT -->
+<div class="mv-content">
+  <div class="lyric" id="lyric"></div>
+</div>
+
+<!-- PROGRESS -->
+<div class="mv-progress" id="progress"></div>
+
+<!-- CTA -->
+<div class="mv-cta" id="cta">
+  <a href="/#menu">オーダーする</a>
+</div>
+
+<!-- PLAY OVERLAY -->
+<div class="play-overlay" id="playOverlay" onclick="startMV()">
+  <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+  <div class="play-title">MAKIMAKI DAYS</div>
+  <div class="play-sub">マキマキ・デイズ</div>
+</div>
+
+<audio id="audio" preload="auto" src="/makimaki-days.mp3"></audio>
+
+<script>
+const LYRICS = [
+  {t:0,    text:"MAKIMAKI DAYS", bg:0},
+  {t:1,    text:"まきまき まきまき Ready Go!", bg:0},
+  {t:6,    text:"", bg:1},
+  {t:14,   text:"小さな道を抜けて 潮風の街", bg:2},
+  {t:19,   text:"ふらり立ち寄ろう いい感じだね", bg:3},
+  {t:24,   text:"箱 開ければ 並ぶ宝石", bg:7},
+  {t:28.5, text:"サーモンの断面が きらり光ってる", bg:9},
+  {t:34,   text:"ふとした瞬間を ぎゅっと抱きしめて", bg:4},
+  {t:36.7, text:"一本ずつ おいしくなれの魔法", bg:1},
+  {t:39.3, text:"出来たてのぬくもり 伝わるから", bg:5},
+  {t:42.2, text:"早く誰かに届けたくなる", bg:6},
+  {t:44.7, text:"まきまき どこでもおいしい", bg:3},
+  {t:47.4, text:"まきまき 笑顔がこぼれる", bg:9},
+  {t:49.7, text:"電車の中でも お土産にしても", bg:8},
+  {t:52.5, text:"幸せ運ぶよ 魔法の6カット", bg:11},
+  {t:55.5, text:"日々をまるっと巻き込んじゃえ", bg:5},
+  {t:59.5, text:"いつも まきまきで", bg:0},
+  {t:63,   text:"", bg:2},
+  {t:66.4, text:"踊る赤身 とろたくのハーモニー", bg:9},
+  {t:70.2, text:"違う味 新しい風", bg:3},
+  {t:74.2, text:"どれにするって 選ぶ時間も", bg:7},
+  {t:77.2, text:"お土産にしたら 笑顔になれる", bg:11},
+  {t:82,   text:"忙しい日々も ちょっとひと休み", bg:6},
+  {t:85.1, text:"手でパクリ 心ほどける", bg:1},
+  {t:87.1, text:"海苔の香りが 磯の香りを", bg:5},
+  {t:89.6, text:"連れてきてくれる 懐かしいの", bg:4},
+  {t:93.2, text:"まきまき 毎日おいしい", bg:3},
+  {t:95.9, text:"まきまき 元気が湧いてくる", bg:9},
+  {t:98.3, text:"自宅のソファーも 旅の途中も", bg:8},
+  {t:101.2,text:"彩りそえる 最高の一本", bg:11},
+  {t:104.4,text:"世界中を巻き込んじゃえ", bg:5},
+  {t:108.1,text:"いつも まきまきで", bg:0},
+  {t:112,  text:"", bg:2},
+  {t:113.2,text:"大切な時間に そっと寄りそう", bg:6},
+  {t:117.5,text:"まっすぐ 美味しいこと 変わらない想い", bg:1},
+  {t:121.9,text:"さあ 次の一本", bg:9},
+  {t:126.1,text:"何を巻こうかな", bg:3},
+  {t:129,  text:"まきまき どこでもおいしい", bg:5},
+  {t:132.1,text:"まきまき 笑顔がこぼれる", bg:11},
+  {t:134.7,text:"電車の中でも お土産にしても", bg:7},
+  {t:137.4,text:"幸せ運ぶよ 魔法の6カット", bg:9},
+  {t:140.4,text:"みんなの心 巻き込んじゃえ", bg:5},
+  {t:144.2,text:"さあ行こう まきまきで!", bg:0},
+  {t:149.4,text:"まきまきでいこうぜ!", bg:3},
+  {t:154.5,text:"まきまき またあした!", bg:11},
+  {t:158,  text:"", bg:0, cta:true},
+];
+
+const audio = document.getElementById('audio');
+const lyricEl = document.getElementById('lyric');
+const progressEl = document.getElementById('progress');
+const ctaEl = document.getElementById('cta');
+const bgs = document.querySelectorAll('.mv-bg');
+let currentBg = 0;
+let currentLyricIdx = -1;
+
+function startMV() {
+  document.getElementById('playOverlay').classList.add('hidden');
+  audio.play();
+  requestAnimationFrame(tick);
+}
+
+function tick() {
+  if (audio.paused && audio.currentTime > 0) return;
+  const t = audio.currentTime;
+
+  // Progress bar
+  if (audio.duration) {
+    progressEl.style.width = (t / audio.duration * 100) + '%';
+  }
+
+  // Find current lyric
+  let idx = -1;
+  for (let i = LYRICS.length - 1; i >= 0; i--) {
+    if (t >= LYRICS[i].t) { idx = i; break; }
+  }
+
+  if (idx !== currentLyricIdx && idx >= 0) {
+    currentLyricIdx = idx;
+    const lyric = LYRICS[idx];
+
+    // Animate lyric
+    lyricEl.classList.remove('active');
+    lyricEl.classList.add('fade');
+    setTimeout(() => {
+      lyricEl.textContent = lyric.text;
+      lyricEl.classList.remove('fade');
+      lyricEl.classList.add('active');
+    }, 300);
+
+    // Change background
+    if (lyric.bg !== currentBg) {
+      bgs[currentBg].classList.remove('active');
+      currentBg = lyric.bg % bgs.length;
+      bgs[currentBg].classList.add('active');
+    }
+
+    // Show CTA at end
+    if (lyric.cta) {
+      ctaEl.classList.add('show');
+    }
+  }
+
+  requestAnimationFrame(tick);
+}
+
+audio.addEventListener('ended', () => {
+  ctaEl.classList.add('show');
+  lyricEl.classList.remove('active');
+  setTimeout(() => {
+    lyricEl.textContent = 'makimaki';
+    lyricEl.classList.add('active');
+  }, 500);
+});
+</script>
+</body>
+</html>

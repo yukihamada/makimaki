@@ -91,7 +91,7 @@ section{padding:7rem 3rem;max-width:1100px;margin:0 auto}
 
 /* CONCEPT */
 .concept{display:grid;grid-template-columns:5fr 6fr;gap:5rem;align-items:center}
-.concept-visual{aspect-ratio:3/4;background:url('/sushi-concept.png') center/cover;position:relative;overflow:hidden}
+.concept-visual{aspect-ratio:3/4;background:url('/img1111.jpg') center/cover;position:relative;overflow:hidden}
 
 /* TAKEOUT */
 .takeout{background:var(--warm);padding:5rem 3rem;text-align:center;max-width:100%;margin:0}
@@ -212,9 +212,9 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
   <div class="parallax-bg"></div>
   <div class="parallax-overlay"></div>
   <div class="parallax-content">
+    <span class="hero-badge" data-ja="テイクアウト専門" data-en="Takeout Only" style="margin:0 0 1.2rem;font-size:.5rem;padding:.3rem .8rem;opacity:.7">テイクアウト専門</span>
     <h1 class="hero-title" data-ja="どこでも美味しい、<br>細巻き専門店。" data-en="Hosomaki sushi,<br>delicious anywhere." style="font-family:var(--serif);font-size:clamp(1.6rem,4vw,2.8rem);font-weight:400;color:#fff;line-height:1.5">どこでも美味しい、<br>細巻き専門店。</h1>
-    <span class="hero-badge" data-ja="テイクアウト専門" data-en="Takeout Only">テイクアウト専門</span>
-    <a href="#menu" class="hero-cta" data-ja="ご予約はこちら" data-en="Order Now">ご予約はこちら</a>
+    <a href="#menu" class="hero-cta" data-ja="ご予約はこちら" data-en="Order Now" style="margin-top:2rem;padding:.8rem 3rem;font-size:.95rem">ご予約はこちら</a>
   </div>
 </div>
 
@@ -312,10 +312,11 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
   </div>
 </section>
 
-<!-- PHOTO: ENTRANCE DAY -->
-<div class="parallax photo-div p6" style="height:50vh">
-  <div class="parallax-bg"></div>
-  <div class="parallax-overlay"></div>
+<!-- MUSIC -->
+<div style="text-align:center;padding:4rem 2rem;background:var(--warm)">
+  <p style="font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin-bottom:.8rem">Music</p>
+  <p style="font-family:var(--serif);font-size:1.3rem;font-weight:400;margin-bottom:1.2rem">MAKIMAKI DAYS</p>
+  <a href="/mv.html" style="display:inline-block;padding:.6rem 2rem;background:var(--accent);color:#fff;text-decoration:none;font-size:.8rem;letter-spacing:.12em;border-radius:2px;transition:background .3s">音楽を聴く</a>
 </div>
 
 <footer>
@@ -724,7 +725,7 @@ async function checkStoreStatus() {
       if (!document.getElementById('closedBanner')) {
         const banner = document.createElement('div');
         banner.id = 'closedBanner';
-        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#E53E3E;color:#fff;text-align:center;padding:.6rem 1rem;font-size:.8rem;z-index:200;';
+        banner.style.cssText = 'position:fixed;top:56px;left:0;right:0;background:#E53E3E;color:#fff;text-align:center;padding:.6rem 1rem;font-size:.8rem;z-index:90;';
         banner.textContent = storeNotice || (lang==='ja'?'現在オンライン注文は受け付けておりません':'Online orders are currently closed');
         document.body.prepend(banner);
       }
@@ -736,7 +737,7 @@ async function checkStoreStatus() {
       if (!document.getElementById('noticeBanner')) {
         const banner = document.createElement('div');
         banner.id = 'noticeBanner';
-        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:var(--accent);color:#fff;text-align:center;padding:.5rem 1rem;font-size:.75rem;z-index:200;';
+        banner.style.cssText = 'position:fixed;top:56px;left:0;right:0;background:var(--accent);color:#fff;text-align:center;padding:.5rem 1rem;font-size:.75rem;z-index:90;';
         banner.textContent = storeNotice;
         document.body.prepend(banner);
       }

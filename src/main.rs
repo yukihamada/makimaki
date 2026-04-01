@@ -66,6 +66,7 @@ struct MenuItem {
 struct StoreStatus {
     open: Option<bool>,
     notice: Option<String>,
+    printer_enabled: Option<bool>,
 }
 
 fn init_db(conn: &Connection) {
@@ -107,12 +108,14 @@ fn init_db(conn: &Connection) {
         );",
     )
     .expect("Failed to create tables");
-    // Migrations
+    // Migrations (add columns if missing)
     conn.execute_batch("ALTER TABLE orders ADD COLUMN paid INTEGER DEFAULT 0").ok();
     conn.execute_batch("ALTER TABLE orders ADD COLUMN stripe_session TEXT DEFAULT ''").ok();
+    conn.execute_batch("ALTER TABLE orders ADD COLUMN printed INTEGER DEFAULT 0").ok();
     // Default store config
     conn.execute("INSERT OR IGNORE INTO store_config (key, value) VALUES ('open', '1')", []).ok();
     conn.execute("INSERT OR IGNORE INTO store_config (key, value) VALUES ('notice', '')", []).ok();
+    conn.execute("INSERT OR IGNORE INTO store_config (key, value) VALUES ('printer_enabled', '0')", []).ok();
 }
 
 fn check_admin(state: &AppState, headers: &HeaderMap) -> bool {
@@ -150,6 +153,8 @@ async fn main() {
         .route("/api/requests/{id}/status", post(update_request_status))
         .route("/api/events", post(track_event).get(get_events))
         .route("/api/analytics", get(get_analytics))
+        .route("/api/cloudprnt", post(cloudprnt_poll))
+        .route("/api/cloudprnt/job", get(cloudprnt_job))
         .route("/admin", get(admin_page))
         .route("/guide", get(guide_page))
         .fallback_service(ServeDir::new("static"))
@@ -398,7 +403,8 @@ async fn get_store_config(State(state): State<Arc<AppState>>) -> impl IntoRespon
     let db = state.db.lock().unwrap();
     let open: String = db.query_row("SELECT value FROM store_config WHERE key='open'", [], |r| r.get(0)).unwrap_or("1".into());
     let notice: String = db.query_row("SELECT value FROM store_config WHERE key='notice'", [], |r| r.get(0)).unwrap_or_default();
-    Json(serde_json::json!({"open": open == "1", "notice": notice}))
+    let printer: String = db.query_row("SELECT value FROM store_config WHERE key='printer_enabled'", [], |r| r.get(0)).unwrap_or("0".into());
+    Json(serde_json::json!({"open": open == "1", "notice": notice, "printer_enabled": printer == "1"}))
 }
 
 async fn update_store_config(
@@ -413,6 +419,10 @@ async fn update_store_config(
     }
     if let Some(notice) = input.notice {
         db.execute("UPDATE store_config SET value=?1 WHERE key='notice'", rusqlite::params![notice]).ok();
+    }
+    if let Some(printer) = input.printer_enabled {
+        db.execute("INSERT INTO store_config (key, value) VALUES ('printer_enabled', ?1) ON CONFLICT(key) DO UPDATE SET value=?1",
+            rusqlite::params![if printer {"1"} else {"0"}]).ok();
     }
     StatusCode::OK
 }
@@ -652,4 +662,110 @@ async fn get_analytics(
         "daily_orders": order_daily,
         "popular_items": popular,
     })))
+}
+
+// --- Star CloudPRNT ---
+// The printer POSTs to /api/cloudprnt periodically.
+// If there's an unprinted order, respond with jobReady=true.
+// Printer then GETs /api/cloudprnt/job to fetch receipt data.
+
+async fn cloudprnt_poll(
+    State(state): State<Arc<AppState>>,
+) -> impl IntoResponse {
+    let db = state.db.lock().unwrap();
+
+    // Check if printer is enabled
+    let enabled: String = db.query_row(
+        "SELECT value FROM store_config WHERE key='printer_enabled'", [], |r| r.get(0)
+    ).unwrap_or("0".into());
+    if enabled != "1" {
+        return Json(serde_json::json!({"jobReady": false}));
+    }
+
+    // Check for unprinted orders
+    let has_unprinted: bool = db.query_row(
+        "SELECT COUNT(*) FROM orders WHERE printed=0 AND status='new'", [], |r| r.get::<_,i32>(0)
+    ).unwrap_or(0) > 0;
+
+    Json(serde_json::json!({
+        "jobReady": has_unprinted,
+        "mediaTypes": ["text/plain"]
+    }))
+}
+
+async fn cloudprnt_job(
+    State(state): State<Arc<AppState>>,
+) -> impl IntoResponse {
+    let db = state.db.lock().unwrap();
+
+    // Get oldest unprinted order
+    let result = db.query_row(
+        "SELECT id,name,phone,pickup_time,items,note,total,paid,created_at FROM orders WHERE printed=0 AND status='new' ORDER BY created_at ASC LIMIT 1",
+        [],
+        |row| {
+            let items_str: String = row.get(4)?;
+            Ok((
+                row.get::<_,String>(0)?,  // id
+                row.get::<_,String>(1)?,  // name
+                row.get::<_,String>(2)?,  // phone
+                row.get::<_,String>(3)?,  // pickup_time
+                items_str,
+                row.get::<_,String>(5)?,  // note
+                row.get::<_,u32>(6)?,     // total
+                row.get::<_,i32>(7)?,     // paid
+                row.get::<_,String>(8)?,  // created_at
+            ))
+        }
+    );
+
+    match result {
+        Ok((id, name, phone, pickup_time, items_str, note, total, paid, created_at)) => {
+            let items: Vec<OrderItem> = serde_json::from_str(&items_str).unwrap_or_default();
+
+            // Mark as printed
+            let _ = db.execute("UPDATE orders SET printed=1 WHERE id=?1", rusqlite::params![id]);
+
+            // Generate receipt text (Star line mode compatible)
+            let mut receipt = String::new();
+            receipt.push_str("================================\n");
+            receipt.push_str("        makimaki\n");
+            receipt.push_str("     細巻き専門店\n");
+            receipt.push_str("================================\n\n");
+            receipt.push_str(&format!("注文番号: #{}\n", id));
+            receipt.push_str(&format!("受付時間: {}\n", created_at));
+            receipt.push_str(&format!("受取時間: {}\n\n", pickup_time));
+            receipt.push_str(&format!("お名前: {}\n", name));
+            receipt.push_str(&format!("電話: {}\n\n", phone));
+            receipt.push_str("--------------------------------\n");
+
+            for item in &items {
+                let line_total = item.price * item.qty;
+                receipt.push_str(&format!(
+                    "{} x{}\n    ¥{}\n",
+                    item.name, item.qty, line_total
+                ));
+            }
+
+            receipt.push_str("--------------------------------\n");
+            receipt.push_str(&format!("合計: ¥{}\n", total));
+            receipt.push_str(&format!("決済: {}\n\n", if paid != 0 { "カード済" } else { "未払い" }));
+
+            if !note.is_empty() {
+                receipt.push_str(&format!("備考: {}\n\n", note));
+            }
+
+            receipt.push_str("================================\n");
+            receipt.push_str("   ありがとうございます\n");
+            receipt.push_str("================================\n\n\n\n");
+
+            (
+                StatusCode::OK,
+                [(axum::http::header::CONTENT_TYPE, "text/plain; charset=utf-8")],
+                receipt,
+            ).into_response()
+        }
+        Err(_) => {
+            (StatusCode::NO_CONTENT, "").into_response()
+        }
+    }
 }

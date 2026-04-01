@@ -124,6 +124,7 @@ body{font-family:-apple-system,'Noto Sans JP',sans-serif;background:#F5F3F0;colo
     <button class="active" data-tab="dashboard">Dashboard</button>
     <button data-tab="orders">注文</button>
     <button data-tab="menu">メニュー管理</button>
+    <button data-tab="printer">プリンター</button>
     <button data-tab="analytics">統計</button>
     <button data-tab="requests">要望</button>
   </div>
@@ -176,6 +177,37 @@ body{font-family:-apple-system,'Noto Sans JP',sans-serif;background:#F5F3F0;colo
   <div class="panel" id="panel-menu">
     <p style="font-size:.75rem;color:#78716C;margin-bottom:1rem">トグルで在庫切れの管理ができます。OFFにするとお客様のメニューに「売切」と表示されます。</p>
     <div class="menu-manager" id="menuManager"></div>
+  </div>
+
+  <!-- PRINTER -->
+  <div class="panel" id="panel-printer">
+    <div style="background:#fff;padding:1.5rem;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:1rem">
+      <h3 style="font-size:.9rem;font-weight:500;margin-bottom:1rem">Star CloudPRNT 設定</h3>
+      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
+        <label style="font-size:.8rem;font-weight:500">プリンター有効</label>
+        <label class="toggle"><input type="checkbox" id="printerEnabled" onchange="togglePrinter()"><span class="slider"></span></label>
+      </div>
+      <div style="background:#F5F3F0;padding:1rem;border-radius:4px;font-size:.8rem;line-height:1.8">
+        <strong>セットアップ手順</strong>
+        <ol style="padding-left:1.2rem;margin-top:.5rem">
+          <li>Star mC-Print3（WiFi版）をWiFiに接続</li>
+          <li>プリンターの設定画面にブラウザでアクセス（<code>http://プリンターのIP</code>）</li>
+          <li>CloudPRNT設定を開く</li>
+          <li>サーバーURLに以下を入力：<br>
+            <code id="cloudprntUrl" style="background:#1C1917;color:#fff;padding:.3rem .6rem;border-radius:3px;display:inline-block;margin-top:.3rem;cursor:pointer" onclick="copyUrl(this)">https://makimaki.tokyo/api/cloudprnt</code>
+            <span style="font-size:.65rem;color:#78716C;margin-left:.5rem">クリックでコピー</span>
+          </li>
+          <li>ポーリング間隔を <strong>5秒</strong> に設定</li>
+          <li>メディアタイプを <strong>text/plain</strong> に設定</li>
+          <li>上の「プリンター有効」をONにする</li>
+        </ol>
+      </div>
+    </div>
+    <div style="background:#fff;padding:1.5rem;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+      <h3 style="font-size:.9rem;font-weight:500;margin-bottom:.8rem">レシートプレビュー（最新注文）</h3>
+      <button onclick="previewReceipt()" style="padding:.4rem 1rem;background:#3A5A40;color:#fff;border:none;cursor:pointer;font-size:.7rem;border-radius:2px;margin-bottom:.8rem">プレビュー取得</button>
+      <pre id="receiptPreview" style="background:#1C1917;color:#fff;padding:1rem;border-radius:4px;font-size:.7rem;font-family:monospace;line-height:1.6;white-space:pre;overflow-x:auto;max-height:400px">ボタンを押してプレビュー</pre>
+    </div>
   </div>
 
   <!-- ANALYTICS -->
@@ -360,6 +392,8 @@ async function loadStoreConfig() {
   const c = await res.json();
   document.getElementById('storeOpen').checked = c.open;
   document.getElementById('noticeInput').value = c.notice || '';
+  const pe = document.getElementById('printerEnabled');
+  if (pe) pe.checked = c.printer_enabled || false;
 }
 
 async function loadMenuStatus() {
@@ -451,6 +485,45 @@ async function toggleMenuItem(id, available) {
   await fetch('/api/menu-status', {method:'POST', headers:headers(), body:JSON.stringify([{id,available}])});
   menuAvailability[id] = available;
   renderMenuManager();
+}
+
+// Printer
+async function loadPrinterStatus() {
+  const res = await fetch('/api/store-config');
+  const c = await res.json();
+  // printer_enabled is in store config
+  const pRes = await fetch('/api/store-config');
+  const el = document.getElementById('printerEnabled');
+  if (el) {
+    // We need to fetch printer_enabled specifically - it's part of store config
+    // For now check from the loadStoreConfig flow
+  }
+}
+
+async function togglePrinter() {
+  const enabled = document.getElementById('printerEnabled').checked;
+  await fetch('/api/store-config', {method:'POST', headers:headers(), body:JSON.stringify({notice: null, open: null})});
+  // Use a dedicated call
+  const db_val = enabled ? '1' : '0';
+  await fetch('/api/store-config', {method:'POST', headers:headers(),
+    body:JSON.stringify({printer_enabled: enabled})});
+  alert(enabled ? 'プリンター有効化しました' : 'プリンター無効化しました');
+}
+
+function copyUrl(el) {
+  navigator.clipboard.writeText(el.textContent);
+  el.style.background = '#38A169';
+  setTimeout(() => el.style.background = '#1C1917', 1000);
+}
+
+async function previewReceipt() {
+  const res = await fetch('/api/cloudprnt/job');
+  if (res.status === 204) {
+    document.getElementById('receiptPreview').textContent = '未印刷の注文はありません';
+  } else {
+    const text = await res.text();
+    document.getElementById('receiptPreview').textContent = text;
+  }
 }
 
 // Full analytics

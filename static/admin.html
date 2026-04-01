@@ -163,7 +163,12 @@ body{font-family:-apple-system,'Noto Sans JP',sans-serif;background:#F5F3F0;colo
 
   <!-- REQUESTS -->
   <div class="panel" id="panel-requests">
-    <p style="font-size:.75rem;color:#78716C;margin-bottom:1rem">スタッフからの要望・改善リクエスト。「改善済み」にすると要望者が確認して消えます。</p>
+    <div style="background:#fff;padding:1rem;border-radius:4px;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+      <div style="display:flex;gap:.5rem">
+        <input type="text" id="reqBody" placeholder="機能要望・改善メモを入力..." style="flex:1;padding:.5rem .8rem;border:1px solid #ddd;font-size:.82rem;border-radius:2px">
+        <button onclick="addRequest()" style="padding:.5rem 1rem;background:#3A5A40;color:#fff;border:none;cursor:pointer;font-size:.75rem;border-radius:2px;white-space:nowrap">追加</button>
+      </div>
+    </div>
     <div id="requestsList"></div>
   </div>
 </div>
@@ -389,6 +394,15 @@ async function loadRequests() {
     </div>
   `).join('');
 }
+
+async function addRequest() {
+  const body = document.getElementById('reqBody').value.trim();
+  if (!body) return;
+  await fetch('/api/requests', {method:'POST', headers:headers(), body:JSON.stringify({body, author:'admin'})});
+  document.getElementById('reqBody').value = '';
+  loadRequests();
+}
+document.getElementById('reqBody')?.addEventListener('keydown', e => { if(e.key==='Enter') addRequest(); });
 
 async function setRequestStatus(id, status) {
   await fetch(`/api/requests/${id}/status`, {method:'POST', headers:headers(), body:JSON.stringify({status})});

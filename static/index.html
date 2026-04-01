@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>makimaki — 麻布十番の手巻き寿司テイクアウト専門店</title>
-<meta name="description" content="makimaki（マキマキ）— 麻布十番の手巻き寿司テイクアウト専門店。厳選素材を一本ずつ丁寧に巻き上げます。オンラインオーダー受付中。">
-<meta property="og:title" content="makimaki — 麻布十番">
-<meta property="og:description" content="手巻き寿司テイクアウト専門店。オンラインオーダー受付中。">
+<title>makimaki — 麻布十番の細巻き専門店</title>
+<meta name="description" content="makimaki（マキマキ）— 麻布十番の細巻き専門テイクアウト店。どこでも手軽に美味しいお鮨を。オンラインオーダー受付中。">
+<meta property="og:title" content="makimaki — 麻布十番の細巻き専門店">
+<meta property="og:description" content="どこでも手軽に美味しいお鮨を。細巻き専門テイクアウト店。">
 <meta property="og:image" content="https://makimaki.fly.dev/img1110.jpg">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%233A5A40' width='100' height='100' rx='12'/><circle cx='28' cy='38' r='12' fill='white'/><circle cx='50' cy='38' r='12' fill='white'/><circle cx='72' cy='38' r='12' fill='white'/><circle cx='28' cy='62' r='12' fill='white'/><circle cx='50' cy='62' r='12' fill='white'/><circle cx='72' cy='62' r='12' fill='white'/></svg>">
@@ -30,8 +30,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--fg);font-weight:30
 nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1.5rem 3rem;display:flex;justify-content:space-between;align-items:center;transition:all .5s var(--ease)}
 nav.scrolled{background:rgba(253,251,248,.95);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);padding:1rem 3rem;border-bottom:1px solid var(--border)}
 .nav-logo{text-decoration:none;display:flex;align-items:center;gap:.6rem}
-.nav-logo img{height:18px;filter:brightness(0) invert(1);transition:filter .5s}
-nav.scrolled .nav-logo img{filter:brightness(0)}
+.nav-logo img{height:18px;transition:opacity .5s}
+.nav-logo .logo-dark{display:none}
+nav.scrolled .nav-logo .logo-white{display:none}
+nav.scrolled .nav-logo .logo-dark{display:block}
 .nav-right{display:flex;align-items:center;gap:2rem}
 .nav-links{display:flex;gap:2rem;list-style:none}
 .nav-links a{text-decoration:none;color:rgba(255,255,255,.7);font-size:.7rem;font-weight:400;letter-spacing:.12em;text-transform:uppercase;transition:color .4s}
@@ -64,7 +66,7 @@ nav.scrolled .nav-ham span{background:var(--fg)}
 .hero .parallax-overlay{background:linear-gradient(170deg,rgba(0,0,0,.05)0%,rgba(0,0,0,.25)50%,rgba(0,0,0,.6)100%)}
 .hero .parallax-content{text-align:left;max-width:640px;padding:0}
 .hero-title{opacity:0;transform:translateY(30px);animation:fadeUp 1s var(--ease) .2s forwards}
-.hero-title img{height:clamp(40px,6vw,70px);filter:brightness(0) invert(1)}
+.hero-title img{height:clamp(40px,6vw,70px)}
 .hero-tagline{margin-top:1.2rem;font-size:clamp(.85rem,2vw,1.05rem);color:rgba(255,255,255,.8);font-weight:300;line-height:1.7;opacity:0;transform:translateY(20px);animation:fadeUp .8s var(--ease) .6s forwards}
 .hero-badge{display:inline-block;margin-top:1.5rem;padding:.4rem 1.2rem;border:1px solid rgba(255,255,255,.35);font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:rgba(255,255,255,.8);opacity:0;transform:translateY(20px);animation:fadeUp .8s var(--ease) .9s forwards}
 @keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
@@ -164,7 +166,7 @@ section{padding:7rem 3rem;max-width:1100px;margin:0 auto}
 /* FOOTER */
 footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color:#fff}
 .footer-logo{margin-bottom:1.2rem}
-.footer-logo img{height:22px;filter:brightness(0) invert(1)}
+.footer-logo img{height:22px}
 .footer-links{display:flex;justify-content:center;gap:2rem;margin-bottom:1.5rem}
 .footer-links a{text-decoration:none;color:rgba(255,255,255,.4);font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;transition:color .3s}
 .footer-links a:hover{color:rgba(255,255,255,.8)}
@@ -190,7 +192,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
 <body>
 
 <nav>
-  <a href="#" class="nav-logo"><img src="/logo-wordmark.png" alt="makimaki"></a>
+  <a href="#" class="nav-logo"><img src="/logo-white.png" alt="makimaki" class="logo-white"><img src="/logo-dark.png" alt="makimaki" class="logo-dark"></a>
   <div class="nav-right">
     <ul class="nav-links" id="navLinks">
       <li><a href="#concept">Concept</a></li>
@@ -208,8 +210,8 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
   <div class="parallax-bg"></div>
   <div class="parallax-overlay"></div>
   <div class="parallax-content">
-    <h1 class="hero-title"><img src="/logo-wordmark.png" alt="MAKIMAKI"></h1>
-    <p class="hero-tagline" data-ja="麻布十番から届ける、手巻き寿司。<br>一本ずつ、丁寧に。" data-en="Hand-rolled sushi, crafted one by one.<br>Takeout from Azabu-Juban, Tokyo.">麻布十番から届ける、手巻き寿司。<br>一本ずつ、丁寧に。</p>
+    <h1 class="hero-title"><img src="/logo-white.png" alt="MAKIMAKI"></h1>
+    <p class="hero-tagline" data-ja="どこでも美味しい、細巻き専門店。<br>麻布十番から届けます。" data-en="Hosomaki sushi, delicious anywhere.<br>From Azabu-Juban, Tokyo.">どこでも美味しい、細巻き専門店。<br>麻布十番から届けます。</p>
     <span class="hero-badge" data-ja="テイクアウト専門" data-en="Takeout Only">テイクアウト専門</span>
   </div>
 </div>
@@ -220,8 +222,8 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
     <div class="concept-visual reveal"></div>
     <div class="reveal rd1">
       <span class="section-label">Concept</span>
-      <h2 class="section-title" data-ja="巻きたてを、<br>持ち帰る贅沢。" data-en="The luxury of<br>taking it fresh.">巻きたてを、<br>持ち帰る贅沢。</h2>
-      <p class="section-text" data-ja="makimakiは、麻布十番に生まれた手巻き寿司のテイクアウト専門店です。厳選した海苔、赤酢のシャリ、豊洲から届く旬の素材。ご注文を受けてから一本ずつ丁寧に巻き上げ、巻きたてのままお渡しします。" data-en="makimaki is a hand-rolled sushi takeout shop in Azabu-Juban, Tokyo. Selected nori, red vinegar shari, and seasonal ingredients from Toyosu Market — each roll is carefully crafted to order and handed to you fresh.">makimakiは、麻布十番に生まれた手巻き寿司のテイクアウト専門店です。厳選した海苔、赤酢のシャリ、豊洲から届く旬の素材。ご注文を受けてから一本ずつ丁寧に巻き上げ、巻きたてのままお渡しします。</p>
+      <h2 class="section-title" data-ja="どんな場面でも、<br>美味しいお鮨を。" data-en="Delicious sushi,<br>for every moment.">どんな場面でも、<br>美味しいお鮨を。</h2>
+      <p class="section-text" data-ja="自宅でも、旅の途中の電車の中でも、お土産としても、ワインバーでも。どんな場面でも手軽に美味しくて、食べやすいお鮨をつくりたい — そんな想いから、MAKIMAKIを始めました。<br><br>より多くの方の幸せな時間に寄り添える、身近で美味しい細巻き専門店。厳選した海苔、赤酢のシャリ、豊洲から届く旬の素材を、一本ずつ丁寧に巻き上げます。" data-en="At home, on a train journey, as a gift, or even at a wine bar. We wanted to make sushi that's easy to eat and delicious — anywhere, anytime. That's why we started MAKIMAKI.<br><br>A hosomaki specialty shop that brings a little happiness to every moment. Selected nori, red vinegar shari, and seasonal ingredients from Toyosu Market, each roll carefully crafted one by one.">自宅でも、旅の途中の電車の中でも、お土産としても、ワインバーでも。どんな場面でも手軽に美味しくて、食べやすいお鮨をつくりたい — そんな想いから、MAKIMAKIを始めました。<br><br>より多くの方の幸せな時間に寄り添える、身近で美味しい細巻き専門店。厳選した海苔、赤酢のシャリ、豊洲から届く旬の素材を、一本ずつ丁寧に巻き上げます。</p>
     </div>
   </div>
 </section>
@@ -230,7 +232,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
 <div class="parallax photo-div p2">
   <div class="parallax-bg"></div>
   <div class="parallax-overlay"></div>
-  <div class="parallax-content"><p data-ja="海苔の香りが、<br>ほどける瞬間。" data-en="The moment<br>nori unfolds.">海苔の香りが、<br>ほどける瞬間。</p></div>
+  <div class="parallax-content"><p data-ja="自宅でも、電車でも、<br>ワインバーでも。" data-en="At home, on a train,<br>or at a wine bar.">自宅でも、電車でも、<br>ワインバーでも。</p></div>
 </div>
 
 <!-- TAKEOUT -->
@@ -320,7 +322,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
 </div>
 
 <footer>
-  <div class="footer-logo"><img src="/logo-wordmark.png" alt="makimaki"></div>
+  <div class="footer-logo"><img src="/logo-white.png" alt="makimaki"></div>
   <div class="footer-links">
     <a href="https://www.instagram.com/maki_maki_tokyo/" target="_blank">Instagram</a>
     <a href="#concept">Concept</a>

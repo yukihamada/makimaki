@@ -4,136 +4,374 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>makimaki — 管理画面</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, 'Noto Sans JP', sans-serif; background: #F5F3F0; color: #1C1917; }
-.header { background: #1C1917; color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
-.header h1 { font-size: 1rem; font-weight: 300; letter-spacing: 0.15em; }
-.header .badge { background: #B8926A; color: #fff; padding: 0.2rem 0.8rem; border-radius: 20px; font-size: 0.7rem; }
-.controls { padding: 1rem 2rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
-.controls button {
-  padding: 0.5rem 1rem; border: 1px solid #ddd; background: #fff; cursor: pointer;
-  font-size: 0.75rem; transition: all 0.2s; border-radius: 4px;
-}
-.controls button.active { background: #1C1917; color: #fff; border-color: #1C1917; }
-.orders { padding: 0 2rem 2rem; display: grid; gap: 1rem; }
-.order-card {
-  background: #fff; border-radius: 8px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-  display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: start;
-  border-left: 4px solid #ddd; transition: border-color 0.3s;
-}
-.order-card[data-status="new"] { border-left-color: #E53E3E; }
-.order-card[data-status="preparing"] { border-left-color: #D69E2E; }
-.order-card[data-status="ready"] { border-left-color: #38A169; }
-.order-card[data-status="done"] { border-left-color: #A0AEC0; opacity: 0.6; }
-.order-id { font-size: 0.65rem; color: #999; letter-spacing: 0.1em; text-transform: uppercase; }
-.order-name { font-size: 1.1rem; font-weight: 500; margin: 0.3rem 0; }
-.order-meta { font-size: 0.8rem; color: #78716C; }
-.order-items { margin-top: 0.8rem; }
-.order-items li { font-size: 0.8rem; list-style: none; padding: 0.2rem 0; color: #555; }
-.order-items li::before { content: '— '; color: #B8926A; }
-.order-note { margin-top: 0.5rem; font-size: 0.75rem; color: #B8926A; font-style: italic; }
-.order-total { font-size: 1rem; font-weight: 500; margin-top: 0.8rem; }
-.order-actions { display: flex; flex-direction: column; gap: 0.4rem; }
-.order-actions button {
-  padding: 0.4rem 0.8rem; border: 1px solid #ddd; background: #fff;
-  cursor: pointer; font-size: 0.65rem; border-radius: 4px; transition: all 0.2s;
-  white-space: nowrap;
-}
-.order-actions button:hover { background: #1C1917; color: #fff; border-color: #1C1917; }
-.order-actions button.danger:hover { background: #E53E3E; border-color: #E53E3E; }
-.empty { text-align: center; padding: 4rem 2rem; color: #999; font-size: 0.9rem; }
-.order-time { display: flex; gap: 1rem; align-items: center; }
-.pickup-badge { background: #F0E6D6; color: #8B6914; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.7rem; font-weight: 500; }
-@media (max-width: 600px) {
-  .order-card { grid-template-columns: 1fr; }
-  .order-actions { flex-direction: row; }
-  .controls { padding: 0.8rem 1rem; }
-  .orders { padding: 0 1rem 1rem; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'Noto Sans JP',sans-serif;background:#F5F3F0;color:#1C1917;font-size:14px}
+.login{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#1C1917}
+.login-box{background:#fff;padding:2.5rem;width:320px;text-align:center;border-radius:4px}
+.login-box h1{font-size:1.2rem;font-weight:300;letter-spacing:.15em;margin-bottom:1.5rem;color:#3A5A40}
+.login-box input{width:100%;padding:.7rem;border:1px solid #ddd;font-size:.9rem;margin-bottom:1rem;text-align:center;letter-spacing:.2em}
+.login-box button{width:100%;padding:.7rem;background:#3A5A40;color:#fff;border:none;cursor:pointer;font-size:.85rem;border-radius:2px}
+.login-box .err{color:#E53E3E;font-size:.75rem;margin-top:.5rem;display:none}
+
+.app{display:none}
+.header{background:#1C1917;color:#fff;padding:.8rem 1.2rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10}
+.header h1{font-size:.9rem;font-weight:300;letter-spacing:.15em}
+.header-right{display:flex;gap:1rem;align-items:center}
+.header .badge{background:#3A5A40;color:#fff;padding:.15rem .6rem;border-radius:20px;font-size:.65rem;min-width:60px;text-align:center}
+.header .badge.alert{background:#E53E3E;animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.7}}
+
+/* TABS */
+.tabs{display:flex;background:#fff;border-bottom:1px solid #E7E0D8;overflow-x:auto}
+.tabs button{flex:1;padding:.8rem .5rem;border:none;background:none;cursor:pointer;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:#78716C;border-bottom:2px solid transparent;white-space:nowrap;min-width:70px}
+.tabs button.active{color:#3A5A40;border-bottom-color:#3A5A40;font-weight:500}
+
+/* PANELS */
+.panel{display:none;padding:1rem}
+.panel.active{display:block}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-bottom:1rem}
+.stat{background:#fff;padding:1rem;border-radius:4px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.stat-num{font-size:1.8rem;font-weight:500;color:#3A5A40}
+.stat-label{font-size:.65rem;color:#78716C;margin-top:.3rem;text-transform:uppercase;letter-spacing:.08em}
+
+/* STORE TOGGLE */
+.store-ctrl{background:#fff;padding:1rem;border-radius:4px;margin-bottom:1rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.store-ctrl label{font-size:.75rem;font-weight:500;text-transform:uppercase;letter-spacing:.08em}
+.toggle{position:relative;width:50px;height:26px;cursor:pointer}
+.toggle input{opacity:0;width:0;height:0}
+.toggle .slider{position:absolute;inset:0;background:#ccc;border-radius:26px;transition:.3s}
+.toggle .slider::before{content:'';position:absolute;height:20px;width:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+.toggle input:checked+.slider{background:#38A169}
+.toggle input:checked+.slider::before{transform:translateX(24px)}
+.notice-input{flex:1;min-width:150px;padding:.5rem;border:1px solid #ddd;font-size:.8rem}
+.notice-btn{padding:.5rem 1rem;background:#3A5A40;color:#fff;border:none;cursor:pointer;font-size:.75rem;border-radius:2px}
+
+/* ORDERS */
+.order-filters{display:flex;gap:.4rem;margin-bottom:.8rem;flex-wrap:wrap}
+.order-filters button{padding:.4rem .8rem;border:1px solid #ddd;background:#fff;cursor:pointer;font-size:.65rem;border-radius:3px;transition:all .2s}
+.order-filters button.active{background:#1C1917;color:#fff;border-color:#1C1917}
+.orders-list{display:grid;gap:.8rem}
+.order-card{background:#fff;border-radius:6px;padding:1rem 1.2rem;box-shadow:0 1px 4px rgba(0,0,0,.05);border-left:4px solid #ddd;display:grid;grid-template-columns:1fr auto;gap:.8rem;align-items:start}
+.order-card[data-s="new"]{border-left-color:#E53E3E}
+.order-card[data-s="preparing"]{border-left-color:#D69E2E}
+.order-card[data-s="ready"]{border-left-color:#38A169}
+.order-card[data-s="done"]{border-left-color:#A0AEC0;opacity:.5}
+.o-head{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.o-id{font-size:.6rem;color:#999;letter-spacing:.08em}
+.o-pickup{background:#F0E6D6;color:#8B6914;padding:.1rem .5rem;border-radius:3px;font-size:.65rem;font-weight:500}
+.o-paid{padding:.1rem .4rem;border-radius:3px;font-size:.55rem;font-weight:600}
+.o-paid.yes{background:#C6F6D5;color:#22543D}
+.o-paid.no{background:#FED7D7;color:#9B2C2C}
+.o-name{font-size:1rem;font-weight:500;margin:.3rem 0}
+.o-phone{font-size:.8rem;color:#78716C}
+.o-items{margin-top:.5rem;list-style:none}
+.o-items li{font-size:.78rem;padding:.15rem 0;color:#555}
+.o-items li::before{content:'— ';color:#3A5A40}
+.o-note{margin-top:.4rem;font-size:.7rem;color:#B8926A;font-style:italic}
+.o-total{font-size:.95rem;font-weight:500;margin-top:.5rem}
+.o-time{font-size:.7rem;color:#999;margin-top:.3rem}
+.o-actions{display:flex;flex-direction:column;gap:.3rem}
+.o-actions button{padding:.35rem .7rem;border:1px solid #ddd;background:#fff;cursor:pointer;font-size:.6rem;border-radius:3px;transition:all .2s;white-space:nowrap}
+.o-actions button:hover{background:#1C1917;color:#fff;border-color:#1C1917}
+.o-actions button.g:hover{background:#38A169;border-color:#38A169}
+.o-actions button.r:hover{background:#E53E3E;border-color:#E53E3E}
+
+/* MENU MANAGER */
+.menu-manager{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.6rem}
+.menu-manage-item{background:#fff;padding:.8rem 1rem;border-radius:4px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.menu-manage-item.soldout{opacity:.4}
+.menu-manage-item .name{font-size:.85rem;font-weight:400}
+.menu-manage-item .price{font-size:.75rem;color:#78716C}
+
+.empty{text-align:center;padding:3rem;color:#999;font-size:.85rem}
+
+@media(max-width:600px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .order-card{grid-template-columns:1fr}
+  .o-actions{flex-direction:row;flex-wrap:wrap}
+  .store-ctrl{flex-direction:column;align-items:stretch}
 }
 </style>
 </head>
 <body>
-<div class="header">
-  <h1>makimaki admin</h1>
-  <span class="badge" id="countBadge">0 orders</span>
-</div>
-<div class="controls">
-  <button class="active" data-filter="all">All</button>
-  <button data-filter="new">New</button>
-  <button data-filter="preparing">Preparing</button>
-  <button data-filter="ready">Ready</button>
-  <button data-filter="done">Done</button>
-</div>
-<div class="orders" id="ordersList"></div>
 
+<!-- LOGIN -->
+<div class="login" id="loginScreen">
+  <div class="login-box">
+    <h1>makimaki</h1>
+    <input type="password" id="keyInput" placeholder="管理キーを入力" autofocus>
+    <button onclick="doLogin()">ログイン</button>
+    <div class="err" id="loginErr">キーが違います</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="appScreen">
+  <div class="header">
+    <h1>makimaki admin</h1>
+    <div class="header-right">
+      <span class="badge" id="countBadge">0</span>
+      <button onclick="logout()" style="background:none;border:none;color:#999;font-size:.7rem;cursor:pointer">Logout</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="active" data-tab="dashboard">Dashboard</button>
+    <button data-tab="orders">注文</button>
+    <button data-tab="menu">メニュー管理</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="panel active" id="panel-dashboard">
+    <div class="stats" id="statsGrid">
+      <div class="stat"><div class="stat-num" id="statToday">0</div><div class="stat-label">Today Orders</div></div>
+      <div class="stat"><div class="stat-num" id="statRevenue">¥0</div><div class="stat-label">Today Revenue</div></div>
+      <div class="stat"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Total Orders</div></div>
+    </div>
+    <div class="store-ctrl">
+      <label>営業中</label>
+      <label class="toggle"><input type="checkbox" id="storeOpen" checked onchange="toggleStore()"><span class="slider"></span></label>
+      <input type="text" class="notice-input" id="noticeInput" placeholder="お知らせ（例：本日売り切れ）">
+      <button class="notice-btn" onclick="saveNotice()">保存</button>
+    </div>
+    <h3 style="font-size:.8rem;margin:1rem 0 .5rem;color:#78716C">最新の注文</h3>
+    <div class="orders-list" id="dashOrders"></div>
+  </div>
+
+  <!-- ORDERS -->
+  <div class="panel" id="panel-orders">
+    <div class="order-filters">
+      <button class="active" data-f="all">すべて</button>
+      <button data-f="new">新規</button>
+      <button data-f="preparing">準備中</button>
+      <button data-f="ready">出来上がり</button>
+      <button data-f="done">完了</button>
+    </div>
+    <div class="orders-list" id="ordersList"></div>
+  </div>
+
+  <!-- MENU MANAGER -->
+  <div class="panel" id="panel-menu">
+    <p style="font-size:.75rem;color:#78716C;margin-bottom:1rem">トグルで在庫切れの管理ができます。OFFにするとお客様のメニューに「売切」と表示されます。</p>
+    <div class="menu-manager" id="menuManager"></div>
+  </div>
+</div>
+
+<!-- NOTIFICATION SOUND (Web Audio API) -->
 <script>
+let adminKey = '';
 let allOrders = [];
+let prevOrderCount = 0;
 let currentFilter = 'all';
+let menuAvailability = {};
+let audioCtx;
 
-async function loadOrders() {
-  const res = await fetch('/api/orders');
-  allOrders = await res.json();
-  render();
+// Beep sound for new orders
+function playNotification() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.frequency.value = 880; osc.type = 'sine';
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + 0.5);
+    // Second beep
+    setTimeout(() => {
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.connect(gain2); gain2.connect(audioCtx.destination);
+      osc2.frequency.value = 1100; osc2.type = 'sine';
+      gain2.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+      osc2.start(audioCtx.currentTime);
+      osc2.stop(audioCtx.currentTime + 0.5);
+    }, 200);
+  } catch(e) {}
 }
 
-function render() {
-  const filtered = currentFilter === 'all' ? allOrders : allOrders.filter(o => o.status === currentFilter);
-  const newCount = allOrders.filter(o => o.status === 'new').length;
-  document.getElementById('countBadge').textContent = newCount > 0 ? `${newCount} new` : `${allOrders.length} total`;
-
-  if (filtered.length === 0) {
-    document.getElementById('ordersList').innerHTML = '<div class="empty">No orders</div>';
-    return;
+// Auth
+async function doLogin() {
+  const key = document.getElementById('keyInput').value;
+  const res = await fetch('/api/auth', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({key})});
+  const data = await res.json();
+  if (data.ok) {
+    adminKey = key;
+    localStorage.setItem('makimaki_admin_key', key);
+    showApp();
+  } else {
+    document.getElementById('loginErr').style.display = 'block';
   }
+}
+document.getElementById('keyInput').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 
-  document.getElementById('ordersList').innerHTML = filtered.map(o => `
-    <div class="order-card" data-status="${o.status}">
-      <div>
-        <div class="order-time">
-          <span class="order-id">#${o.id}</span>
-          <span class="pickup-badge">${o.pickup_time}</span>
-        </div>
-        <div class="order-name">${esc(o.name)} ${o.paid ? '<span style="background:#38A169;color:#fff;padding:1px 6px;border-radius:3px;font-size:.6rem;margin-left:4px">PAID</span>' : '<span style="background:#E53E3E;color:#fff;padding:1px 6px;border-radius:3px;font-size:.6rem;margin-left:4px">未払</span>'}</div>
-        <div class="order-meta">${esc(o.phone)} &middot; ${o.created_at}</div>
-        <ul class="order-items">
-          ${o.items.map(i => `<li>${esc(i.name)} x${i.qty} &nbsp; ¥${(i.price * i.qty).toLocaleString()}</li>`).join('')}
-        </ul>
-        ${o.note ? `<div class="order-note">${esc(o.note)}</div>` : ''}
-        <div class="order-total">合計 ¥${o.total.toLocaleString()}</div>
+function logout() { localStorage.removeItem('makimaki_admin_key'); adminKey=''; location.reload(); }
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'block';
+  loadAll();
+  setInterval(loadAll, 5000);
+}
+
+// Auto-login
+const savedKey = localStorage.getItem('makimaki_admin_key');
+if (savedKey) { adminKey = savedKey; showApp(); }
+
+function headers() { return {'Content-Type':'application/json','x-admin-key':adminKey}; }
+
+async function loadAll() {
+  loadOrders(); loadStats(); loadStoreConfig(); loadMenuStatus();
+}
+
+async function loadOrders() {
+  const res = await fetch('/api/orders', {headers:{'x-admin-key':adminKey}});
+  if (res.status === 401) { logout(); return; }
+  const orders = await res.json();
+  const newCount = orders.filter(o=>o.status==='new').length;
+  if (orders.length > prevOrderCount && prevOrderCount > 0) { playNotification(); }
+  prevOrderCount = orders.length;
+  allOrders = orders;
+  document.getElementById('countBadge').textContent = newCount > 0 ? `${newCount} new` : `${orders.length}`;
+  document.getElementById('countBadge').className = 'badge' + (newCount > 0 ? ' alert' : '');
+  renderOrders();
+  renderDashOrders();
+}
+
+async function loadStats() {
+  const res = await fetch('/api/stats', {headers:{'x-admin-key':adminKey}});
+  if (!res.ok) return;
+  const s = await res.json();
+  document.getElementById('statToday').textContent = s.today_orders;
+  document.getElementById('statRevenue').textContent = '¥' + s.today_revenue.toLocaleString();
+  document.getElementById('statTotal').textContent = s.total_orders;
+}
+
+async function loadStoreConfig() {
+  const res = await fetch('/api/store-config');
+  const c = await res.json();
+  document.getElementById('storeOpen').checked = c.open;
+  document.getElementById('noticeInput').value = c.notice || '';
+}
+
+async function loadMenuStatus() {
+  const res = await fetch('/api/menu-status');
+  const items = await res.json();
+  menuAvailability = {};
+  items.forEach(i => menuAvailability[i.id] = i.available);
+  renderMenuManager();
+}
+
+function renderOrders() {
+  const filtered = currentFilter === 'all' ? allOrders : allOrders.filter(o=>o.status===currentFilter);
+  document.getElementById('ordersList').innerHTML = filtered.length ? filtered.map(renderOrderCard).join('') : '<div class="empty">注文なし</div>';
+}
+
+function renderDashOrders() {
+  const recent = allOrders.filter(o=>o.status!=='done').slice(0,5);
+  document.getElementById('dashOrders').innerHTML = recent.length ? recent.map(renderOrderCard).join('') : '<div class="empty">アクティブな注文なし</div>';
+}
+
+function renderOrderCard(o) {
+  return `<div class="order-card" data-s="${o.status}">
+    <div>
+      <div class="o-head">
+        <span class="o-id">#${o.id}</span>
+        <span class="o-pickup">${esc(o.pickup_time)}</span>
+        <span class="o-paid ${o.paid?'yes':'no'}">${o.paid?'PAID':'未払'}</span>
       </div>
-      <div class="order-actions">
-        ${o.status === 'new' ? `<button onclick="setStatus('${o.id}','preparing')">準備中</button>` : ''}
-        ${o.status === 'preparing' ? `<button onclick="setStatus('${o.id}','ready')">出来上がり</button>` : ''}
-        ${o.status === 'ready' ? `<button onclick="setStatus('${o.id}','done')">受渡済</button>` : ''}
-        ${o.status !== 'done' ? `<button class="danger" onclick="setStatus('${o.id}','done')">完了</button>` : ''}
-      </div>
+      <div class="o-name">${esc(o.name)}</div>
+      <div class="o-phone">${esc(o.phone)}</div>
+      <ul class="o-items">${o.items.map(i=>`<li>${esc(i.name)} x${i.qty} ¥${(i.price*i.qty).toLocaleString()}</li>`).join('')}</ul>
+      ${o.note?`<div class="o-note">${esc(o.note)}</div>`:''}
+      <div class="o-total">¥${o.total.toLocaleString()}</div>
+      <div class="o-time">${o.created_at}</div>
     </div>
-  `).join('');
+    <div class="o-actions">
+      ${o.status==='new'?`<button class="g" onclick="setStatus('${o.id}','preparing')">準備開始</button>`:''}
+      ${o.status==='preparing'?`<button class="g" onclick="setStatus('${o.id}','ready')">出来上がり</button>`:''}
+      ${o.status==='ready'?`<button class="g" onclick="setStatus('${o.id}','done')">受渡済</button>`:''}
+      ${o.status!=='done'?`<button class="r" onclick="setStatus('${o.id}','done')">完了</button>`:''}
+    </div>
+  </div>`;
 }
 
 async function setStatus(id, status) {
-  await fetch(`/api/orders/${id}/status`, {
-    method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({status})
-  });
+  await fetch(`/api/orders/${id}/status`, {method:'POST', headers:headers(), body:JSON.stringify({status})});
   loadOrders();
 }
 
-function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+async function toggleStore() {
+  const open = document.getElementById('storeOpen').checked;
+  await fetch('/api/store-config', {method:'POST', headers:headers(), body:JSON.stringify({open})});
+}
 
-// Filter buttons
-document.querySelectorAll('.controls button').forEach(btn => {
+async function saveNotice() {
+  const notice = document.getElementById('noticeInput').value;
+  await fetch('/api/store-config', {method:'POST', headers:headers(), body:JSON.stringify({notice})});
+  alert('お知らせを保存しました');
+}
+
+// Menu Manager
+const ALL_MENU_ITEMS = [
+  {id:'makimaki_box',name:'makimaki Box',price:3500},
+  {id:'maguro_box',name:'まぐろBox',price:5000},
+  {id:'akami',name:'赤身鉄火',price:1400},{id:'chutoro',name:'中とろ鉄火',price:1600},
+  {id:'negitoro',name:'ネギトロ',price:1400},{id:'torotaku',name:'とろたく',price:1400},
+  {id:'salmon',name:'サーモン',price:900},{id:'salmon_cc',name:'サーモンクリームチーズ',price:900},
+  {id:'ebimayo_p',name:'エビマヨパクチー',price:800},{id:'ika_shiso',name:'いか大葉',price:800},
+  {id:'nama_ebi',name:'生エビマヨ',price:900},{id:'kohada',name:'小肌ガリ大葉',price:900},
+  {id:'anakyu',name:'あなきゅう',price:900},{id:'mentai',name:'明太きゅうり',price:700},
+  {id:'tuna_mayo',name:'ツナマヨ',price:700},{id:'ume_shiso',name:'梅しそきゅう',price:650},
+  {id:'kappa',name:'かっぱ',price:600},{id:'wasabi_kyu',name:'わさびマヨきゅうり',price:600},
+  {id:'natto',name:'納豆白ねぎ',price:600},{id:'ume_katsuo',name:'梅きゅうかつお高菜',price:600},
+  {id:'tamago_m',name:'たまごマヨ',price:600},{id:'tamago_i',name:'たまごいなり',price:600},
+  {id:'kanpyo',name:'かんぴょう',price:600},{id:'oshinko',name:'おしんこ',price:500},
+];
+
+function renderMenuManager() {
+  document.getElementById('menuManager').innerHTML = ALL_MENU_ITEMS.map(item => {
+    const avail = menuAvailability[item.id] !== false;
+    return `<div class="menu-manage-item ${avail?'':'soldout'}">
+      <div><div class="name">${item.name}</div><div class="price">¥${item.price.toLocaleString()}</div></div>
+      <label class="toggle"><input type="checkbox" ${avail?'checked':''} onchange="toggleMenuItem('${item.id}',this.checked)"><span class="slider"></span></label>
+    </div>`;
+  }).join('');
+}
+
+async function toggleMenuItem(id, available) {
+  await fetch('/api/menu-status', {method:'POST', headers:headers(), body:JSON.stringify([{id,available}])});
+  menuAvailability[id] = available;
+  renderMenuManager();
+}
+
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+// Tabs
+document.querySelectorAll('.tabs button').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
-    currentFilter = btn.dataset.filter;
-    render();
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
   });
 });
 
-loadOrders();
-setInterval(loadOrders, 8000);
+// Order filters
+document.querySelectorAll('.order-filters button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.order-filters button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.f;
+    renderOrders();
+  });
+});
 </script>
 </body>
 </html>

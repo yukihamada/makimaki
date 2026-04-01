@@ -116,6 +116,7 @@ body{font-family:-apple-system,'Noto Sans JP',sans-serif;background:#F5F3F0;colo
     <div class="header-right">
       <span class="badge" id="countBadge">0</span>
       <a href="/guide" style="color:#999;font-size:.65rem;text-decoration:none">Guide</a>
+      <a id="docsLink" href="/docs" style="color:#999;font-size:.65rem;text-decoration:none">Docs</a>
       <button onclick="logout()" style="background:none;border:none;color:#999;font-size:.7rem;cursor:pointer">Logout</button>
     </div>
   </div>
@@ -125,6 +126,7 @@ body{font-family:-apple-system,'Noto Sans JP',sans-serif;background:#F5F3F0;colo
     <button data-tab="orders">注文</button>
     <button data-tab="menu">メニュー管理</button>
     <button data-tab="printer">プリンター</button>
+    <button data-tab="line">LINE</button>
     <button data-tab="analytics">統計</button>
     <button data-tab="requests">要望</button>
   </div>
@@ -208,6 +210,36 @@ body{font-family:-apple-system,'Noto Sans JP',sans-serif;background:#F5F3F0;colo
       <h3 style="font-size:.9rem;font-weight:500;margin-bottom:.8rem">レシートプレビュー（最新注文）</h3>
       <button onclick="previewReceipt()" style="padding:.4rem 1rem;background:#3A5A40;color:#fff;border:none;cursor:pointer;font-size:.7rem;border-radius:2px;margin-bottom:.8rem">プレビュー取得</button>
       <pre id="receiptPreview" style="background:#1C1917;color:#fff;padding:1rem;border-radius:4px;font-size:.7rem;font-family:monospace;line-height:1.6;white-space:pre;overflow-x:auto;max-height:400px">ボタンを押してプレビュー</pre>
+    </div>
+  </div>
+
+  <!-- LINE -->
+  <div class="panel" id="panel-line">
+    <div style="background:#fff;padding:1.5rem;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:1rem">
+      <h3 style="font-size:.9rem;font-weight:500;margin-bottom:1rem">LINE通知設定</h3>
+      <p style="font-size:.75rem;color:#78716C;margin-bottom:1rem">注文が入ったらオーナーのLINEに通知が届きます。<a href="https://developers.line.biz/" target="_blank" style="color:#3A5A40">LINE Developers Console</a> から取得してください。</p>
+      <div style="margin-bottom:1rem">
+        <label style="font-size:.7rem;color:#78716C;letter-spacing:.08em;display:block;margin-bottom:.3rem">CHANNEL ACCESS TOKEN</label>
+        <input type="text" id="lineToken" placeholder="トークンを入力" style="width:100%;padding:.5rem .8rem;border:1px solid #ddd;font-size:.8rem;border-radius:2px;font-family:monospace">
+        <span id="lineTokenStatus" style="font-size:.65rem;margin-top:.3rem;display:block"></span>
+      </div>
+      <div style="margin-bottom:1rem">
+        <label style="font-size:.7rem;color:#78716C;letter-spacing:.08em;display:block;margin-bottom:.3rem">OWNER USER ID</label>
+        <input type="text" id="lineUid" placeholder="Uから始まるID" style="width:100%;padding:.5rem .8rem;border:1px solid #ddd;font-size:.8rem;border-radius:2px;font-family:monospace">
+        <span id="lineUidStatus" style="font-size:.65rem;margin-top:.3rem;display:block"></span>
+      </div>
+      <button onclick="saveLine()" style="padding:.5rem 1.2rem;background:#3A5A40;color:#fff;border:none;cursor:pointer;font-size:.75rem;border-radius:2px">保存</button>
+      <button onclick="testLine()" style="padding:.5rem 1.2rem;background:#fff;color:#3A5A40;border:1px solid #3A5A40;cursor:pointer;font-size:.75rem;border-radius:2px;margin-left:.5rem">テスト送信</button>
+    </div>
+    <div style="background:#F5F3F0;padding:1rem;border-radius:4px;font-size:.78rem;line-height:1.9">
+      <strong>取得手順</strong>
+      <ol style="padding-left:1.2rem;margin-top:.5rem">
+        <li><a href="https://developers.line.biz/" target="_blank" style="color:#3A5A40">LINE Developers Console</a> にログイン</li>
+        <li>プロバイダー作成 → 「Messaging API」チャネルを作成</li>
+        <li>Messaging API設定 → 「Channel access token」の「Issue」をクリック → コピー</li>
+        <li>Basic設定 → 「Your user ID」をコピー（Uで始まる33文字）</li>
+        <li>上のフォームに貼り付けて「保存」</li>
+      </ol>
     </div>
   </div>
 
@@ -312,6 +344,7 @@ function logout() { localStorage.removeItem('makimaki_admin_key'); adminKey=''; 
 function showApp() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appScreen').style.display = 'block';
+  document.getElementById('docsLink').href = '/docs?key=' + encodeURIComponent(adminKey);
   loadAll();
   setInterval(loadAll, 5000);
 }
@@ -330,7 +363,7 @@ if (savedKey) {
 function headers() { return {'Content-Type':'application/json','x-admin-key':adminKey}; }
 
 async function loadAll() {
-  loadOrders(); loadStats(); loadStoreConfig(); loadMenuStatus(); loadRequests(); loadAnalytics(); loadAnalyticsFull();
+  loadOrders(); loadStats(); loadStoreConfig(); loadMenuStatus(); loadRequests(); loadAnalytics(); loadAnalyticsFull(); loadLineStatus();
 }
 
 async function loadAnalytics() {
@@ -500,6 +533,39 @@ async function toggleMenuItem(id, available) {
   await fetch('/api/menu-status', {method:'POST', headers:headers(), body:JSON.stringify([{id,available}])});
   menuAvailability[id] = available;
   renderMenuManager();
+}
+
+// LINE
+async function loadLineStatus() {
+  const res = await fetch('/api/store-config');
+  const c = await res.json();
+  document.getElementById('lineTokenStatus').innerHTML = c.line_token_set
+    ? '<span style="color:#38A169">✓ 設定済み</span>' : '<span style="color:#E53E3E">未設定</span>';
+  document.getElementById('lineUidStatus').innerHTML = c.line_uid_set
+    ? '<span style="color:#38A169">✓ 設定済み</span>' : '<span style="color:#E53E3E">未設定</span>';
+}
+
+async function saveLine() {
+  const token = document.getElementById('lineToken').value.trim();
+  const uid = document.getElementById('lineUid').value.trim();
+  const body = {};
+  if (token) body.line_channel_token = token;
+  if (uid) body.line_owner_user_id = uid;
+  if (!token && !uid) { alert('トークンまたはUser IDを入力してください'); return; }
+  await fetch('/api/store-config', {method:'POST', headers:headers(), body:JSON.stringify(body)});
+  document.getElementById('lineToken').value = '';
+  document.getElementById('lineUid').value = '';
+  alert('保存しました');
+  loadLineStatus();
+}
+
+async function testLine() {
+  const res = await fetch('/api/orders', {method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name:'テスト通知',phone:'000-0000-0000',pickup_time:'テスト',items:[{name:'テスト',price:0,qty:1}],note:'LINE通知テスト'})});
+  const data = await res.json();
+  if (data.id) alert('テスト注文を送信しました。LINEを確認してください。');
+  else alert('送信失敗');
+  loadOrders();
 }
 
 // Printer

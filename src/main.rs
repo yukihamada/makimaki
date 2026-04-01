@@ -67,6 +67,8 @@ struct StoreStatus {
     open: Option<bool>,
     notice: Option<String>,
     printer_enabled: Option<bool>,
+    line_channel_token: Option<String>,
+    line_owner_user_id: Option<String>,
 }
 
 fn init_db(conn: &Connection) {
@@ -124,6 +126,8 @@ fn init_db(conn: &Connection) {
     conn.execute("INSERT OR IGNORE INTO store_config (key, value) VALUES ('open', '1')", []).ok();
     conn.execute("INSERT OR IGNORE INTO store_config (key, value) VALUES ('notice', '')", []).ok();
     conn.execute("INSERT OR IGNORE INTO store_config (key, value) VALUES ('printer_enabled', '0')", []).ok();
+    conn.execute("INSERT OR IGNORE INTO store_config (key, value) VALUES ('line_channel_token', '')", []).ok();
+    conn.execute("INSERT OR IGNORE INTO store_config (key, value) VALUES ('line_owner_user_id', '')", []).ok();
 }
 
 fn check_admin(state: &AppState, headers: &HeaderMap) -> bool {
@@ -167,6 +171,7 @@ async fn main() {
         .route("/api/stripe-webhook", post(stripe_webhook))
         .route("/api/inventory", get(get_inventory))
         .route("/box", get(box_page))
+        .route("/docs", get(docs_page))
         .route("/admin", get(admin_page))
         .route("/guide", get(guide_page))
         .fallback_service(ServeDir::new("static"))
@@ -212,14 +217,36 @@ async fn create_order(
         .format("%Y-%m-%d %H:%M")
         .to_string();
 
-    let db = state.db.lock().unwrap();
-    match db.execute(
-        "INSERT INTO orders (id,name,phone,pickup_time,items,note,total,status,paid,created_at) VALUES (?1,?2,?3,?4,?5,?6,?7,'new',0,?8)",
-        rusqlite::params![id, input.name, input.phone, input.pickup_time, items_json, input.note, total, now],
-    ) {
-        Ok(_) => (StatusCode::CREATED, Json(serde_json::json!({"id": id, "total": total}))),
-        Err(e) => { eprintln!("Error: {e}"); (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": "Server error"}))) },
+    let (line_token, line_uid) = {
+        let db = state.db.lock().unwrap();
+        let r = db.execute(
+            "INSERT INTO orders (id,name,phone,pickup_time,items,note,total,status,paid,created_at) VALUES (?1,?2,?3,?4,?5,?6,?7,'new',0,?8)",
+            rusqlite::params![id, input.name, input.phone, input.pickup_time, items_json, input.note, total, now],
+        );
+        if let Err(e) = r {
+            eprintln!("Error: {e}");
+            return (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": "Server error"})));
+        }
+        let lt: String = db.query_row("SELECT value FROM store_config WHERE key='line_channel_token'", [], |r| r.get(0)).unwrap_or_default();
+        let lu: String = db.query_row("SELECT value FROM store_config WHERE key='line_owner_user_id'", [], |r| r.get(0)).unwrap_or_default();
+        (lt, lu)
+    };
+
+    // Send LINE notification (fire and forget)
+    if !line_token.is_empty() && !line_uid.is_empty() {
+        let msg = format!("🍣 新規注文 #{}\n{} 様\n受取: {}\n合計: ¥{}\n📞 {}", id, input.name, input.pickup_time, total, input.phone);
+        let token = line_token.clone();
+        let uid = line_uid.clone();
+        tokio::spawn(async move {
+            let _ = reqwest::Client::new()
+                .post("https://api.line.me/v2/bot/message/push")
+                .header("Authorization", format!("Bearer {token}"))
+                .json(&serde_json::json!({"to": uid, "messages": [{"type": "text", "text": msg}]}))
+                .send().await;
+        });
     }
+
+    (StatusCode::CREATED, Json(serde_json::json!({"id": id, "total": total})))
 }
 
 async fn create_checkout(
@@ -416,7 +443,10 @@ async fn get_store_config(State(state): State<Arc<AppState>>) -> impl IntoRespon
     let open: String = db.query_row("SELECT value FROM store_config WHERE key='open'", [], |r| r.get(0)).unwrap_or("1".into());
     let notice: String = db.query_row("SELECT value FROM store_config WHERE key='notice'", [], |r| r.get(0)).unwrap_or_default();
     let printer: String = db.query_row("SELECT value FROM store_config WHERE key='printer_enabled'", [], |r| r.get(0)).unwrap_or("0".into());
-    Json(serde_json::json!({"open": open == "1", "notice": notice, "printer_enabled": printer == "1"}))
+    let line_token: String = db.query_row("SELECT value FROM store_config WHERE key='line_channel_token'", [], |r| r.get(0)).unwrap_or_default();
+    let line_uid: String = db.query_row("SELECT value FROM store_config WHERE key='line_owner_user_id'", [], |r| r.get(0)).unwrap_or_default();
+    Json(serde_json::json!({"open": open == "1", "notice": notice, "printer_enabled": printer == "1",
+        "line_token_set": !line_token.is_empty(), "line_uid_set": !line_uid.is_empty()}))
 }
 
 async fn update_store_config(
@@ -435,6 +465,14 @@ async fn update_store_config(
     if let Some(printer) = input.printer_enabled {
         db.execute("INSERT INTO store_config (key, value) VALUES ('printer_enabled', ?1) ON CONFLICT(key) DO UPDATE SET value=?1",
             rusqlite::params![if printer {"1"} else {"0"}]).ok();
+    }
+    if let Some(ref token) = input.line_channel_token {
+        db.execute("INSERT INTO store_config (key, value) VALUES ('line_channel_token', ?1) ON CONFLICT(key) DO UPDATE SET value=?1",
+            rusqlite::params![token]).ok();
+    }
+    if let Some(ref uid) = input.line_owner_user_id {
+        db.execute("INSERT INTO store_config (key, value) VALUES ('line_owner_user_id', ?1) ON CONFLICT(key) DO UPDATE SET value=?1",
+            rusqlite::params![uid]).ok();
     }
     StatusCode::OK
 }
@@ -898,4 +936,16 @@ async fn get_inventory(State(state): State<Arc<AppState>>) -> impl IntoResponse 
 
 async fn box_page() -> Html<&'static str> {
     Html(include_str!("../static/box.html"))
+}
+
+async fn docs_page(
+    State(state): State<Arc<AppState>>,
+    Query(q): Query<std::collections::HashMap<String, String>>,
+) -> impl IntoResponse {
+    let key = q.get("key").map(|s| s.as_str()).unwrap_or("");
+    if key == state.admin_key {
+        Html(include_str!("../static/_docs.html")).into_response()
+    } else {
+        Html("<html><body style='font-family:sans-serif;display:flex;height:100vh;align-items:center;justify-content:center'><div style='text-align:center'><h2>makimaki docs</h2><p style='color:#999;margin:1rem 0'>認証が必要です。URLに ?key=xxx を付けてアクセスしてください。</p></div></body></html>").into_response()
+    }
 }

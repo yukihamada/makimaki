@@ -149,6 +149,7 @@ async fn main() {
         .route("/api/requests", get(list_requests).post(create_request))
         .route("/api/requests/{id}/status", post(update_request_status))
         .route("/api/events", post(track_event).get(get_events))
+        .route("/api/analytics", get(get_analytics))
         .route("/admin", get(admin_page))
         .route("/guide", get(guide_page))
         .fallback_service(ServeDir::new("static"))
@@ -551,5 +552,67 @@ async fn get_events(
     (StatusCode::OK, Json(serde_json::json!({
         "today": counts,
         "recent_cart": cart_items,
+    })))
+}
+
+async fn get_analytics(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+) -> impl IntoResponse {
+    if !check_admin(&state, &headers) {
+        return (StatusCode::UNAUTHORIZED, Json(serde_json::json!({})));
+    }
+    let db = state.db.lock().unwrap();
+
+    // Daily PV for last 30 days
+    let mut daily: Vec<serde_json::Value> = Vec::new();
+    let mut stmt = db.prepare(
+        "SELECT SUBSTR(ts,1,10) as day, event, COUNT(*) FROM events WHERE ts >= date('now','-30 days') GROUP BY day, event ORDER BY day"
+    ).unwrap();
+    let rows = stmt.query_map([], |row| {
+        Ok((row.get::<_,String>(0)?, row.get::<_,String>(1)?, row.get::<_,i32>(2)?))
+    }).unwrap();
+
+    let mut day_map: std::collections::BTreeMap<String, std::collections::HashMap<String, i32>> = std::collections::BTreeMap::new();
+    for row in rows.flatten() {
+        day_map.entry(row.0).or_default().insert(row.1, row.2);
+    }
+    for (day, events) in &day_map {
+        daily.push(serde_json::json!({
+            "date": day,
+            "pageview": events.get("pageview").unwrap_or(&0),
+            "cart_add": events.get("cart_add").unwrap_or(&0),
+            "checkout_start": events.get("checkout_start").unwrap_or(&0),
+            "order_complete": events.get("order_complete").unwrap_or(&0),
+            "stripe_redirect": events.get("stripe_redirect").unwrap_or(&0),
+        }));
+    }
+
+    // Daily orders + revenue
+    let mut order_daily: Vec<serde_json::Value> = Vec::new();
+    let mut stmt2 = db.prepare(
+        "SELECT SUBSTR(created_at,1,10) as day, COUNT(*), COALESCE(SUM(total),0), SUM(CASE WHEN paid=1 THEN 1 ELSE 0 END) FROM orders WHERE created_at >= date('now','-30 days') GROUP BY day ORDER BY day"
+    ).unwrap();
+    let rows2 = stmt2.query_map([], |row| {
+        Ok((row.get::<_,String>(0)?, row.get::<_,i32>(1)?, row.get::<_,i64>(2)?, row.get::<_,i32>(3)?))
+    }).unwrap();
+    for row in rows2.flatten() {
+        order_daily.push(serde_json::json!({"date":row.0,"orders":row.1,"revenue":row.2,"paid":row.3}));
+    }
+
+    // Popular items all-time
+    let mut popular: Vec<serde_json::Value> = Vec::new();
+    let mut stmt3 = db.prepare("SELECT data, COUNT(*) as cnt FROM events WHERE event='cart_add' AND data!='' GROUP BY data ORDER BY cnt DESC LIMIT 20").unwrap();
+    let rows3 = stmt3.query_map([], |row| {
+        Ok((row.get::<_,String>(0)?, row.get::<_,i32>(1)?))
+    }).unwrap();
+    for row in rows3.flatten() {
+        popular.push(serde_json::json!({"item":row.0,"count":row.1}));
+    }
+
+    (StatusCode::OK, Json(serde_json::json!({
+        "daily_events": daily,
+        "daily_orders": order_daily,
+        "popular_items": popular,
     })))
 }

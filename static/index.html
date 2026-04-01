@@ -518,25 +518,46 @@ function getOrderBody() {
 
 async function submitOrder(e) {
   e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  btn.disabled = true; btn.textContent = lang==='ja'?'処理中...':'Processing...';
+  trk('checkout_submit');
   const body = getOrderBody();
   try {
     const res = await fetch('/api/checkout', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const data = await res.json();
-    if (data.url) { window.location.href = data.url; }
-    else { showSuccess(data); }
+    if (data.url) {
+      trk('stripe_redirect');
+      window.location.href = data.url;
+    } else if (data.error) {
+      // Stripe not configured or error — fallback to no-pay order
+      btn.disabled = false; btn.textContent = lang==='ja'?'カード決済で注文する':'Pay & Order with Card';
+      if (confirm(lang==='ja'?'カード決済が利用できません。店頭払いで予約しますか？':'Card payment unavailable. Reserve with pay-at-shop?')) {
+        await doSubmitNoPay(body);
+      }
+    }
   } catch(err) {
-    alert(lang==='ja'?'決済の開始に失敗しました。店頭払いをお試しください。':'Payment failed. Please try pay-at-shop.');
+    btn.disabled = false; btn.textContent = lang==='ja'?'カード決済で注文する':'Pay & Order with Card';
+    if (confirm(lang==='ja'?'通信エラーが発生しました。店頭払いで予約しますか？':'Connection error. Reserve with pay-at-shop?')) {
+      await doSubmitNoPay(body);
+    }
   }
 }
 
 async function submitOrderNoPay() {
   const body = getOrderBody();
+  await doSubmitNoPay(body);
+}
+
+async function doSubmitNoPay(body) {
+  trk('order_nopay');
   try {
     const res = await fetch('/api/orders', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const data = await res.json();
+    if (data.error) { alert(lang==='ja'?'現在注文を受け付けておりません。':'Orders are currently closed.'); return; }
+    trk('order_complete');
     showSuccess(data);
   } catch(err) {
-    alert(lang==='ja'?'送信に失敗しました。':'Failed to submit.');
+    alert(lang==='ja'?'送信に失敗しました。もう一度お試しください。':'Failed to submit. Please try again.');
   }
 }
 
@@ -552,14 +573,16 @@ function showSuccess(data) {
 
 function resetCart() { cart = {}; updateCart(); renderMenu(); }
 
-// Check if returned from Stripe
+// Check if returned from Stripe payment
 if (location.search.includes('paid=1')) {
+  cart = {};
   setTimeout(() => {
     document.getElementById('modalContent').innerHTML = `
       <button class="modal-close" onclick="closeModal()">&times;</button>
       <div class="success-msg">
-        <h3>${'お支払い完了'}</h3>
-        <p>ご注文ありがとうございます。<br>受取時間にお越しください。</p>
+        <h3>お支払い完了</h3>
+        <p style="font-size:2rem;color:var(--accent);margin:.5rem 0">&#10003;</p>
+        <p>ご注文・お支払いありがとうございます。<br>受取時間にお越しください。</p>
       </div>`;
     document.getElementById('modalBg').classList.add('show');
     history.replaceState(null,'','/');

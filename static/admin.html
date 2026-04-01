@@ -123,6 +123,7 @@ body{font-family:-apple-system,'Noto Sans JP',sans-serif;background:#F5F3F0;colo
     <button class="active" data-tab="dashboard">Dashboard</button>
     <button data-tab="orders">注文</button>
     <button data-tab="menu">メニュー管理</button>
+    <button data-tab="analytics">統計</button>
     <button data-tab="requests">要望</button>
   </div>
 
@@ -174,6 +175,40 @@ body{font-family:-apple-system,'Noto Sans JP',sans-serif;background:#F5F3F0;colo
   <div class="panel" id="panel-menu">
     <p style="font-size:.75rem;color:#78716C;margin-bottom:1rem">トグルで在庫切れの管理ができます。OFFにするとお客様のメニューに「売切」と表示されます。</p>
     <div class="menu-manager" id="menuManager"></div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div class="panel" id="panel-analytics">
+    <h3 style="font-size:.85rem;font-weight:500;margin-bottom:1rem">過去30日間の統計</h3>
+    <div style="background:#fff;padding:1rem;border-radius:4px;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+      <h4 style="font-size:.7rem;color:#78716C;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:.08em">日別アクセス</h4>
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.75rem" id="analyticsTable">
+        <thead><tr style="border-bottom:2px solid #E7E0D8">
+          <th style="text-align:left;padding:.4rem .5rem;font-weight:500;color:#78716C">日付</th>
+          <th style="text-align:right;padding:.4rem .5rem">PV</th>
+          <th style="text-align:right;padding:.4rem .5rem">カート追加</th>
+          <th style="text-align:right;padding:.4rem .5rem">注文開始</th>
+          <th style="text-align:right;padding:.4rem .5rem">決済</th>
+        </tr></thead>
+        <tbody id="analyticsBody"></tbody>
+      </table></div>
+    </div>
+    <div style="background:#fff;padding:1rem;border-radius:4px;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+      <h4 style="font-size:.7rem;color:#78716C;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:.08em">日別注文・売上</h4>
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.75rem">
+        <thead><tr style="border-bottom:2px solid #E7E0D8">
+          <th style="text-align:left;padding:.4rem .5rem;font-weight:500;color:#78716C">日付</th>
+          <th style="text-align:right;padding:.4rem .5rem">注文数</th>
+          <th style="text-align:right;padding:.4rem .5rem">売上</th>
+          <th style="text-align:right;padding:.4rem .5rem">決済済</th>
+        </tr></thead>
+        <tbody id="orderStatsBody"></tbody>
+      </table></div>
+    </div>
+    <div style="background:#fff;padding:1rem;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+      <h4 style="font-size:.7rem;color:#78716C;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:.08em">人気メニュー（累計カート追加数）</h4>
+      <div id="popularItems"></div>
+    </div>
   </div>
 
   <!-- REQUESTS -->
@@ -261,7 +296,7 @@ if (savedKey) {
 function headers() { return {'Content-Type':'application/json','x-admin-key':adminKey}; }
 
 async function loadAll() {
-  loadOrders(); loadStats(); loadStoreConfig(); loadMenuStatus(); loadRequests(); loadAnalytics();
+  loadOrders(); loadStats(); loadStoreConfig(); loadMenuStatus(); loadRequests(); loadAnalytics(); loadAnalyticsFull();
 }
 
 async function loadAnalytics() {
@@ -415,6 +450,44 @@ async function toggleMenuItem(id, available) {
   await fetch('/api/menu-status', {method:'POST', headers:headers(), body:JSON.stringify([{id,available}])});
   menuAvailability[id] = available;
   renderMenuManager();
+}
+
+// Full analytics
+async function loadAnalyticsFull() {
+  const res = await fetch('/api/analytics', {headers:{'x-admin-key':adminKey}});
+  if (!res.ok) return;
+  const data = await res.json();
+
+  // Daily events table
+  const evts = (data.daily_events || []).reverse();
+  document.getElementById('analyticsBody').innerHTML = evts.map(d => `
+    <tr style="border-bottom:1px solid #f0ede8">
+      <td style="padding:.4rem .5rem">${d.date}</td>
+      <td style="text-align:right;padding:.4rem .5rem;font-weight:500">${d.pageview}</td>
+      <td style="text-align:right;padding:.4rem .5rem">${d.cart_add}</td>
+      <td style="text-align:right;padding:.4rem .5rem">${d.checkout_start}</td>
+      <td style="text-align:right;padding:.4rem .5rem">${d.stripe_redirect}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="5" style="padding:1rem;color:#999;text-align:center">データなし</td></tr>';
+
+  // Daily orders table
+  const ords = (data.daily_orders || []).reverse();
+  document.getElementById('orderStatsBody').innerHTML = ords.map(d => `
+    <tr style="border-bottom:1px solid #f0ede8">
+      <td style="padding:.4rem .5rem">${d.date}</td>
+      <td style="text-align:right;padding:.4rem .5rem;font-weight:500">${d.orders}</td>
+      <td style="text-align:right;padding:.4rem .5rem;color:#3A5A40;font-weight:500">¥${d.revenue.toLocaleString()}</td>
+      <td style="text-align:right;padding:.4rem .5rem">${d.paid}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="4" style="padding:1rem;color:#999;text-align:center">データなし</td></tr>';
+
+  // Popular items
+  const pop = data.popular_items || [];
+  document.getElementById('popularItems').innerHTML = pop.length
+    ? pop.map((p,i) => `<div style="display:flex;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid #f5f0ea;font-size:.8rem">
+        <span>${i+1}. ${esc(p.item)}</span><span style="font-weight:500;color:#3A5A40">${p.count}</span>
+      </div>`).join('')
+    : '<span style="font-size:.8rem;color:#999">データなし</span>';
 }
 
 // Requests management

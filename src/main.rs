@@ -130,7 +130,7 @@ async fn main() {
     init_db(&conn);
 
     let stripe_key = std::env::var("STRIPE_SECRET_KEY").ok();
-    let admin_key = std::env::var("ADMIN_KEY").unwrap_or_else(|_| "makimaki2026".to_string());
+    let admin_key = std::env::var("ADMIN_KEY").expect("ADMIN_KEY environment variable must be set");
 
     if stripe_key.is_some() { println!("Stripe payments enabled"); }
     println!("Admin key configured");
@@ -201,7 +201,7 @@ async fn create_order(
         rusqlite::params![id, input.name, input.phone, input.pickup_time, items_json, input.note, total, now],
     ) {
         Ok(_) => (StatusCode::CREATED, Json(serde_json::json!({"id": id, "total": total}))),
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": e.to_string()}))),
+        Err(e) => { eprintln!("Error: {e}"); (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": "Server error"}))) },
     }
 }
 
@@ -278,10 +278,10 @@ async fn create_checkout(
                 }
                 (StatusCode::OK, Json(serde_json::json!({"url": url, "id": id})))
             } else {
-                (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error": "Stripe error", "detail": body.to_string()})))
+                { eprintln!("Stripe error: {body}"); (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error": "Payment processing failed"}))) }
             }
         }
-        Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": e.to_string()}))),
+        Err(e) => { eprintln!("Error: {e}"); (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": "Server error"}))) },
     }
 }
 
@@ -289,9 +289,34 @@ async fn stripe_success(
     State(state): State<Arc<AppState>>,
     Query(q): Query<SuccessQuery>,
 ) -> impl IntoResponse {
-    if let Some(order_id) = q.order_id {
-        let db = state.db.lock().unwrap();
-        let _ = db.execute("UPDATE orders SET paid=1 WHERE id=?1", rusqlite::params![order_id]);
+    if let Some(order_id) = &q.order_id {
+        // Verify payment via Stripe API before marking as paid
+        let verified = if let Some(stripe_key) = &state.stripe_key {
+            let session_id: Option<String> = {
+                let db = state.db.lock().unwrap();
+                db.query_row(
+                    "SELECT stripe_session FROM orders WHERE id=?1",
+                    rusqlite::params![order_id], |r| r.get(0)
+                ).ok()
+            };
+            if let Some(sid) = session_id.filter(|s| !s.is_empty()) {
+                let client = reqwest::Client::new();
+                if let Ok(resp) = client
+                    .get(&format!("https://api.stripe.com/v1/checkout/sessions/{sid}"))
+                    .basic_auth(stripe_key, Option::<&str>::None)
+                    .send().await
+                {
+                    if let Ok(body) = resp.json::<serde_json::Value>().await {
+                        body["payment_status"].as_str() == Some("paid")
+                    } else { false }
+                } else { false }
+            } else { false }
+        } else { false };
+
+        if verified {
+            let db = state.db.lock().unwrap();
+            let _ = db.execute("UPDATE orders SET paid=1 WHERE id=?1", rusqlite::params![order_id]);
+        }
     }
     Redirect::temporary("/?paid=1")
 }
@@ -509,13 +534,25 @@ async fn track_event(
     State(state): State<Arc<AppState>>,
     Json(input): Json<TrackEvent>,
 ) -> impl IntoResponse {
+    // Whitelist allowed events to prevent abuse
+    const ALLOWED: &[&str] = &[
+        "pageview", "scroll_25", "scroll_50", "scroll_75", "scroll_100",
+        "section_view", "cart_add", "checkout_start", "checkout_submit",
+        "stripe_redirect", "order_nopay", "order_complete",
+    ];
+    if !ALLOWED.contains(&input.event.as_str()) {
+        return StatusCode::BAD_REQUEST;
+    }
+    let data = input.data.unwrap_or_default();
+    if data.len() > 100 { return StatusCode::BAD_REQUEST; }
+
     let now = chrono::Utc::now()
         .with_timezone(&chrono::FixedOffset::east_opt(9 * 3600).unwrap())
         .format("%Y-%m-%d %H:%M:%S").to_string();
     let db = state.db.lock().unwrap();
     let _ = db.execute(
         "INSERT INTO events (event, data, ts) VALUES (?1, ?2, ?3)",
-        rusqlite::params![input.event, input.data.unwrap_or_default(), now],
+        rusqlite::params![input.event, data, now],
     );
     StatusCode::OK
 }

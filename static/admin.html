@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>makimaki — 管理画面</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, 'Noto Sans JP', sans-serif; background: #F5F3F0; color: #1C1917; }
+.header { background: #1C1917; color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+.header h1 { font-size: 1rem; font-weight: 300; letter-spacing: 0.15em; }
+.header .badge { background: #B8926A; color: #fff; padding: 0.2rem 0.8rem; border-radius: 20px; font-size: 0.7rem; }
+.controls { padding: 1rem 2rem; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.controls button {
+  padding: 0.5rem 1rem; border: 1px solid #ddd; background: #fff; cursor: pointer;
+  font-size: 0.75rem; transition: all 0.2s; border-radius: 4px;
+}
+.controls button.active { background: #1C1917; color: #fff; border-color: #1C1917; }
+.orders { padding: 0 2rem 2rem; display: grid; gap: 1rem; }
+.order-card {
+  background: #fff; border-radius: 8px; padding: 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: start;
+  border-left: 4px solid #ddd; transition: border-color 0.3s;
+}
+.order-card[data-status="new"] { border-left-color: #E53E3E; }
+.order-card[data-status="preparing"] { border-left-color: #D69E2E; }
+.order-card[data-status="ready"] { border-left-color: #38A169; }
+.order-card[data-status="done"] { border-left-color: #A0AEC0; opacity: 0.6; }
+.order-id { font-size: 0.65rem; color: #999; letter-spacing: 0.1em; text-transform: uppercase; }
+.order-name { font-size: 1.1rem; font-weight: 500; margin: 0.3rem 0; }
+.order-meta { font-size: 0.8rem; color: #78716C; }
+.order-items { margin-top: 0.8rem; }
+.order-items li { font-size: 0.8rem; list-style: none; padding: 0.2rem 0; color: #555; }
+.order-items li::before { content: '— '; color: #B8926A; }
+.order-note { margin-top: 0.5rem; font-size: 0.75rem; color: #B8926A; font-style: italic; }
+.order-total { font-size: 1rem; font-weight: 500; margin-top: 0.8rem; }
+.order-actions { display: flex; flex-direction: column; gap: 0.4rem; }
+.order-actions button {
+  padding: 0.4rem 0.8rem; border: 1px solid #ddd; background: #fff;
+  cursor: pointer; font-size: 0.65rem; border-radius: 4px; transition: all 0.2s;
+  white-space: nowrap;
+}
+.order-actions button:hover { background: #1C1917; color: #fff; border-color: #1C1917; }
+.order-actions button.danger:hover { background: #E53E3E; border-color: #E53E3E; }
+.empty { text-align: center; padding: 4rem 2rem; color: #999; font-size: 0.9rem; }
+.order-time { display: flex; gap: 1rem; align-items: center; }
+.pickup-badge { background: #F0E6D6; color: #8B6914; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.7rem; font-weight: 500; }
+@media (max-width: 600px) {
+  .order-card { grid-template-columns: 1fr; }
+  .order-actions { flex-direction: row; }
+  .controls { padding: 0.8rem 1rem; }
+  .orders { padding: 0 1rem 1rem; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>makimaki admin</h1>
+  <span class="badge" id="countBadge">0 orders</span>
+</div>
+<div class="controls">
+  <button class="active" data-filter="all">All</button>
+  <button data-filter="new">New</button>
+  <button data-filter="preparing">Preparing</button>
+  <button data-filter="ready">Ready</button>
+  <button data-filter="done">Done</button>
+</div>
+<div class="orders" id="ordersList"></div>
+
+<script>
+let allOrders = [];
+let currentFilter = 'all';
+
+async function loadOrders() {
+  const res = await fetch('/api/orders');
+  allOrders = await res.json();
+  render();
+}
+
+function render() {
+  const filtered = currentFilter === 'all' ? allOrders : allOrders.filter(o => o.status === currentFilter);
+  const newCount = allOrders.filter(o => o.status === 'new').length;
+  document.getElementById('countBadge').textContent = newCount > 0 ? `${newCount} new` : `${allOrders.length} total`;
+
+  if (filtered.length === 0) {
+    document.getElementById('ordersList').innerHTML = '<div class="empty">No orders</div>';
+    return;
+  }
+
+  document.getElementById('ordersList').innerHTML = filtered.map(o => `
+    <div class="order-card" data-status="${o.status}">
+      <div>
+        <div class="order-time">
+          <span class="order-id">#${o.id}</span>
+          <span class="pickup-badge">${o.pickup_time}</span>
+        </div>
+        <div class="order-name">${esc(o.name)}</div>
+        <div class="order-meta">${esc(o.phone)} &middot; ${o.created_at}</div>
+        <ul class="order-items">
+          ${o.items.map(i => `<li>${esc(i.name)} x${i.qty} &nbsp; ¥${(i.price * i.qty).toLocaleString()}</li>`).join('')}
+        </ul>
+        ${o.note ? `<div class="order-note">${esc(o.note)}</div>` : ''}
+        <div class="order-total">合計 ¥${o.total.toLocaleString()}</div>
+      </div>
+      <div class="order-actions">
+        ${o.status === 'new' ? `<button onclick="setStatus('${o.id}','preparing')">準備中</button>` : ''}
+        ${o.status === 'preparing' ? `<button onclick="setStatus('${o.id}','ready')">出来上がり</button>` : ''}
+        ${o.status === 'ready' ? `<button onclick="setStatus('${o.id}','done')">受渡済</button>` : ''}
+        ${o.status !== 'done' ? `<button class="danger" onclick="setStatus('${o.id}','done')">完了</button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function setStatus(id, status) {
+  await fetch(`/api/orders/${id}/status`, {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({status})
+  });
+  loadOrders();
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+// Filter buttons
+document.querySelectorAll('.controls button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    render();
+  });
+});
+
+loadOrders();
+setInterval(loadOrders, 8000);
+</script>
+</body>
+</html>

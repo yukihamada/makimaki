@@ -1,0 +1,7 @@
+.git/
+target/
+.DS_Store
+*.md
+*.db
+*.db-wal
+*.db-shm

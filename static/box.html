@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>makimaki Box — セットメニュー予約</title>
+<meta name="description" content="makimaki Boxのオンライン予約。麻布十番の細巻き専門店からお届け。">
+<meta property="og:image" content="https://makimaki.tokyo/sushi-original-2.jpg">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;500&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--accent:#3A5A40;--bg:#FDFBF8;--fg:#1C1917;--muted:#78716C;--border:#E7E0D8}
+body{font-family:'Zen Kaku Gothic New',sans-serif;background:var(--bg);color:var(--fg);font-weight:300;line-height:1.8}
+.header{text-align:center;padding:2rem 1.5rem 1rem}
+.header svg{height:24px;margin-bottom:.8rem}
+.header h1{font-family:'Zen Old Mincho',serif;font-size:1.4rem;font-weight:400;letter-spacing:.05em}
+.header p{font-size:.75rem;color:var(--muted);margin-top:.3rem}
+
+.products{max-width:500px;margin:0 auto;padding:0 1.5rem}
+.product{border:1px solid var(--border);background:#fff;margin-bottom:1rem;overflow:hidden;border-radius:4px}
+.product img{width:100%;height:200px;object-fit:cover}
+.product-body{padding:1.2rem}
+.product-name{font-family:'Zen Old Mincho',serif;font-size:1.2rem;font-weight:500}
+.product-price{font-size:1rem;color:var(--accent);margin:.3rem 0}
+.product-price small{font-size:.7rem;color:var(--muted)}
+.product-desc{font-size:.78rem;color:var(--muted);margin-bottom:1rem}
+.qty-row{display:flex;align-items:center;justify-content:space-between}
+.qty-row label{font-size:.8rem}
+.qty-ctrl{display:flex;align-items:center;gap:.6rem}
+.qty-btn{width:32px;height:32px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;border-radius:2px}
+.qty-btn:hover{background:var(--fg);color:#fff}
+.qty-num{font-size:1rem;min-width:2rem;text-align:center;font-weight:500}
+
+.form-section{max-width:500px;margin:2rem auto;padding:0 1.5rem}
+.form-section h2{font-family:'Zen Old Mincho',serif;font-size:1.1rem;font-weight:400;margin-bottom:1rem;text-align:center}
+.fg{margin-bottom:1rem}
+.fg label{display:block;font-size:.7rem;letter-spacing:.08em;color:var(--muted);margin-bottom:.3rem;text-transform:uppercase}
+.fg input,.fg select{width:100%;padding:.6rem .8rem;border:1px solid var(--border);font-family:inherit;font-size:.85rem;background:var(--bg);border-radius:2px}
+.fg input:focus{outline:none;border-color:var(--accent)}
+
+.summary{max-width:500px;margin:0 auto;padding:0 1.5rem 1rem}
+.summary-line{display:flex;justify-content:space-between;font-size:.85rem;padding:.3rem 0;border-bottom:1px solid #f0ede8}
+.summary-total{display:flex;justify-content:space-between;font-size:1rem;font-weight:500;padding:.8rem 0;border-top:2px solid var(--fg);margin-top:.5rem}
+
+.submit-btn{display:block;width:100%;max-width:500px;margin:1rem auto 0;padding:.9rem;background:var(--accent);color:#fff;border:none;font-size:.9rem;cursor:pointer;font-family:inherit;letter-spacing:.1em;border-radius:2px}
+.submit-btn:hover{background:#2E4833}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed}
+
+.shop-info{max-width:500px;margin:2rem auto;padding:1rem 1.5rem;text-align:center;font-size:.75rem;color:var(--muted);line-height:2}
+.shop-info a{color:var(--accent);text-decoration:none}
+
+.success{display:none;max-width:500px;margin:2rem auto;padding:2rem 1.5rem;text-align:center}
+.success h2{font-family:'Zen Old Mincho',serif;font-size:1.4rem;font-weight:400;color:var(--accent)}
+.success .check{font-size:3rem;color:var(--accent);margin:.5rem 0}
+.success p{font-size:.85rem;color:var(--muted);line-height:2}
+.success .info-box{background:#EDF2EE;padding:1rem;border-radius:4px;text-align:left;margin:1.5rem 0;font-size:.8rem}
+
+.closed-msg{display:none;max-width:500px;margin:2rem auto;padding:2rem;text-align:center;background:#FED7D7;border-radius:4px;color:#9B2C2C;font-size:.85rem}
+
+@media(max-width:400px){.product img{height:150px}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <svg viewBox="0 0 120 80" fill="#3A5A40"><circle cx="20" cy="20" r="14"/><circle cx="60" cy="20" r="14"/><circle cx="100" cy="20" r="14"/><circle cx="20" cy="60" r="14"/><circle cx="60" cy="60" r="14"/><circle cx="100" cy="60" r="14"/></svg>
+  <h1>makimaki Box 予約</h1>
+  <p>セットメニューのオンライン予約</p>
+</div>
+
+<div class="closed-msg" id="closedMsg">現在オンライン予約は受け付けておりません</div>
+
+<div id="orderForm">
+  <div class="products">
+    <div class="product">
+      <img src="/sushi-original-2.jpg" alt="makimaki Box">
+      <div class="product-body">
+        <div class="product-name">makimaki Box</div>
+        <div class="product-price">¥3,500 <small>(税別)</small></div>
+        <div class="product-desc">赤身鉄火、とろたく、日替わり2種が入ったおすすめセット。</div>
+        <div class="qty-row">
+          <label>数量</label>
+          <div class="qty-ctrl">
+            <button class="qty-btn" onclick="chg('makimaki_box',-1)">−</button>
+            <span class="qty-num" id="q-makimaki_box">0</span>
+            <button class="qty-btn" onclick="chg('makimaki_box',1)">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="product">
+      <img src="/sushi-original-1.jpg" alt="まぐろBox">
+      <div class="product-body">
+        <div class="product-name">まぐろBox</div>
+        <div class="product-price">¥5,000 <small>(税別)</small></div>
+        <div class="product-desc">赤身鉄火、中トロ鉄火、ネギトロ、とろたくが入ったマグロづくしセット。</div>
+        <div class="qty-row">
+          <label>数量</label>
+          <div class="qty-ctrl">
+            <button class="qty-btn" onclick="chg('maguro_box',-1)">−</button>
+            <span class="qty-num" id="q-maguro_box">0</span>
+            <button class="qty-btn" onclick="chg('maguro_box',1)">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h2>お客様情報</h2>
+    <div class="fg"><label>お名前</label><input type="text" id="bName" required placeholder="山田 太郎"></div>
+    <div class="fg"><label>電話番号</label><input type="tel" id="bPhone" required placeholder="090-1234-5678"></div>
+    <div class="fg"><label>受取時間</label><select id="bTime"></select></div>
+  </div>
+
+  <div class="summary" id="summarySection" style="display:none">
+    <div id="summaryLines"></div>
+    <div class="summary-total"><span>合計（税込+箱代）</span><span id="summaryTotal">¥0</span></div>
+  </div>
+
+  <button class="submit-btn" id="submitBtn" onclick="submitBox()" disabled>カード決済で予約する</button>
+</div>
+
+<div class="success" id="successSection">
+  <h2>ご予約ありがとうございます</h2>
+  <div class="check">✓</div>
+  <p>お支払いが完了しました。<br>受取時間にお越しください。</p>
+  <div class="info-box">
+    <strong style="color:#3A5A40;font-size:.7rem;letter-spacing:.1em">SHOP INFO</strong><br>
+    <strong>makimaki</strong> — 麻布十番<br>
+    麻布十番2-19-1 オフィスエイトビル1F（徒歩1分）<br>
+    営業時間 11:00 - 18:00<br>
+    <a href="https://maps.google.com/?q=東京都港区麻布十番2-19-1+オフィスエイトビル1F" target="_blank" style="color:#3A5A40">Google Mapsで見る</a>
+  </div>
+  <a href="/" style="color:#3A5A40;font-size:.8rem">トップページへ</a>
+</div>
+
+<div class="shop-info">
+  makimaki — 麻布十番2-19-1 オフィスエイトビル1F<br>
+  <a href="https://www.instagram.com/maki_maki_tokyo/" target="_blank">@maki_maki_tokyo</a> ・ <a href="https://line.me/R/ti/p/@061xfqki" target="_blank">LINE</a> ・ <a href="/">トップページ</a>
+</div>
+
+<script>
+const BOXES = {makimaki_box:{name:'makimaki Box',price:3500},maguro_box:{name:'まぐろBox',price:5000}};
+let cart = {};
+
+function chg(id, d) {
+  cart[id] = Math.max(0, (cart[id]||0)+d);
+  if(cart[id]===0) delete cart[id];
+  document.getElementById('q-'+id).textContent = cart[id]||0;
+  updateSummary();
+}
+
+function updateSummary() {
+  const entries = Object.entries(cart).filter(([,q])=>q>0);
+  const sec = document.getElementById('summarySection');
+  const btn = document.getElementById('submitBtn');
+  if(!entries.length){sec.style.display='none';btn.disabled=true;return;}
+  sec.style.display='block';btn.disabled=false;
+  const subtotal = entries.reduce((s,[id,q])=>s+BOXES[id].price*q,0);
+  const tax = Math.floor(subtotal*0.1);
+  const boxCharge = entries.reduce((s,[,q])=>s+q*200,0);
+  const total = subtotal+tax+boxCharge;
+  document.getElementById('summaryLines').innerHTML = entries.map(([id,q])=>
+    `<div class="summary-line"><span>${BOXES[id].name} ×${q}</span><span>¥${(BOXES[id].price*q).toLocaleString()}</span></div>`
+  ).join('')+`<div class="summary-line"><span>消費税(10%)</span><span>¥${tax.toLocaleString()}</span></div>`
+  +`<div class="summary-line"><span>箱代</span><span>¥${boxCharge.toLocaleString()}</span></div>`;
+  document.getElementById('summaryTotal').textContent = '¥'+total.toLocaleString();
+}
+
+function genSlots() {
+  const sel = document.getElementById('bTime');
+  const now = new Date();
+  const earliest = new Date(now.getTime()+30*60000);
+  const eh=earliest.getHours(),em=earliest.getMinutes();
+  const rMin=em<30?30:0, rHour=em<30?eh:eh+1;
+  let html='';
+  for(let h=11;h<=18;h++)for(let m=0;m<60;m+=30){
+    if(h===18&&m>0)break;
+    if(h<rHour||(h===rHour&&m<rMin))continue;
+    const t=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+    html+=`<option value="本日 ${t}">本日 ${t}</option>`;
+  }
+  for(let h=11;h<=18;h++)for(let m=0;m<60;m+=30){
+    if(h===18&&m>0)break;
+    const t=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+    html+=`<option value="明日 ${t}">明日 ${t}</option>`;
+  }
+  if(!html)html='<option value="明日 11:00">明日 11:00</option>';
+  sel.innerHTML=html;
+}
+
+async function submitBox() {
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true;btn.textContent='処理中...';
+  const items=Object.entries(cart).map(([id,qty])=>({name:BOXES[id].name,price:BOXES[id].price,qty}));
+  const body={name:document.getElementById('bName').value,phone:document.getElementById('bPhone').value,
+    pickup_time:document.getElementById('bTime').value,items,note:'Box予約'};
+  try{
+    const res=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const data=await res.json();
+    if(data.url){window.location.href=data.url;}
+    else{btn.disabled=false;btn.textContent='カード決済で予約する';alert('決済の処理に失敗しました。');}
+  }catch(e){btn.disabled=false;btn.textContent='カード決済で予約する';alert('通信エラーです。');}
+}
+
+async function checkStore(){
+  try{const r=await fetch('/api/store-config');const d=await r.json();
+  if(!d.open){document.getElementById('closedMsg').style.display='block';document.getElementById('orderForm').style.display='none';}}catch(e){}
+}
+
+if(location.search.includes('paid=1')){
+  document.getElementById('orderForm').style.display='none';
+  document.getElementById('successSection').style.display='block';
+}
+
+genSlots();checkStore();
+</script>
+</body>
+</html>

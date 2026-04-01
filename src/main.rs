@@ -105,6 +105,14 @@ fn init_db(conn: &Connection) {
             event TEXT NOT NULL,
             data TEXT DEFAULT '',
             ts TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS inventory (
+            date TEXT NOT NULL,
+            slot TEXT NOT NULL,
+            item_id TEXT NOT NULL,
+            stock INTEGER DEFAULT 30,
+            sold INTEGER DEFAULT 0,
+            PRIMARY KEY (date, slot, item_id)
         );",
     )
     .expect("Failed to create tables");
@@ -155,6 +163,10 @@ async fn main() {
         .route("/api/analytics", get(get_analytics))
         .route("/api/cloudprnt", post(cloudprnt_poll))
         .route("/api/cloudprnt/job", get(cloudprnt_job))
+        .route("/api/orders/{id}/cancel", post(cancel_order))
+        .route("/api/stripe-webhook", post(stripe_webhook))
+        .route("/api/inventory", get(get_inventory))
+        .route("/box", get(box_page))
         .route("/admin", get(admin_page))
         .route("/guide", get(guide_page))
         .fallback_service(ServeDir::new("static"))
@@ -768,4 +780,122 @@ async fn cloudprnt_job(
             (StatusCode::NO_CONTENT, "").into_response()
         }
     }
+}
+
+// --- Cancel & Refund ---
+async fn cancel_order(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    if !check_admin(&state, &headers) { return (StatusCode::UNAUTHORIZED, Json(serde_json::json!({"error":"unauthorized"}))); }
+
+    let (stripe_session, paid) = {
+        let db = state.db.lock().unwrap();
+        let result = db.query_row(
+            "SELECT stripe_session, paid FROM orders WHERE id=?1",
+            rusqlite::params![id], |r| Ok((r.get::<_,String>(0)?, r.get::<_,i32>(1)?))
+        );
+        match result {
+            Ok(r) => r,
+            Err(_) => return (StatusCode::NOT_FOUND, Json(serde_json::json!({"error":"order not found"}))),
+        }
+    };
+
+    // If paid via Stripe, attempt refund
+    if paid != 0 && !stripe_session.is_empty() {
+        if let Some(stripe_key) = &state.stripe_key {
+            let client = reqwest::Client::new();
+            // Get payment intent from session
+            if let Ok(resp) = client
+                .get(&format!("https://api.stripe.com/v1/checkout/sessions/{stripe_session}"))
+                .basic_auth(stripe_key, Option::<&str>::None)
+                .send().await
+            {
+                if let Ok(body) = resp.json::<serde_json::Value>().await {
+                    if let Some(pi) = body["payment_intent"].as_str() {
+                        let _ = client
+                            .post("https://api.stripe.com/v1/refunds")
+                            .basic_auth(stripe_key, Option::<&str>::None)
+                            .form(&[("payment_intent", pi)])
+                            .send().await;
+                    }
+                }
+            }
+        }
+    }
+
+    let db = state.db.lock().unwrap();
+    let _ = db.execute("UPDATE orders SET status='cancelled', paid=0 WHERE id=?1", rusqlite::params![id]);
+    (StatusCode::OK, Json(serde_json::json!({"ok": true, "refunded": paid != 0})))
+}
+
+// --- Stripe Webhook ---
+async fn stripe_webhook(
+    State(state): State<Arc<AppState>>,
+    body: String,
+) -> impl IntoResponse {
+    // Parse the event (simplified - production should verify signature)
+    let event: serde_json::Value = match serde_json::from_str(&body) {
+        Ok(v) => v,
+        Err(_) => return StatusCode::BAD_REQUEST,
+    };
+
+    let event_type = event["type"].as_str().unwrap_or("");
+    if event_type == "checkout.session.completed" {
+        let session = &event["data"]["object"];
+        if session["payment_status"].as_str() == Some("paid") {
+            if let Some(order_id) = session["metadata"]["order_id"].as_str() {
+                let db = state.db.lock().unwrap();
+                let _ = db.execute("UPDATE orders SET paid=1 WHERE id=?1", rusqlite::params![order_id]);
+            }
+        }
+    }
+    StatusCode::OK
+}
+
+// --- Inventory ---
+async fn get_inventory(State(state): State<Arc<AppState>>) -> impl IntoResponse {
+    let db = state.db.lock().unwrap();
+    let today = chrono::Utc::now()
+        .with_timezone(&chrono::FixedOffset::east_opt(9 * 3600).unwrap())
+        .format("%Y-%m-%d").to_string();
+    let tomorrow = (chrono::Utc::now() + chrono::Duration::days(1))
+        .with_timezone(&chrono::FixedOffset::east_opt(9 * 3600).unwrap())
+        .format("%Y-%m-%d").to_string();
+
+    // Auto-create slots if not exist for today and tomorrow
+    let items = ["makimaki_box", "maguro_box"];
+    let slots = ["11:00","11:30","12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30","18:00"];
+    for date in [&today, &tomorrow] {
+        for slot in &slots {
+            for item in &items {
+                db.execute(
+                    "INSERT OR IGNORE INTO inventory (date,slot,item_id,stock,sold) VALUES (?1,?2,?3,30,0)",
+                    rusqlite::params![date, slot, item],
+                ).ok();
+            }
+        }
+    }
+
+    let mut stmt = db.prepare(
+        "SELECT date,slot,item_id,stock,sold FROM inventory WHERE date IN (?1,?2) ORDER BY date,slot"
+    ).unwrap();
+    let rows: Vec<serde_json::Value> = stmt.query_map(
+        rusqlite::params![today, tomorrow], |row| {
+            Ok(serde_json::json!({
+                "date": row.get::<_,String>(0)?,
+                "slot": row.get::<_,String>(1)?,
+                "item_id": row.get::<_,String>(2)?,
+                "stock": row.get::<_,i32>(3)?,
+                "sold": row.get::<_,i32>(4)?,
+                "remaining": row.get::<_,i32>(3)? - row.get::<_,i32>(4)?,
+            }))
+        }
+    ).unwrap().filter_map(|r| r.ok()).collect();
+    Json(serde_json::json!(rows))
+}
+
+async fn box_page() -> Html<&'static str> {
+    Html(include_str!("../static/box.html"))
 }

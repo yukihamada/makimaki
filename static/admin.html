@@ -434,7 +434,9 @@ function renderOrderCard(o) {
       ${o.status==='new'?`<button class="g" onclick="setStatus('${o.id}','preparing')">準備開始</button>`:''}
       ${o.status==='preparing'?`<button class="g" onclick="setStatus('${o.id}','ready')">出来上がり</button>`:''}
       ${o.status==='ready'?`<button class="g" onclick="setStatus('${o.id}','done')">受渡済</button>`:''}
-      ${o.status!=='done'?`<button class="r" onclick="setStatus('${o.id}','done')">完了</button>`:''}
+      ${o.status!=='done'&&o.status!=='cancelled'?`<button class="r" onclick="setStatus('${o.id}','done')">完了</button>`:''}
+      ${o.status!=='cancelled'?`<button class="r" onclick="cancelOrder('${o.id}')">キャンセル・返金</button>`:''}
+      ${o.status==='cancelled'?'<span style="font-size:.6rem;color:#999">キャンセル済</span>':''}
     </div>
   </div>`;
 }
@@ -442,6 +444,18 @@ function renderOrderCard(o) {
 async function setStatus(id, status) {
   await fetch(`/api/orders/${id}/status`, {method:'POST', headers:headers(), body:JSON.stringify({status})});
   loadOrders();
+}
+
+async function cancelOrder(id) {
+  if (!confirm('この注文をキャンセルしますか？カード決済済みの場合は自動返金されます。')) return;
+  const res = await fetch(`/api/orders/${id}/cancel`, {method:'POST', headers:headers()});
+  const data = await res.json();
+  if (data.ok) {
+    alert(data.refunded ? 'キャンセル＆返金しました' : 'キャンセルしました');
+    loadOrders();
+  } else {
+    alert('キャンセルに失敗しました');
+  }
 }
 
 async function toggleStore() {

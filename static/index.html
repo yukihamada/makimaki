@@ -299,7 +299,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
           <dt data-ja="最寄駅" data-en="Station">最寄駅</dt>
           <dd data-ja="麻布十番駅より徒歩1分<br>南北線・大江戸線" data-en="1 min walk from Azabu-Juban Sta.<br>Namboku Line / Oedo Line">麻布十番駅より徒歩1分<br>南北線・大江戸線</dd>
           <dt data-ja="営業時間" data-en="Hours">営業時間</dt>
-          <dd>11:00 - 20:00</dd>
+          <dd>11:00 - 18:00</dd>
           <dt data-ja="定休日" data-en="Closed">定休日</dt>
           <dd data-ja="不定休" data-en="Irregular holidays">不定休</dd>
           <dt>Instagram</dt>
@@ -504,25 +504,30 @@ function closeModal() { document.getElementById('modalBg').classList.remove('sho
 
 function generateTimeSlots() {
   const now = new Date(); const slots = [];
-  let h = now.getHours(), m = now.getMinutes();
-  m = Math.ceil(m/15)*15+30; if(m>=60){h++;m-=60;}
-  // Today's slots
-  const startH = Math.max(h, 11);
-  if (h < 20) {
-    for (let sh = startH, sm = (sh===h?m:0); sh < 20; sm+=15) {
-      if(sm>=60){sh++;sm=0;continue;}
-      if(sh>=20) break;
-      const t=`${String(sh).padStart(2,'0')}:${String(sm).padStart(2,'0')}`;
+  // 30min from now minimum
+  const earliest = new Date(now.getTime() + 30 * 60000);
+  const eh = earliest.getHours(), em = earliest.getMinutes();
+  const roundedMin = em < 30 ? 30 : 0;
+  const roundedHour = em < 30 ? eh : eh + 1;
+
+  // Today's slots: 11:00-18:00 in 30min steps
+  for (let h = 11; h <= 18; h++) {
+    for (let m = 0; m < 60; m += 30) {
+      if (h === 18 && m > 0) break; // 18:00 is last
+      if (h < roundedHour || (h === roundedHour && m < roundedMin)) continue;
+      const t = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
       slots.push(`<option value="${lang==='ja'?'本日':'Today'} ${t}">${lang==='ja'?'本日':'Today'} ${t}</option>`);
     }
   }
-  // Tomorrow's slots (always show)
-  for (let th = 11; th < 20; th++) {
-    for (let tm = 0; tm < 60; tm += 30) {
-      const t=`${String(th).padStart(2,'0')}:${String(tm).padStart(2,'0')}`;
+  // Tomorrow's slots: always show 11:00-18:00
+  for (let h = 11; h <= 18; h++) {
+    for (let m = 0; m < 60; m += 30) {
+      if (h === 18 && m > 0) break;
+      const t = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
       slots.push(`<option value="${lang==='ja'?'明日':'Tomorrow'} ${t}">${lang==='ja'?'明日':'Tomorrow'} ${t}</option>`);
     }
   }
+  if (!slots.length) slots.push(`<option value="${lang==='ja'?'明日':'Tomorrow'} 11:00">${lang==='ja'?'明日':'Tomorrow'} 11:00</option>`);
   return slots.join('');
 }
 
@@ -573,7 +578,7 @@ function showSuccess(data) {
         <strong style="font-size:.7rem;letter-spacing:.1em;color:var(--accent)">SHOP INFO</strong><br>
         <strong>makimaki</strong> — ${lang==='ja'?'麻布十番':'Azabu-Juban'}<br>
         ${lang==='ja'?'麻布十番2-19-1 オフィスエイトビル1F（徒歩1分）':'2-19-1 Azabu-Juban, Office Eight Bldg. 1F (1 min walk)'}<br>
-        ${lang==='ja'?'営業時間':'Hours'} 11:00 - 20:00
+        ${lang==='ja'?'営業時間':'Hours'} 11:00 - 18:00
       </div>
       <p style="font-size:.78rem;color:#78716C;line-height:1.8">${lang==='ja'?'お気をつけてお越しくださいませ。<br>巻きたてのお鮨を楽しんでいただけたら幸いです。':'We look forward to seeing you.<br>Enjoy your freshly rolled sushi!'}</p>
     </div>`;
@@ -596,7 +601,7 @@ if (location.search.includes('paid=1')) {
           <strong style="font-size:.7rem;letter-spacing:.1em;color:var(--accent)">SHOP INFO</strong><br>
           <strong>makimaki</strong> — ${isJa?'麻布十番':'Azabu-Juban'}<br>
           ${isJa?'麻布十番2-19-1 オフィスエイトビル1F（徒歩1分）':'2-19-1 Azabu-Juban, Office Eight Bldg. 1F (1 min walk)'}<br>
-          ${isJa?'営業時間':'Hours'} 11:00 - 20:00<br>
+          ${isJa?'営業時間':'Hours'} 11:00 - 18:00<br>
           <a href="https://maps.google.com/?q=東京都港区麻布十番2-19-1+オフィスエイトビル1F" target="_blank" style="color:var(--accent);font-size:.75rem">${isJa?'Google Mapsで見る':'View on Google Maps'}</a>
         </div>
         <p style="font-size:.78rem;color:#78716C;line-height:1.8">${isJa?'お気をつけてお越しくださいませ。<br>巻きたてのお鮨を楽しんでいただけたら幸いです。':'We look forward to seeing you.<br>Enjoy your freshly rolled sushi!'}</p>

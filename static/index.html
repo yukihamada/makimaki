@@ -61,10 +61,11 @@ nav.scrolled .nav-ham span{background:var(--fg)}
 .parallax-content{position:relative;z-index:1;text-align:center;max-width:700px;padding:0 2rem}
 
 /* HERO */
-.hero{justify-content:flex-end;align-items:flex-start;padding:6rem 3rem}
+.hero{justify-content:center;align-items:center;padding:3rem}
 .hero .parallax-bg{background-image:url('/img1110.jpg')}
-.hero .parallax-overlay{background:linear-gradient(170deg,rgba(0,0,0,.05)0%,rgba(0,0,0,.25)50%,rgba(0,0,0,.6)100%)}
-.hero .parallax-content{text-align:left;max-width:640px;padding:0}
+.hero .parallax-overlay{background:linear-gradient(170deg,rgba(0,0,0,.1)0%,rgba(0,0,0,.35)50%,rgba(0,0,0,.55)100%)}
+.hero .parallax-content{text-align:center;max-width:640px;padding:0;margin-top:-8vh}
+.hero-cta-bottom{position:absolute;bottom:5rem;left:50%;transform:translateX(-50%);z-index:1;opacity:0;animation:fadeUp .8s var(--ease) 1.1s forwards}
 .hero-title{opacity:0;transform:translateY(30px);animation:fadeUp 1s var(--ease) .2s forwards}
 .hero-title img{height:clamp(50px,8vw,90px)}
 .hero-tagline{margin-top:1.2rem;font-size:clamp(.85rem,2vw,1.05rem);color:rgba(255,255,255,.8);font-weight:300;line-height:1.7;opacity:0;transform:translateY(20px);animation:fadeUp .8s var(--ease) .6s forwards}
@@ -212,10 +213,10 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
   <div class="parallax-bg"></div>
   <div class="parallax-overlay"></div>
   <div class="parallax-content">
-    <span class="hero-badge" data-ja="テイクアウト専門" data-en="Takeout Only" style="margin:0 0 1.2rem;font-size:.5rem;padding:.3rem .8rem;opacity:.7">テイクアウト専門</span>
+    <span class="hero-badge" data-ja="テイクアウト専門" data-en="Takeout Only" style="margin:0 0 1.2rem;font-size:.5rem;padding:.3rem .8rem;opacity:.6">テイクアウト専門</span>
     <h1 class="hero-title" data-ja="どこでも美味しい、<br>細巻き専門店。" data-en="Hosomaki sushi,<br>delicious anywhere." style="font-family:var(--serif);font-size:clamp(1.6rem,4vw,2.8rem);font-weight:400;color:#fff;line-height:1.5">どこでも美味しい、<br>細巻き専門店。</h1>
-    <a href="#menu" class="hero-cta" data-ja="ご予約はこちら" data-en="Order Now" style="margin-top:2rem;padding:.8rem 3rem;font-size:.95rem">ご予約はこちら</a>
   </div>
+  <a href="#menu" class="hero-cta-bottom hero-cta" data-ja="ご予約はこちら" data-en="Order Now" style="padding:.8rem 3rem;font-size:.95rem">ご予約はこちら</a>
 </div>
 
 <!-- CONCEPT -->
@@ -252,7 +253,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
         <div class="takeout-step-desc" data-ja="専用パッケージで<br>巻きたてをお届けします。" data-en="Packed in our special box,<br>ready to enjoy.">専用パッケージで<br>巻きたてをお届けします。</div>
       </div>
     </div>
-    <div class="takeout-img reveal"><img src="/img1111.jpg" alt="makimaki package"></div>
+    <div class="takeout-img reveal"><img src="/sushi-original-2.jpg" alt="makimaki hosomaki box"></div>
   </div>
 </div>
 

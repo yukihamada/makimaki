@@ -545,9 +545,16 @@ function showSuccess(data) {
   document.getElementById('modalContent').innerHTML = `
     <button class="modal-close" onclick="closeModal();resetCart()">&times;</button>
     <div class="success-msg">
-      <h3>${lang==='ja'?'ご注文ありがとうございます':'Thank you!'}</h3>
+      <h3 style="color:var(--accent)">${lang==='ja'?'ご注文ありがとうございます':'Thank you!'}</h3>
       <div class="order-id">#${data.id}</div>
-      <p>${lang==='ja'?`受取時間にお越しください。<br>合計 ¥${data.total.toLocaleString()}`:`Please pick up at your selected time.<br>Total ¥${data.total.toLocaleString()}`}</p>
+      <p style="font-size:.95rem;line-height:1.9;margin-bottom:1.5rem">${lang==='ja'?'受取時間に合わせて巻きたてをご用意してお待ちしております。':'We will have your fresh rolls ready at your selected time.'}</p>
+      <div style="background:var(--accent-bg,#EDF2EE);padding:1.2rem;border-radius:4px;text-align:left;font-size:.82rem;line-height:1.9;margin-bottom:1rem">
+        <strong style="font-size:.7rem;letter-spacing:.1em;color:var(--accent)">SHOP INFO</strong><br>
+        <strong>makimaki</strong> — ${lang==='ja'?'麻布十番':'Azabu-Juban'}<br>
+        ${lang==='ja'?'麻布十番駅より徒歩3分（南北線・大江戸線）':'3 min walk from Azabu-Juban Sta.'}<br>
+        ${lang==='ja'?'営業時間':'Hours'} 11:00 - 20:00
+      </div>
+      <p style="font-size:.78rem;color:#78716C;line-height:1.8">${lang==='ja'?'お気をつけてお越しくださいませ。<br>巻きたてのお鮨を楽しんでいただけたら幸いです。':'We look forward to seeing you.<br>Enjoy your freshly rolled sushi!'}</p>
     </div>`;
 }
 
@@ -560,9 +567,20 @@ if (location.search.includes('paid=1')) {
     document.getElementById('modalContent').innerHTML = `
       <button class="modal-close" onclick="closeModal()">&times;</button>
       <div class="success-msg">
-        <h3>お支払い完了</h3>
-        <p style="font-size:2rem;color:var(--accent);margin:.5rem 0">&#10003;</p>
-        <p>ご注文・お支払いありがとうございます。<br>受取時間にお越しください。</p>
+        <h3 style="color:var(--accent)">ご注文ありがとうございます</h3>
+        <p style="font-size:2.5rem;color:var(--accent);margin:.5rem 0">&#10003;</p>
+        <p style="font-size:.95rem;line-height:1.9;margin-bottom:1.5rem">お支払いが完了しました。<br>受取時間に合わせて巻きたてをご用意してお待ちしております。</p>
+        <div style="background:var(--accent-bg,#EDF2EE);padding:1.2rem;border-radius:4px;text-align:left;font-size:.82rem;line-height:1.9;margin-bottom:1rem">
+          <strong style="font-size:.7rem;letter-spacing:.1em;color:var(--accent)">SHOP INFO</strong><br>
+          <strong>makimaki</strong> — 麻布十番<br>
+          麻布十番駅より徒歩3分（南北線・大江戸線）<br>
+          営業時間 11:00 - 20:00
+        </div>
+        <p style="font-size:.78rem;color:#78716C;line-height:1.8">お気をつけてお越しくださいませ。<br>巻きたてのお鮨を楽しんでいただけたら幸いです。</p>
+        <div style="margin-top:1.5rem;display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap">
+          <a href="https://www.instagram.com/maki_maki_tokyo/" target="_blank" style="font-size:.7rem;color:var(--accent);text-decoration:none;border:1px solid var(--accent);padding:.4rem 1rem;border-radius:2px">Instagram</a>
+          <a href="https://line.me/R/ti/p/@061xfqki" target="_blank" style="font-size:.7rem;color:var(--accent);text-decoration:none;border:1px solid var(--accent);padding:.4rem 1rem;border-radius:2px">LINE</a>
+        </div>
       </div>`;
     document.getElementById('modalBg').classList.add('show');
     history.replaceState(null,'','/');

@@ -139,6 +139,21 @@ body{font-family:-apple-system,'Noto Sans JP',sans-serif;background:#F5F3F0;colo
       <input type="text" class="notice-input" id="noticeInput" placeholder="お知らせ（例：本日売り切れ）">
       <button class="notice-btn" onclick="saveNotice()">保存</button>
     </div>
+    <!-- ANALYTICS -->
+    <h3 style="font-size:.8rem;margin:1rem 0 .5rem;color:#78716C">本日のアクセス</h3>
+    <div class="stats" id="analyticsGrid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="stat"><div class="stat-num" id="aPV">-</div><div class="stat-label">PV</div></div>
+      <div class="stat"><div class="stat-num" id="aMenu">-</div><div class="stat-label">Menu閲覧</div></div>
+      <div class="stat"><div class="stat-num" id="aCart">-</div><div class="stat-label">カート追加</div></div>
+      <div class="stat"><div class="stat-num" id="aCheckout">-</div><div class="stat-label">注文開始</div></div>
+    </div>
+    <div style="background:#fff;padding:1rem;border-radius:4px;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+      <h4 style="font-size:.75rem;color:#78716C;margin-bottom:.5rem">スクロール到達率</h4>
+      <div id="scrollFunnel" style="display:flex;gap:.3rem;align-items:end;height:60px"></div>
+      <h4 style="font-size:.75rem;color:#78716C;margin:1rem 0 .5rem">人気カート追加（本日）</h4>
+      <div id="cartRanking" style="font-size:.8rem;color:#555"></div>
+    </div>
+
     <h3 style="font-size:.8rem;margin:1rem 0 .5rem;color:#78716C">最新の注文</h3>
     <div class="orders-list" id="dashOrders"></div>
   </div>
@@ -246,7 +261,39 @@ if (savedKey) {
 function headers() { return {'Content-Type':'application/json','x-admin-key':adminKey}; }
 
 async function loadAll() {
-  loadOrders(); loadStats(); loadStoreConfig(); loadMenuStatus(); loadRequests();
+  loadOrders(); loadStats(); loadStoreConfig(); loadMenuStatus(); loadRequests(); loadAnalytics();
+}
+
+async function loadAnalytics() {
+  const res = await fetch('/api/events', {headers:{'x-admin-key':adminKey}});
+  if (!res.ok) return;
+  const data = await res.json();
+  const t = data.today || {};
+  document.getElementById('aPV').textContent = t.pageview || 0;
+  document.getElementById('aMenu').textContent = t.section_view || 0;
+  document.getElementById('aCart').textContent = t.cart_add || 0;
+  document.getElementById('aCheckout').textContent = t.checkout_start || 0;
+
+  // Scroll funnel
+  const steps = [{k:'scroll_25',l:'25%'},{k:'scroll_50',l:'50%'},{k:'scroll_75',l:'75%'},{k:'scroll_100',l:'100%'}];
+  const pv = t.pageview || 1;
+  document.getElementById('scrollFunnel').innerHTML = steps.map(s => {
+    const cnt = t[s.k] || 0;
+    const pct = Math.round(cnt / pv * 100);
+    return `<div style="flex:1;text-align:center">
+      <div style="background:#3A5A40;height:${Math.max(pct*.5,2)}px;border-radius:2px;transition:height .3s"></div>
+      <div style="font-size:.6rem;color:#78716C;margin-top:.3rem">${s.l}<br>${pct}%</div>
+    </div>`;
+  }).join('');
+
+  // Cart ranking
+  const items = data.recent_cart || [];
+  const freq = {};
+  items.forEach(i => freq[i] = (freq[i]||0) + 1);
+  const sorted = Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0,8);
+  document.getElementById('cartRanking').innerHTML = sorted.length
+    ? sorted.map(([name,cnt],i) => `<span style="display:inline-block;margin:.2rem .3rem;padding:.2rem .6rem;background:${i<3?'#EDF2EE':'#F5F0EA'};border-radius:3px;font-size:.7rem">${name} <strong>${cnt}</strong></span>`).join('')
+    : '<span style="font-size:.75rem;color:#999">データなし</span>';
 }
 
 async function loadOrders() {

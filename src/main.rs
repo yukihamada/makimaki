@@ -98,6 +98,12 @@ fn init_db(conn: &Connection) {
             status TEXT DEFAULT 'open',
             created_at TEXT NOT NULL,
             resolved_at TEXT DEFAULT ''
+        );
+        CREATE TABLE IF NOT EXISTS events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event TEXT NOT NULL,
+            data TEXT DEFAULT '',
+            ts TEXT NOT NULL
         );",
     )
     .expect("Failed to create tables");
@@ -142,6 +148,7 @@ async fn main() {
         .route("/api/auth", post(check_auth))
         .route("/api/requests", get(list_requests).post(create_request))
         .route("/api/requests/{id}/status", post(update_request_status))
+        .route("/api/events", post(track_event).get(get_events))
         .route("/admin", get(admin_page))
         .route("/guide", get(guide_page))
         .fallback_service(ServeDir::new("static"))
@@ -487,4 +494,62 @@ async fn update_request_status(
         Ok(n) if n > 0 => StatusCode::OK,
         _ => StatusCode::NOT_FOUND,
     }
+}
+
+// --- Analytics Events ---
+
+#[derive(Deserialize)]
+struct TrackEvent {
+    event: String,
+    data: Option<String>,
+}
+
+async fn track_event(
+    State(state): State<Arc<AppState>>,
+    Json(input): Json<TrackEvent>,
+) -> impl IntoResponse {
+    let now = chrono::Utc::now()
+        .with_timezone(&chrono::FixedOffset::east_opt(9 * 3600).unwrap())
+        .format("%Y-%m-%d %H:%M:%S").to_string();
+    let db = state.db.lock().unwrap();
+    let _ = db.execute(
+        "INSERT INTO events (event, data, ts) VALUES (?1, ?2, ?3)",
+        rusqlite::params![input.event, input.data.unwrap_or_default(), now],
+    );
+    StatusCode::OK
+}
+
+async fn get_events(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+) -> impl IntoResponse {
+    if !check_admin(&state, &headers) {
+        return (StatusCode::UNAUTHORIZED, Json(serde_json::json!({})));
+    }
+    let db = state.db.lock().unwrap();
+    let today = chrono::Utc::now()
+        .with_timezone(&chrono::FixedOffset::east_opt(9 * 3600).unwrap())
+        .format("%Y-%m-%d").to_string();
+
+    let mut counts: std::collections::HashMap<String, i32> = std::collections::HashMap::new();
+    let mut stmt = db.prepare("SELECT event, COUNT(*) FROM events WHERE ts LIKE ?1||'%' GROUP BY event").unwrap();
+    let rows = stmt.query_map(rusqlite::params![today], |row| {
+        Ok((row.get::<_, String>(0)?, row.get::<_, i32>(1)?))
+    }).unwrap();
+    for row in rows.flatten() {
+        counts.insert(row.0, row.1);
+    }
+
+    // Funnel: recent cart items
+    let mut cart_items: Vec<String> = Vec::new();
+    let mut stmt2 = db.prepare("SELECT data FROM events WHERE event='cart_add' AND ts LIKE ?1||'%' ORDER BY id DESC LIMIT 50").unwrap();
+    let rows2 = stmt2.query_map(rusqlite::params![today], |row| row.get::<_, String>(0)).unwrap();
+    for row in rows2.flatten() {
+        cart_items.push(row);
+    }
+
+    (StatusCode::OK, Json(serde_json::json!({
+        "today": counts,
+        "recent_cart": cart_items,
+    })))
 }

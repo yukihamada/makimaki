@@ -615,6 +615,50 @@ document.getElementById('langSwitch').addEventListener('click', () => {
   renderMenu();
 });
 
+// ANALYTICS
+function trk(event, data) {
+  fetch('/api/events', {method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({event, data: data||''})}).catch(()=>{});
+}
+trk('pageview');
+
+// Track scroll depth
+let maxScroll = 0;
+const sections = ['concept','menu','access'];
+const tracked = {};
+window.addEventListener('scroll', () => {
+  const pct = Math.round((window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100);
+  if (pct > maxScroll) {
+    maxScroll = pct;
+    if (pct >= 25 && !tracked['scroll_25']) { tracked['scroll_25']=1; trk('scroll_25'); }
+    if (pct >= 50 && !tracked['scroll_50']) { tracked['scroll_50']=1; trk('scroll_50'); }
+    if (pct >= 75 && !tracked['scroll_75']) { tracked['scroll_75']=1; trk('scroll_75'); }
+    if (pct >= 95 && !tracked['scroll_100']) { tracked['scroll_100']=1; trk('scroll_100'); }
+  }
+}, {passive:true});
+
+// Track section views
+const sectionObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting && !tracked['view_'+e.target.id]) {
+      tracked['view_'+e.target.id] = 1;
+      trk('section_view', e.target.id);
+    }
+  });
+}, {threshold:.3});
+document.querySelectorAll('section[id]').forEach(s => sectionObs.observe(s));
+
+// Wrap changeQty to track cart_add
+const _origChangeQty = changeQty;
+changeQty = function(id, delta) {
+  if (delta > 0) trk('cart_add', id);
+  _origChangeQty(id, delta);
+};
+
+// Track modal open
+const _origOpenModal = openModal;
+openModal = function() { trk('checkout_start'); _origOpenModal(); };
+
 // INIT
 renderMenu();
 </script>

@@ -47,6 +47,7 @@ body{font-family:'Zen Maru Gothic',sans-serif;background:#000;color:#fff;overflo
 
 .sushi-rain{position:fixed;inset:0;z-index:4;pointer-events:none;overflow:hidden}
 .sushi-drop{position:absolute;animation:sushiFall linear forwards}
+.sushi-drop img{width:100%;height:100%;object-fit:contain}
 @keyframes sushiFall{0%{transform:translateY(-40px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(360deg);opacity:0}}
 
 .mv-progress{position:fixed;bottom:0;left:0;height:3px;background:linear-gradient(90deg,#3A5A40,#7CBA82);z-index:10;transition:width .3s linear}
@@ -67,6 +68,14 @@ body{font-family:'Zen Maru Gothic',sans-serif;background:#000;color:#fff;overflo
 .play-sub{margin-top:.4rem;font-size:.7rem;opacity:.35;letter-spacing:.15em}
 
 .mv-close{position:fixed;top:1.2rem;right:1.2rem;z-index:20;color:rgba(255,255,255,.4);font-size:1.3rem;cursor:pointer;text-decoration:none}
+/* INFO TEXT */
+.info-text{position:fixed;z-index:6;pointer-events:none;opacity:0;transition:all .8s cubic-bezier(.22,1,.36,1)}
+.info-text.show{opacity:1}
+.info-top{top:13%;left:50%;transform:translateX(-50%);text-align:center}
+.info-bottom{bottom:13%;left:50%;transform:translateX(-50%);text-align:center}
+.info-text h3{font-size:clamp(.6rem,1.2vw,.85rem);font-weight:300;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:.4rem}
+.info-text p{font-size:clamp(.85rem,2vw,1.2rem);font-weight:400;line-height:1.8;text-shadow:0 2px 15px rgba(0,0,0,.6)}
+
 .mv-close:hover{color:#fff}
 
 @media(max-width:600px){
@@ -90,6 +99,10 @@ body{font-family:'Zen Maru Gothic',sans-serif;background:#000;color:#fff;overflo
 <div class="maki-chan maki-left" id="makiL"><img id="makiLI" alt=""></div>
 <div class="maki-chan maki-right" id="makiR"><img id="makiRI" alt=""></div>
 <div class="maki-chan maki-center" id="makiC"><img id="makiCI" alt=""></div>
+
+<!-- INFO TEXT -->
+<div class="info-text info-top" id="infoTop"></div>
+<div class="info-text info-bottom" id="infoBottom"></div>
 
 <div class="mv-logo"><svg viewBox="0 0 120 80" fill="white"><circle cx="20" cy="20" r="14"/><circle cx="60" cy="20" r="14"/><circle cx="100" cy="20" r="14"/><circle cx="20" cy="60" r="14"/><circle cx="60" cy="60" r="14"/><circle cx="100" cy="60" r="14"/></svg></div>
 <a href="/" class="mv-close">&times;</a>
@@ -121,23 +134,33 @@ BGS.forEach(s => { const i = new Image(); i.src = s; });
 
 const TIMELINE = [
   {t:0,    lyric:"Makimaki!", bg:0, maki:{p:'C',c:'jump'}, sushi:true},
-  {t:2.6,  lyric:"Let's go!", bg:0, maki:{p:'L',c:'run'}},
-  {t:5,    lyric:"Makimaki, Let's go!", bg:4, maki:{p:'R',c:'cheer'}, sushi:true},
-  {t:8,    lyric:"", bg:1, hideMaki:true},
-  {t:14.2, lyric:"十番の街　光るロゴ", bg:0, maki:{p:'R',c:'wave'}},
-  {t:16.7, lyric:"一本ずつ　巻くのがプロ", bg:4, maki:{p:'L',c:'cook'}},
-  {t:19.2, lyric:"旬の素材　光る彩り", bg:2, maki:{p:'R',c:'love'}},
-  {t:21.6, lyric:"手にするだけで　心踊り", bg:6, maki:{p:'L',c:'jump'}},
-  {t:24.9, lyric:"MAKIMAKI!　どこでもパクり", bg:3, maki:{p:'C',c:'jump'}, sushi:true},
-  {t:27.3, lyric:"MAKIMAKI!　笑顔がキラり", bg:7, maki:{p:'L',c:'cheer'}, sushi:true},
-  {t:29.8, lyric:"お家も外も　幸せガブリ", bg:1, maki:{p:'R',c:'love'}},
-  {t:32.3, lyric:"最高な時間を　巻き込んじゃえ！", bg:5, maki:{p:'C',c:'cheer'}, sushi:true},
-  {t:37.4, lyric:"It's a MAKIMAKI DAY!", bg:0, maki:{p:'C',c:'jump'}, sushi:true},
-  {t:41,   lyric:"", bg:4, hideMaki:true},
-  {t:43.1, lyric:"できたてをどうぞ。", bg:6, maki:{p:'R',c:'bow'}},
-  {t:47,   lyric:"", bg:8, hideMaki:true},
-  {t:48.7, lyric:"Makimaki!", bg:0, maki:{p:'C',c:'wave'}},
-  {t:52,   lyric:"", bg:4, cta:true, maki:{p:'L',c:'wave'}},
+  {t:2.6,  lyric:"Let's go!", bg:0, maki:{p:'L',c:'run'},
+   info:{pos:'top', html:'<h3>Azabu-Juban, Tokyo</h3><p>麻布十番の細巻き専門店</p>'}},
+  {t:5,    lyric:"Makimaki, Let's go!", bg:4, maki:{p:'R',c:'cheer'}, sushi:true, hideInfo:true,
+   info:{pos:'bottom', html:'<p>鮨めい乃のMaiがプロデュース</p>'}},
+  {t:8,    lyric:"", bg:1, hideMaki:true, hideInfo:true},
+  {t:14.2, lyric:"十番の街　光るロゴ", bg:0, maki:{p:'R',c:'wave'},
+   info:{pos:'top', html:'<h3>Location</h3><p>麻布十番駅 徒歩1分</p>'}},
+  {t:16.7, lyric:"一本ずつ　巻くのがプロ", bg:4, maki:{p:'L',c:'cook'}, hideInfo:true,
+   info:{pos:'bottom', html:'<p>一本ずつ、心を込めて巻き上げます</p>'}},
+  {t:19.2, lyric:"旬の素材　光る彩り", bg:2, maki:{p:'R',c:'love'}, hideInfo:true,
+   info:{pos:'top', html:'<h3>Ingredients</h3><p>山幸の国産本マグロを使用</p>'}},
+  {t:21.6, lyric:"手にするだけで　心踊り", bg:6, maki:{p:'L',c:'jump'}, hideInfo:true},
+  {t:24.9, lyric:"MAKIMAKI!　どこでもパクり", bg:3, maki:{p:'C',c:'jump'}, sushi:true,
+   info:{pos:'top', html:'<h3>Takeout</h3><p>どこでも手軽に、美味しいお鮨を</p>'}},
+  {t:27.3, lyric:"MAKIMAKI!　笑顔がキラり", bg:7, maki:{p:'L',c:'cheer'}, sushi:true, hideInfo:true},
+  {t:29.8, lyric:"お家も外も　幸せガブリ", bg:1, maki:{p:'R',c:'love'},
+   info:{pos:'bottom', html:'<p>2本Box / 4本Box / 6本Box</p>'}},
+  {t:32.3, lyric:"最高な時間を　巻き込んじゃえ！", bg:5, maki:{p:'C',c:'cheer'}, sushi:true, hideInfo:true},
+  {t:37.4, lyric:"It's a MAKIMAKI DAY!", bg:0, maki:{p:'C',c:'jump'}, sushi:true,
+   info:{pos:'top', html:'<h3>Online Order</h3><p>makimaki.tokyo</p>'}},
+  {t:41,   lyric:"", bg:4, hideMaki:true, hideInfo:true},
+  {t:43.1, lyric:"できたてをどうぞ。", bg:6, maki:{p:'R',c:'bow'},
+   info:{pos:'top', html:'<h3>Open</h3><p>11:00 − 18:00</p>'}},
+  {t:47,   lyric:"", bg:8, hideMaki:true, hideInfo:true},
+  {t:48.7, lyric:"Makimaki!", bg:0, maki:{p:'C',c:'wave'},
+   info:{pos:'bottom', html:'<p>@maki_maki_tokyo</p>'}},
+  {t:52,   lyric:"", bg:4, cta:true, maki:{p:'L',c:'wave'}, hideInfo:true},
 ];
 
 const audio = document.getElementById('audio');
@@ -156,13 +179,24 @@ function showMaki(pos, clip) {
 }
 function hideAllMaki() { ['L','R','C'].forEach(p => document.getElementById('maki'+p).classList.remove('show')); }
 
+function showInfo(pos, html) {
+  const el = document.getElementById(pos === 'top' ? 'infoTop' : 'infoBottom');
+  el.innerHTML = html; el.classList.add('show');
+}
+function hideAllInfo() {
+  document.getElementById('infoTop').classList.remove('show');
+  document.getElementById('infoBottom').classList.remove('show');
+}
+
+const SUSHI_IMGS = ['akami','chutoro','negitoro','torotaku','salmon','salmon_cc','kappa','mentai','tamago_m','oshinko','anakyu','ebimayo_p'];
 function sushiRain() {
   const c = document.getElementById('sushiRain');
-  const e = ['🍣','🥢','🍙','🐟','💚'];
   for (let i = 0; i < 10; i++) {
     const d = document.createElement('div'); d.className = 'sushi-drop';
-    d.textContent = e[Math.floor(Math.random()*e.length)];
-    d.style.cssText = `left:${Math.random()*100}%;animation-duration:${2+Math.random()*2}s;animation-delay:${Math.random()*.8}s;font-size:${1+Math.random()*1}rem`;
+    const id = SUSHI_IMGS[Math.floor(Math.random()*SUSHI_IMGS.length)];
+    const size = 30 + Math.random()*25;
+    d.innerHTML = `<img src="/menu/${id}.webp" alt="">`;
+    d.style.cssText = `left:${Math.random()*100}%;width:${size}px;height:${size}px;animation-duration:${2+Math.random()*2}s;animation-delay:${Math.random()*.8}s`;
     c.appendChild(d); setTimeout(() => d.remove(), 4000);
   }
 }
@@ -242,6 +276,9 @@ function tick() {
     // Maki
     if (ev.hideMaki) hideAllMaki();
     else if (ev.maki) showMaki(ev.maki.p, ev.maki.c);
+    // Info
+    if (ev.hideInfo) hideAllInfo();
+    if (ev.info) showInfo(ev.info.pos, ev.info.html);
     // Sushi
     if (ev.sushi) sushiRain();
     // Particles burst
@@ -255,6 +292,7 @@ audio.addEventListener('ended', () => {
   clearInterval(pInt);
   document.getElementById('cta').classList.add('show');
   showMaki('C','wave');
+  showInfo('top','<h3>makimaki</h3><p>麻布十番の細巻き専門テイクアウト店</p>');
   lyricEl.classList.remove('active');
   setTimeout(() => { lyricEl.textContent = 'また来てね♪'; lyricEl.classList.add('active'); }, 500);
 });

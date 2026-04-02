@@ -123,7 +123,7 @@ section{padding:7rem 3rem;max-width:1100px;margin:0 auto}
 .box-card{text-align:center;padding:2.5rem 1.5rem;border:2px solid var(--border);background:var(--white);cursor:pointer;transition:all .4s var(--ease);border-radius:4px}
 .box-card:hover{border-color:var(--accent-light);transform:translateY(-3px);box-shadow:0 12px 36px rgba(0,0,0,.06)}
 .box-card.selected{border-color:var(--accent);background:var(--accent-bg);box-shadow:0 8px 30px rgba(58,90,64,.12)}
-.box-dots{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:1.2rem;min-height:48px;align-items:center}
+.box-dots{display:grid;grid-template-columns:repeat(3,18px);gap:5px;justify-content:center;margin-bottom:1.2rem}
 .box-dot{width:18px;height:18px;border-radius:50%;background:var(--accent);opacity:.7;transition:all .3s}
 .box-card.selected .box-dot{opacity:1;transform:scale(1.1)}
 .box-card-title{font-family:var(--serif);font-size:1.3rem;font-weight:400;margin-bottom:.3rem}
@@ -345,7 +345,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
   <h3 class="menu-cat-title reveal" data-ja="セットメニュー" data-en="Set Menu">セットメニュー</h3>
   <div class="box-select-grid" style="grid-template-columns:repeat(2,1fr);max-width:520px" id="setMenuGrid">
     <div class="box-card reveal" onclick="addSetMenu('makimaki_box')" style="padding:1.5rem 1rem">
-      <img src="/menu/makimaki_box.png" alt="makimaki Box" style="width:120px;height:120px;object-fit:contain;margin:0 auto .8rem;display:block;border-radius:8px">
+      <img src="/menu/makimaki_box.webp" alt="makimaki Box" style="width:120px;height:120px;object-fit:contain;margin:0 auto .8rem;display:block;border-radius:8px">
       <div class="box-dots"><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span></div>
       <div class="box-card-title">makimaki Box</div>
       <div style="font-size:.7rem;color:var(--fg-muted);margin:.2rem 0">4本入り</div>
@@ -358,7 +358,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
       </div>
     </div>
     <div class="box-card reveal rd1" onclick="addSetMenu('maguro_box')" style="padding:1.5rem 1rem">
-      <img src="/menu/maguro_box.png" alt="まぐろBox" style="width:120px;height:120px;object-fit:contain;margin:0 auto .8rem;display:block;border-radius:8px">
+      <img src="/menu/maguro_box.webp" alt="まぐろBox" style="width:120px;height:120px;object-fit:contain;margin:0 auto .8rem;display:block;border-radius:8px">
       <div class="box-dots"><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span></div>
       <div class="box-card-title" data-ja="まぐろBox" data-en="Maguro Box">まぐろBox</div>
       <div style="font-size:.7rem;color:var(--fg-muted);margin:.2rem 0">4本入り</div>
@@ -376,12 +376,12 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
   <h3 class="menu-cat-title reveal" data-ja="おこのみ Box" data-en="Build Your Own Box" id="boxStepTitle">おこのみ Box</h3>
   <div class="box-select-grid" id="boxSelectGrid">
     <div class="box-card reveal" onclick="selectBox(2)">
-      <div class="box-dots"><span class="box-dot"></span><span class="box-dot"></span></div>
+      <div class="box-dots" style="grid-template-columns:repeat(2,18px)"><span class="box-dot"></span><span class="box-dot"></span></div>
       <div class="box-card-title" data-ja="2本 Box" data-en="2-Roll Box">2本 Box</div>
       <div class="box-card-desc" data-ja="ちょっとしたお楽しみに" data-en="A little treat">ちょっとしたお楽しみに</div>
     </div>
     <div class="box-card reveal rd1" onclick="selectBox(4)">
-      <div class="box-dots"><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span></div>
+      <div class="box-dots" style="grid-template-columns:repeat(2,18px)"><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span></div>
       <div class="box-card-title" data-ja="4本 Box" data-en="4-Roll Box">4本 Box</div>
       <div class="box-card-desc" data-ja="一番人気のサイズ" data-en="Our most popular size">一番人気のサイズ</div>
     </div>
@@ -554,7 +554,7 @@ function renderPickGrid() {
     return `
     <div class="pick-item ${picked ? 'picked' : ''}" onclick="pickItem('${item.id}')">
       <div class="pick-item-badge">${orders.join(',')}</div>
-      <img class="pick-item-img" src="/menu/${item.id}.png" alt="${item.jp}" loading="lazy">
+      <img class="pick-item-img" src="/menu/${item.id}.webp" alt="${item.jp}" loading="lazy">
       <div class="pick-item-name">${item.jp}</div>
       <div class="pick-item-sub">${item.name}</div>
       <div class="pick-item-price">&yen;${item.price.toLocaleString()}</div>

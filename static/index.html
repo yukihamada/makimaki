@@ -296,6 +296,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
 <!-- TAKEOUT -->
 <div class="takeout">
   <div class="takeout-inner">
+    <img src="/maki-chan-welcome.webp" alt="まきちゃん" class="reveal" style="width:80px;height:80px;margin:0 auto .5rem;display:block">
     <span class="section-label reveal">How to Order</span>
     <h2 class="section-title reveal" style="text-align:center" data-ja="3つのステップで、<br>巻きたてをお持ち帰り。" data-en="Three simple steps<br>to fresh hosomaki.">3つのステップで、<br>巻きたてをお持ち帰り。</h2>
     <div class="takeout-steps">
@@ -341,6 +342,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
 
 <!-- MENU + ORDER -->
 <section id="menu" class="menu-sec">
+  <img src="/maki-chan-heart.webp" alt="まきちゃん" class="reveal" style="width:70px;height:70px;margin:0 auto .5rem;display:block">
   <span class="section-label reveal">Menu</span>
   <h2 class="section-title reveal" data-ja="ボックスを選んで、<br>お好みの巻きを詰めて。" data-en="Choose a box,<br>fill it with your favorites.">ボックスを選んで、<br>お好みの巻きを詰めて。</h2>
   <p class="section-text reveal" data-ja="1本＝6カット。お好きなボックスサイズを選び、中身をお選びください。<br>価格は税別です。箱代 ¥200を頂戴しております。" data-en="1 roll = 6 cuts. Pick your box size, then choose your rolls.<br>Prices exclude tax. Box charge ¥200.">1本＝6カット。お好きなボックスサイズを選び、中身をお選びください。<br>価格は税別です。箱代 ¥200を頂戴しております。</p>
@@ -941,8 +943,8 @@ if (location.search.includes('paid=1')) {
     document.getElementById('modalContent').innerHTML = `
       <button class="modal-close" onclick="closeModal()">&times;</button>
       <div class="success-msg">
+        <img src="/maki-chan-bye.webp" alt="まきちゃん" style="width:100px;height:100px;margin:0 auto .5rem;display:block">
         <h3 style="color:var(--accent)">${isJa?'ご注文ありがとうございます':'Thank you for your order!'}</h3>
-        <p style="font-size:2.5rem;color:var(--accent);margin:.5rem 0">&#10003;</p>
         <p style="font-size:.95rem;line-height:1.9;margin-bottom:1.5rem">${isJa?'お支払いが完了しました。<br>受取時間に合わせて巻きたてをご用意してお待ちしております。':'Payment complete.<br>Your fresh rolls will be ready at your selected time.'}</p>
         <div style="background:var(--accent-bg,#EDF2EE);padding:1.2rem;border-radius:4px;text-align:left;font-size:.82rem;line-height:1.9;margin-bottom:1rem">
           <strong style="font-size:.7rem;letter-spacing:.1em;color:var(--accent)">SHOP INFO</strong><br>

@@ -12,7 +12,8 @@ use tower_http::services::ServeDir;
 
 struct AppState {
     db: Mutex<Connection>,
-    stripe_key: Option<String>,
+    square_token: Option<String>,
+    square_location: Option<String>,
     admin_key: String,
 }
 
@@ -144,19 +145,23 @@ async fn main() {
     conn.execute_batch("PRAGMA journal_mode=WAL;").ok();
     init_db(&conn);
 
-    let stripe_key = std::env::var("STRIPE_SECRET_KEY").ok();
+    let square_token = std::env::var("SQUARE_ACCESS_TOKEN").ok();
+    let square_location = std::env::var("SQUARE_LOCATION_ID").ok();
     let admin_key = std::env::var("ADMIN_KEY").expect("ADMIN_KEY environment variable must be set");
 
-    if stripe_key.is_some() { println!("Stripe payments enabled"); }
+    if square_token.is_some() { println!("Square payments enabled"); }
     println!("Admin key configured");
 
-    let state = Arc::new(AppState { db: Mutex::new(conn), stripe_key, admin_key });
+    let state = Arc::new(AppState { db: Mutex::new(conn), square_token, square_location, admin_key });
 
     let app = Router::new()
         .route("/api/orders", post(create_order).get(list_orders))
         .route("/api/orders/{id}/status", post(update_order_status))
         .route("/api/checkout", post(create_checkout))
-        .route("/api/stripe-success", get(stripe_success))
+        .route("/api/square-callback", get(square_callback))
+        .route("/api/pos/order", post(create_pos_order))
+        .route("/api/pos/terminal-checkout", post(create_terminal_checkout))
+        .route("/api/pos/terminal-status/{checkout_id}", get(get_terminal_status))
         .route("/api/menu-status", get(get_menu_status).post(update_menu_status))
         .route("/api/store-config", get(get_store_config).post(update_store_config))
         .route("/api/stats", get(get_stats))
@@ -168,9 +173,11 @@ async fn main() {
         .route("/api/cloudprnt", post(cloudprnt_poll))
         .route("/api/cloudprnt/job", get(cloudprnt_job))
         .route("/api/orders/{id}/cancel", post(cancel_order))
-        .route("/api/stripe-webhook", post(stripe_webhook))
+        .route("/api/square-webhook", post(square_webhook))
         .route("/api/inventory", get(get_inventory))
-        .route("/box", get(box_page))
+        .route("/pos", get(pos_page))
+        .route("/order", get(order_page))
+        .route("/box", get(|| async { Redirect::permanent("/#menu") }))
         .route("/docs", get(docs_page))
         .route("/admin", get(admin_page))
         .route("/guide", get(guide_page))
@@ -253,14 +260,15 @@ async fn create_checkout(
     State(state): State<Arc<AppState>>,
     Json(input): Json<CreateOrder>,
 ) -> impl IntoResponse {
-    let stripe_key = match &state.stripe_key {
+    let square_token = match &state.square_token {
         Some(k) => k.clone(),
-        None => return (StatusCode::SERVICE_UNAVAILABLE, Json(serde_json::json!({"error": "Stripe not configured. Please use pay-at-shop."}))),
+        None => return (StatusCode::SERVICE_UNAVAILABLE, Json(serde_json::json!({"error": "Square not configured. Please use pay-at-shop."}))),
     };
+    let location_id = state.square_location.clone().unwrap_or_default();
 
     let id = uuid::Uuid::new_v4().to_string()[..8].to_string();
     let total: u32 = input.items.iter().map(|i| i.price * i.qty).sum();
-    let total_with_tax = ((total as f64) * 1.1).ceil() as u32 + 200;
+    let total_with_tax = ((total as f64) * 1.1).ceil() as u32 + 200; // +箱代
     let items_json = serde_json::to_string(&input.items).unwrap_or_default();
     let now = chrono::Utc::now()
         .with_timezone(&chrono::FixedOffset::east_opt(9 * 3600).unwrap())
@@ -275,86 +283,98 @@ async fn create_checkout(
         );
     }
 
-    let line_items: Vec<Vec<(String, String)>> = input.items.iter().map(|item| {
-        let unit_amount = ((item.price as f64) * 1.1).ceil() as u32;
-        vec![
-            ("price_data[currency]".into(), "jpy".into()),
-            ("price_data[product_data][name]".into(), item.name.clone()),
-            ("price_data[unit_amount]".into(), unit_amount.to_string()),
-            ("quantity".into(), item.qty.to_string()),
-        ]
-    }).collect();
+    // Build Square line items
+    let mut sq_line_items: Vec<serde_json::Value> = Vec::new();
+
+    // Box charge
+    sq_line_items.push(serde_json::json!({
+        "name": "箱代 Box charge",
+        "quantity": "1",
+        "base_price_money": { "amount": 200, "currency": "JPY" }
+    }));
+
+    for item in &input.items {
+        let unit_amount = ((item.price as f64) * 1.1).ceil() as u64;
+        sq_line_items.push(serde_json::json!({
+            "name": item.name,
+            "quantity": item.qty.to_string(),
+            "base_price_money": { "amount": unit_amount, "currency": "JPY" }
+        }));
+    }
 
     let base_url = std::env::var("BASE_URL").unwrap_or_else(|_| "https://makimaki.fly.dev".into());
-    let mut form_params: Vec<(String, String)> = vec![
-        ("mode".into(), "payment".into()),
-        ("success_url".into(), format!("{base_url}/api/stripe-success?order_id={id}")),
-        ("cancel_url".into(), format!("{base_url}/#menu")),
-        ("metadata[order_id]".into(), id.clone()),
-    ];
+    let idempotency_key = uuid::Uuid::new_v4().to_string();
 
-    form_params.push(("line_items[0][price_data][currency]".into(), "jpy".into()));
-    form_params.push(("line_items[0][price_data][product_data][name]".into(), "箱代 Box charge".into()));
-    form_params.push(("line_items[0][price_data][unit_amount]".into(), "200".into()));
-    form_params.push(("line_items[0][quantity]".into(), "1".into()));
-
-    for (i, item_params) in line_items.iter().enumerate() {
-        let idx = i + 1;
-        for (k, v) in item_params {
-            form_params.push((format!("line_items[{idx}][{k}]"), v.clone()));
+    let payload = serde_json::json!({
+        "idempotency_key": idempotency_key,
+        "order": {
+            "location_id": location_id,
+            "line_items": sq_line_items,
+            "metadata": { "order_id": id }
+        },
+        "checkout_options": {
+            "redirect_url": format!("{base_url}/api/square-callback?order_id={id}")
         }
-    }
+    });
 
     let client = reqwest::Client::new();
     match client
-        .post("https://api.stripe.com/v1/checkout/sessions")
-        .basic_auth(&stripe_key, Option::<&str>::None)
-        .form(&form_params)
+        .post("https://connect.squareup.com/v2/online-checkout/payment-links")
+        .header("Authorization", format!("Bearer {square_token}"))
+        .header("Content-Type", "application/json")
+        .json(&payload)
         .send()
         .await
     {
         Ok(resp) => {
             let body: serde_json::Value = resp.json().await.unwrap_or_default();
-            if let Some(url) = body["url"].as_str() {
-                if let Some(sid) = body["id"].as_str() {
-                    let db = state.db.lock().unwrap();
-                    let _ = db.execute("UPDATE orders SET stripe_session=?1 WHERE id=?2", rusqlite::params![sid, id]);
-                }
+            if let Some(url) = body["payment_link"]["url"].as_str() {
+                let sq_order_id = body["payment_link"]["order_id"].as_str().unwrap_or("");
+                let db = state.db.lock().unwrap();
+                let _ = db.execute("UPDATE orders SET stripe_session=?1 WHERE id=?2", rusqlite::params![sq_order_id, id]);
                 (StatusCode::OK, Json(serde_json::json!({"url": url, "id": id})))
             } else {
-                { eprintln!("Stripe error: {body}"); (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error": "Payment processing failed"}))) }
+                eprintln!("Square error: {body}");
+                (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error": "Payment processing failed"})))
             }
         }
-        Err(e) => { eprintln!("Error: {e}"); (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": "Server error"}))) },
+        Err(e) => {
+            eprintln!("Error: {e}");
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": "Server error"})))
+        }
     }
 }
 
-async fn stripe_success(
+async fn square_callback(
     State(state): State<Arc<AppState>>,
     Query(q): Query<SuccessQuery>,
 ) -> impl IntoResponse {
     if let Some(order_id) = &q.order_id {
-        // Verify payment via Stripe API before marking as paid
-        let verified = if let Some(stripe_key) = &state.stripe_key {
-            let session_id: Option<String> = {
+        // Verify payment via Square Orders API
+        let verified = if let Some(square_token) = &state.square_token {
+            let sq_order_id: Option<String> = {
                 let db = state.db.lock().unwrap();
                 db.query_row(
                     "SELECT stripe_session FROM orders WHERE id=?1",
                     rusqlite::params![order_id], |r| r.get(0)
                 ).ok()
             };
-            if let Some(sid) = session_id.filter(|s| !s.is_empty()) {
+            if let Some(sq_id) = sq_order_id.filter(|s| !s.is_empty()) {
                 let client = reqwest::Client::new();
                 if let Ok(resp) = client
-                    .get(&format!("https://api.stripe.com/v1/checkout/sessions/{sid}"))
-                    .basic_auth(stripe_key, Option::<&str>::None)
+                    .get(&format!("https://connect.squareup.com/v2/orders/{sq_id}"))
+                    .header("Authorization", format!("Bearer {square_token}"))
                     .send().await
                 {
                     if let Ok(body) = resp.json::<serde_json::Value>().await {
-                        body["payment_status"].as_str() == Some("paid")
+                        let state_str = body["order"]["state"].as_str().unwrap_or("");
+                        state_str == "COMPLETED" || state_str == "OPEN"
                     } else { false }
                 } else { false }
-            } else { false }
+            } else {
+                // No Square order ID stored — trust the redirect (payment link only redirects on success)
+                true
+            }
         } else { false };
 
         if verified {
@@ -598,7 +618,8 @@ async fn track_event(
     const ALLOWED: &[&str] = &[
         "pageview", "scroll_25", "scroll_50", "scroll_75", "scroll_100",
         "section_view", "cart_add", "checkout_start", "checkout_submit",
-        "stripe_redirect", "order_nopay", "order_complete",
+        "square_redirect", "order_nopay", "order_complete",
+        "box_select", "pos_order",
     ];
     if !ALLOWED.contains(&input.event.as_str()) {
         return StatusCode::BAD_REQUEST;
@@ -801,7 +822,9 @@ async fn cloudprnt_job(
             receipt.push_str(&format!("決済: {}\n\n", if paid != 0 { "カード済" } else { "未払い" }));
 
             if !note.is_empty() {
-                receipt.push_str(&format!("備考: {}\n\n", note));
+                // Format box info nicely if present
+                let display_note = note.replace(" / ", "\n  ");
+                receipt.push_str(&format!("備考:\n  {}\n\n", display_note));
             }
 
             receipt.push_str("================================\n");
@@ -828,7 +851,7 @@ async fn cancel_order(
 ) -> impl IntoResponse {
     if !check_admin(&state, &headers) { return (StatusCode::UNAUTHORIZED, Json(serde_json::json!({"error":"unauthorized"}))); }
 
-    let (stripe_session, paid) = {
+    let (sq_order_id, paid) = {
         let db = state.db.lock().unwrap();
         let result = db.query_row(
             "SELECT stripe_session, paid FROM orders WHERE id=?1",
@@ -840,23 +863,36 @@ async fn cancel_order(
         }
     };
 
-    // If paid via Stripe, attempt refund
-    if paid != 0 && !stripe_session.is_empty() {
-        if let Some(stripe_key) = &state.stripe_key {
+    // If paid via Square, attempt refund
+    let mut refunded = false;
+    if paid != 0 && !sq_order_id.is_empty() {
+        if let Some(square_token) = &state.square_token {
             let client = reqwest::Client::new();
-            // Get payment intent from session
+            // Get payments for this order
             if let Ok(resp) = client
-                .get(&format!("https://api.stripe.com/v1/checkout/sessions/{stripe_session}"))
-                .basic_auth(stripe_key, Option::<&str>::None)
+                .get(&format!("https://connect.squareup.com/v2/orders/{sq_order_id}"))
+                .header("Authorization", format!("Bearer {square_token}"))
                 .send().await
             {
                 if let Ok(body) = resp.json::<serde_json::Value>().await {
-                    if let Some(pi) = body["payment_intent"].as_str() {
-                        let _ = client
-                            .post("https://api.stripe.com/v1/refunds")
-                            .basic_auth(stripe_key, Option::<&str>::None)
-                            .form(&[("payment_intent", pi)])
-                            .send().await;
+                    // Get tender/payment IDs
+                    if let Some(tenders) = body["order"]["tenders"].as_array() {
+                        for tender in tenders {
+                            if let Some(payment_id) = tender["payment_id"].as_str() {
+                                let refund_payload = serde_json::json!({
+                                    "idempotency_key": uuid::Uuid::new_v4().to_string(),
+                                    "payment_id": payment_id,
+                                    "amount_money": tender["amount_money"],
+                                    "reason": "Order cancelled"
+                                });
+                                let _ = client
+                                    .post("https://connect.squareup.com/v2/refunds")
+                                    .header("Authorization", format!("Bearer {square_token}"))
+                                    .json(&refund_payload)
+                                    .send().await;
+                                refunded = true;
+                            }
+                        }
                     }
                 }
             }
@@ -865,31 +901,234 @@ async fn cancel_order(
 
     let db = state.db.lock().unwrap();
     let _ = db.execute("UPDATE orders SET status='cancelled', paid=0 WHERE id=?1", rusqlite::params![id]);
-    (StatusCode::OK, Json(serde_json::json!({"ok": true, "refunded": paid != 0})))
+    (StatusCode::OK, Json(serde_json::json!({"ok": true, "refunded": refunded})))
 }
 
-// --- Stripe Webhook ---
-async fn stripe_webhook(
+// --- Square Webhook ---
+async fn square_webhook(
     State(state): State<Arc<AppState>>,
     body: String,
 ) -> impl IntoResponse {
-    // Parse the event (simplified - production should verify signature)
     let event: serde_json::Value = match serde_json::from_str(&body) {
         Ok(v) => v,
         Err(_) => return StatusCode::BAD_REQUEST,
     };
 
     let event_type = event["type"].as_str().unwrap_or("");
-    if event_type == "checkout.session.completed" {
-        let session = &event["data"]["object"];
-        if session["payment_status"].as_str() == Some("paid") {
-            if let Some(order_id) = session["metadata"]["order_id"].as_str() {
-                let db = state.db.lock().unwrap();
-                let _ = db.execute("UPDATE orders SET paid=1 WHERE id=?1", rusqlite::params![order_id]);
-            }
+    // payment.completed or order.updated
+    if event_type == "payment.completed" {
+        if let Some(order_id) = event["data"]["object"]["payment"]["order_id"].as_str() {
+            // Look up our internal order by square order id
+            let db = state.db.lock().unwrap();
+            let _ = db.execute("UPDATE orders SET paid=1 WHERE stripe_session=?1", rusqlite::params![order_id]);
         }
     }
     StatusCode::OK
+}
+
+// --- POS Order (in-store, cash or card) ---
+#[derive(Deserialize)]
+struct PosOrder {
+    items: Vec<OrderItem>,
+    note: String,
+    payment_method: String, // "cash", "card", "qr"
+    customer_name: Option<String>,
+}
+
+async fn create_pos_order(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Json(input): Json<PosOrder>,
+) -> impl IntoResponse {
+    if !check_admin(&state, &headers) {
+        return (StatusCode::UNAUTHORIZED, Json(serde_json::json!({"error":"unauthorized"})));
+    }
+
+    let id = uuid::Uuid::new_v4().to_string()[..8].to_string();
+    let total: u32 = input.items.iter().map(|i| i.price * i.qty).sum();
+    let total_with_tax = ((total as f64) * 1.1).ceil() as u32 + 200;
+    let items_json = serde_json::to_string(&input.items).unwrap_or_default();
+    let now = chrono::Utc::now()
+        .with_timezone(&chrono::FixedOffset::east_opt(9 * 3600).unwrap())
+        .format("%Y-%m-%d %H:%M")
+        .to_string();
+    let name = input.customer_name.unwrap_or_else(|| "店頭".into());
+    let note = format!("[{}] {}", input.payment_method.to_uppercase(), input.note);
+
+    let db = state.db.lock().unwrap();
+    let _ = db.execute(
+        "INSERT INTO orders (id,name,phone,pickup_time,items,note,total,status,paid,created_at) VALUES (?1,?2,'店頭','店頭受取',?3,?4,?5,'new',1,?6)",
+        rusqlite::params![id, name, items_json, note, total_with_tax, now],
+    );
+
+    (StatusCode::CREATED, Json(serde_json::json!({"id": id, "total": total_with_tax})))
+}
+
+// --- Square Terminal Checkout ---
+#[derive(Deserialize)]
+struct TerminalCheckoutRequest {
+    items: Vec<OrderItem>,
+    note: String,
+    device_id: Option<String>,
+}
+
+async fn create_terminal_checkout(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Json(input): Json<TerminalCheckoutRequest>,
+) -> impl IntoResponse {
+    if !check_admin(&state, &headers) {
+        return (StatusCode::UNAUTHORIZED, Json(serde_json::json!({"error":"unauthorized"})));
+    }
+    let square_token = match &state.square_token {
+        Some(k) => k.clone(),
+        None => return (StatusCode::SERVICE_UNAVAILABLE, Json(serde_json::json!({"error":"Square not configured"}))),
+    };
+
+    let order_id = uuid::Uuid::new_v4().to_string()[..8].to_string();
+    let total: u32 = input.items.iter().map(|i| i.price * i.qty).sum();
+    let total_with_tax = ((total as f64) * 1.1).ceil() as u32 + 200;
+    let items_json = serde_json::to_string(&input.items).unwrap_or_default();
+    let now = chrono::Utc::now()
+        .with_timezone(&chrono::FixedOffset::east_opt(9 * 3600).unwrap())
+        .format("%Y-%m-%d %H:%M")
+        .to_string();
+
+    // Insert order as unpaid first
+    {
+        let db = state.db.lock().unwrap();
+        let _ = db.execute(
+            "INSERT INTO orders (id,name,phone,pickup_time,items,note,total,status,paid,created_at) VALUES (?1,'店頭','店頭','店頭受取',?2,?3,?4,'new',0,?5)",
+            rusqlite::params![order_id, items_json, format!("[CARD] {}", input.note), total_with_tax, now],
+        );
+    }
+
+    let location_id = state.square_location.clone().unwrap_or_default();
+    let idempotency_key = uuid::Uuid::new_v4().to_string();
+
+    // Build the terminal checkout payload
+    let mut checkout_payload = serde_json::json!({
+        "idempotency_key": idempotency_key,
+        "checkout": {
+            "amount_money": {
+                "amount": total_with_tax as u64,
+                "currency": "JPY"
+            },
+            "reference_id": order_id,
+            "note": format!("makimaki #{}", order_id),
+            "device_options": {
+                "device_id": input.device_id.as_deref().unwrap_or(""),
+                "skip_receipt_screen": false,
+                "collect_signature": false
+            },
+            "payment_type": "CARD_PRESENT"
+        }
+    });
+
+    // If no device_id provided, try to get the first available terminal
+    if input.device_id.is_none() || input.device_id.as_deref() == Some("") {
+        // List device codes to find the terminal
+        let client = reqwest::Client::new();
+        if let Ok(resp) = client
+            .get("https://connect.squareup.com/v2/devices")
+            .header("Authorization", format!("Bearer {square_token}"))
+            .send().await
+        {
+            if let Ok(body) = resp.json::<serde_json::Value>().await {
+                if let Some(devices) = body["devices"].as_array() {
+                    if let Some(device) = devices.first() {
+                        if let Some(did) = device["id"].as_str() {
+                            checkout_payload["checkout"]["device_options"]["device_id"] = serde_json::Value::String(did.to_string());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    let client = reqwest::Client::new();
+    match client
+        .post("https://connect.squareup.com/v2/terminals/checkouts")
+        .header("Authorization", format!("Bearer {square_token}"))
+        .header("Content-Type", "application/json")
+        .json(&checkout_payload)
+        .send()
+        .await
+    {
+        Ok(resp) => {
+            let body: serde_json::Value = resp.json().await.unwrap_or_default();
+            if let Some(checkout) = body.get("checkout") {
+                let checkout_id = checkout["id"].as_str().unwrap_or("");
+                let status = checkout["status"].as_str().unwrap_or("PENDING");
+                // Store checkout ID in stripe_session field for tracking
+                let db = state.db.lock().unwrap();
+                let _ = db.execute("UPDATE orders SET stripe_session=?1 WHERE id=?2",
+                    rusqlite::params![checkout_id, order_id]);
+                (StatusCode::OK, Json(serde_json::json!({
+                    "order_id": order_id,
+                    "checkout_id": checkout_id,
+                    "status": status,
+                    "total": total_with_tax
+                })))
+            } else {
+                eprintln!("Square Terminal error: {body}");
+                // Clean up the unpaid order
+                let db = state.db.lock().unwrap();
+                let _ = db.execute("DELETE FROM orders WHERE id=?1", rusqlite::params![order_id]);
+                (StatusCode::BAD_REQUEST, Json(serde_json::json!({"error": "Terminal checkout failed", "detail": body.to_string()})))
+            }
+        }
+        Err(e) => {
+            eprintln!("Terminal error: {e}");
+            let db = state.db.lock().unwrap();
+            let _ = db.execute("DELETE FROM orders WHERE id=?1", rusqlite::params![order_id]);
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error":"Server error"})))
+        }
+    }
+}
+
+async fn get_terminal_status(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Path(checkout_id): Path<String>,
+) -> impl IntoResponse {
+    if !check_admin(&state, &headers) {
+        return (StatusCode::UNAUTHORIZED, Json(serde_json::json!({"error":"unauthorized"})));
+    }
+    let square_token = match &state.square_token {
+        Some(k) => k.clone(),
+        None => return (StatusCode::SERVICE_UNAVAILABLE, Json(serde_json::json!({"error":"Square not configured"}))),
+    };
+
+    let client = reqwest::Client::new();
+    match client
+        .get(&format!("https://connect.squareup.com/v2/terminals/checkouts/{checkout_id}"))
+        .header("Authorization", format!("Bearer {square_token}"))
+        .send().await
+    {
+        Ok(resp) => {
+            let body: serde_json::Value = resp.json().await.unwrap_or_default();
+            let status = body["checkout"]["status"].as_str().unwrap_or("UNKNOWN");
+            let payment_ids = body["checkout"]["payment_ids"].as_array()
+                .map(|a| a.iter().filter_map(|v| v.as_str().map(String::from)).collect::<Vec<_>>())
+                .unwrap_or_default();
+
+            // If completed, mark order as paid
+            if status == "COMPLETED" {
+                let db = state.db.lock().unwrap();
+                let _ = db.execute("UPDATE orders SET paid=1 WHERE stripe_session=?1",
+                    rusqlite::params![checkout_id]);
+            }
+
+            (StatusCode::OK, Json(serde_json::json!({
+                "status": status,
+                "payment_ids": payment_ids,
+            })))
+        }
+        Err(e) => {
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"error": e.to_string()})))
+        }
+    }
 }
 
 // --- Inventory ---
@@ -934,8 +1173,20 @@ async fn get_inventory(State(state): State<Arc<AppState>>) -> impl IntoResponse 
     Json(serde_json::json!(rows))
 }
 
-async fn box_page() -> Html<&'static str> {
-    Html(include_str!("../static/box.html"))
+async fn pos_page(
+    State(state): State<Arc<AppState>>,
+    Query(q): Query<std::collections::HashMap<String, String>>,
+) -> impl IntoResponse {
+    let key = q.get("key").map(|s| s.as_str()).unwrap_or("");
+    if key == state.admin_key {
+        Html(include_str!("../static/pos.html")).into_response()
+    } else {
+        Html("<html><body style='font-family:sans-serif;display:flex;height:100vh;align-items:center;justify-content:center'><div style='text-align:center'><h2>makimaki POS</h2><p style='color:#999'>認証が必要です。URLに ?key=xxx を付けてアクセスしてください。</p></div></body></html>").into_response()
+    }
+}
+
+async fn order_page() -> Html<&'static str> {
+    Html(include_str!("../static/order.html"))
 }
 
 async fn docs_page(

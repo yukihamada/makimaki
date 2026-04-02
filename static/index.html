@@ -117,15 +117,62 @@ section{padding:7rem 3rem;max-width:1100px;margin:0 auto}
 .menu-item-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:.8rem}
 .menu-item-price{font-family:var(--serif);font-size:1rem;color:var(--accent)}
 .menu-cat-title{font-family:var(--serif);font-size:1.4rem;font-weight:400;margin:3rem auto 1.5rem;max-width:960px;text-align:center;letter-spacing:.08em}
-.set-grid{grid-template-columns:repeat(2,1fr)!important;max-width:640px!important}
-.menu-item.set-item{text-align:center;padding:2rem 1.5rem}
-.menu-item.set-item .set-dots{display:flex;justify-content:center;margin-bottom:1rem}
-.menu-item.set-item .set-dots svg{width:48px;height:32px}
-.menu-item.set-item .menu-item-desc{font-size:.7rem;margin-top:.8rem}
+
+/* BOX SELECTION */
+.box-select-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;max-width:720px;margin:0 auto 2rem}
+.box-card{text-align:center;padding:2.5rem 1.5rem;border:2px solid var(--border);background:var(--white);cursor:pointer;transition:all .4s var(--ease);border-radius:4px}
+.box-card:hover{border-color:var(--accent-light);transform:translateY(-3px);box-shadow:0 12px 36px rgba(0,0,0,.06)}
+.box-card.selected{border-color:var(--accent);background:var(--accent-bg);box-shadow:0 8px 30px rgba(58,90,64,.12)}
+.box-dots{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:1.2rem;min-height:48px;align-items:center}
+.box-dot{width:18px;height:18px;border-radius:50%;background:var(--accent);opacity:.7;transition:all .3s}
+.box-card.selected .box-dot{opacity:1;transform:scale(1.1)}
+.box-card-title{font-family:var(--serif);font-size:1.3rem;font-weight:400;margin-bottom:.3rem}
+.box-card-price{font-size:.85rem;color:var(--accent);margin-bottom:.4rem}
+.box-card-desc{font-size:.7rem;color:var(--fg-muted)}
+
+/* ITEM PICKER */
+.box-picker{display:none;max-width:960px;margin:0 auto}
+.box-picker.active{display:block}
+.picker-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem}
+.picker-title{font-family:var(--serif);font-size:1.2rem;font-weight:400}
+.picker-progress{display:flex;align-items:center;gap:.8rem}
+.progress-dots{display:flex;gap:6px}
+.progress-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);transition:all .3s}
+.progress-dot.filled{background:var(--accent);border-color:var(--accent)}
+.progress-text{font-size:.75rem;color:var(--fg-muted)}
+.pick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem}
+.pick-item{padding:1.2rem;border:1px solid var(--border);background:var(--white);text-align:left;transition:all .3s var(--ease);cursor:pointer;border-radius:4px;position:relative}
+.pick-item:hover{border-color:var(--accent-light);box-shadow:0 4px 16px rgba(0,0,0,.04)}
+.pick-item.picked{border-color:var(--accent);background:var(--accent-bg)}
+.pick-item-badge{position:absolute;top:-.5rem;right:-.5rem;min-width:22px;height:22px;padding:0 5px;background:var(--accent);color:#fff;border-radius:11px;font-size:.7rem;display:none;align-items:center;justify-content:center;font-weight:500;white-space:nowrap}
+.pick-item.picked .pick-item-badge{display:flex}
+.pick-item-name{font-family:var(--serif);font-size:1rem;font-weight:400}
+.pick-item-sub{font-size:.6rem;color:var(--fg-muted);letter-spacing:.08em;margin-top:.1rem}
+.pick-item-price{font-size:.8rem;color:var(--accent);margin-top:.4rem}
+
+/* COMPLETED BOXES */
+.completed-boxes{max-width:720px;margin:2rem auto 0}
+.completed-box{border:1px solid var(--accent);background:var(--accent-bg);border-radius:4px;padding:1.2rem 1.5rem;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center}
+.completed-box-info{font-size:.85rem}
+.completed-box-info strong{font-family:var(--serif);font-weight:400}
+.completed-box-items{font-size:.75rem;color:var(--fg-muted);margin-top:.3rem}
+.completed-box-actions{display:flex;gap:.5rem}
+.completed-box-actions button{background:none;border:1px solid var(--border);padding:.3rem .8rem;font-size:.7rem;cursor:pointer;font-family:var(--sans);border-radius:2px;transition:all .2s}
+.completed-box-actions button:hover{border-color:var(--fg);background:var(--fg);color:#fff}
+.completed-box-price{font-family:var(--serif);font-size:.95rem;color:var(--accent);margin-left:1rem}
+.add-box-btn{display:block;max-width:720px;margin:1.5rem auto;padding:.8rem 2rem;background:var(--white);border:2px dashed var(--border);color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:var(--sans);letter-spacing:.05em;transition:all .3s;border-radius:4px;width:100%}
+.add-box-btn:hover{border-color:var(--accent);color:var(--accent)}
+
 .qty-ctrl{display:flex;align-items:center;gap:.5rem}
 .qty-btn{width:28px;height:28px;border:1px solid var(--border);background:var(--white);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;border-radius:2px;color:var(--fg)}
 .qty-btn:hover{background:var(--fg);color:var(--white);border-color:var(--fg)}
 .qty-num{font-size:.85rem;min-width:1.5rem;text-align:center;font-weight:400}
+
+@media(max-width:768px){
+  .box-select-grid{grid-template-columns:1fr;max-width:320px}
+  .pick-grid{grid-template-columns:repeat(2,1fr)}
+  .completed-box{flex-direction:column;align-items:flex-start;gap:.8rem}
+}
 
 /* CART BAR */
 .cart-bar{position:fixed;bottom:0;left:0;right:0;background:var(--fg);color:var(--white);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;z-index:90;transform:translateY(100%);transition:transform .4s var(--ease)}
@@ -268,17 +315,44 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
 <!-- MENU + ORDER -->
 <section id="menu" class="menu-sec">
   <span class="section-label reveal">Menu</span>
-  <h2 class="section-title reveal" data-ja="お好みの一本を。" data-en="Choose your roll.">お好みの一本を。</h2>
-  <p class="section-text reveal" data-ja="1本＝6カット。2本からご注文いただけます。<br>価格は税別です。箱代 ¥200を頂戴しております。" data-en="1 roll = 6 cuts. Minimum order: 2 rolls.<br>Prices exclude tax. Box charge ¥200.">1本＝6カット。2本からご注文いただけます。<br>価格は税別です。箱代 ¥200を頂戴しております。</p>
+  <h2 class="section-title reveal" data-ja="ボックスを選んで、<br>お好みの巻きを詰めて。" data-en="Choose a box,<br>fill it with your favorites.">ボックスを選んで、<br>お好みの巻きを詰めて。</h2>
+  <p class="section-text reveal" data-ja="1本＝6カット。お好きなボックスサイズを選び、中身をお選びください。<br>価格は税別です。箱代 ¥200を頂戴しております。" data-en="1 roll = 6 cuts. Pick your box size, then choose your rolls.<br>Prices exclude tax. Box charge ¥200.">1本＝6カット。お好きなボックスサイズを選び、中身をお選びください。<br>価格は税別です。箱代 ¥200を頂戴しております。</p>
 
-  <!-- SET MENU -->
-  <h3 class="menu-cat-title reveal" data-ja="セットメニュー" data-en="Set Menu">セットメニュー</h3>
-  <div class="menu-grid set-grid" id="setGrid"></div>
+  <!-- STEP 1: BOX SIZE -->
+  <h3 class="menu-cat-title reveal" data-ja="ボックスを選ぶ" data-en="Choose Your Box" id="boxStepTitle">ボックスを選ぶ</h3>
+  <div class="box-select-grid" id="boxSelectGrid">
+    <div class="box-card reveal" onclick="selectBox(2)">
+      <div class="box-dots"><span class="box-dot"></span><span class="box-dot"></span></div>
+      <div class="box-card-title" data-ja="2本 Box" data-en="2-Roll Box">2本 Box</div>
+      <div class="box-card-desc" data-ja="ちょっとしたお楽しみに" data-en="A little treat">ちょっとしたお楽しみに</div>
+    </div>
+    <div class="box-card reveal rd1" onclick="selectBox(4)">
+      <div class="box-dots"><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span></div>
+      <div class="box-card-title" data-ja="4本 Box" data-en="4-Roll Box">4本 Box</div>
+      <div class="box-card-desc" data-ja="一番人気のサイズ" data-en="Our most popular size">一番人気のサイズ</div>
+    </div>
+    <div class="box-card reveal rd2" onclick="selectBox(6)">
+      <div class="box-dots"><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span></div>
+      <div class="box-card-title" data-ja="6本 Box" data-en="6-Roll Box">6本 Box</div>
+      <div class="box-card-desc" data-ja="みんなでシェア" data-en="Great for sharing">みんなでシェア</div>
+    </div>
+  </div>
 
-  <!-- OKONOMI -->
-  <h3 class="menu-cat-title reveal" data-ja="おこのみ（日替わり）" data-en="À la carte (daily)">おこのみ（日替わり）</h3>
-  <div class="menu-grid" id="menuGrid"></div>
-  <p class="menu-note reveal" data-ja="※ 本日の巻き物は店頭でご確認ください。" data-en="* Please check today's special at the shop.">※ 本日の巻き物は店頭でご確認ください。</p>
+  <!-- STEP 2: PICK ITEMS -->
+  <div class="box-picker" id="boxPicker">
+    <div class="picker-header">
+      <div class="picker-title" id="pickerTitle"></div>
+      <div class="picker-progress">
+        <div class="progress-dots" id="progressDots"></div>
+        <span class="progress-text" id="progressText"></span>
+      </div>
+    </div>
+    <div class="pick-grid" id="pickGrid"></div>
+  </div>
+
+  <!-- COMPLETED BOXES -->
+  <div class="completed-boxes" id="completedBoxes"></div>
+  <button class="add-box-btn" id="addBoxBtn" style="display:none" onclick="startNewBox()" data-ja="＋ もう1ボックス追加する" data-en="+ Add another box">＋ もう1ボックス追加する</button>
 </section>
 
 <!-- ACCESS -->
@@ -339,16 +413,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
 </div>
 
 <script>
-// REAL MENU DATA (prices tax-excluded)
-const SETS = [
-  {id:'makimaki_box', name:'makimaki Box', jp:'makimaki Box', price:3500,
-   desc_ja:'赤身鉄火、とろたく、日替わり2種が入ったおすすめセット。',
-   desc_en:'Akami tekka, torotaku, and 2 daily specials.'},
-  {id:'maguro_box', name:'Maguro Box', jp:'まぐろBox', price:5000,
-   desc_ja:'赤身鉄火、中トロ鉄火、ネギトロ、とろたくが入ったマグロづくしセット。',
-   desc_en:'All-tuna set: akami, chutoro, negitoro, and torotaku.'},
-];
-
+// MENU DATA (prices tax-excluded)
 const MENU = [
   {id:'akami',     name:'Akami Tekka',     jp:'赤身鉄火',           price:1400, desc_ja:'赤身の鉄火巻き。', desc_en:'Lean tuna roll.'},
   {id:'chutoro',   name:'Chutoro Tekka',   jp:'中とろ鉄火',         price:1600, desc_ja:'中トロの鉄火巻き。', desc_en:'Medium-fatty tuna roll.'},
@@ -374,124 +439,208 @@ const MENU = [
   {id:'oshinko',   name:'Oshinko',         jp:'おしんこ',           price:500,  desc_ja:'お漬物の巻き。', desc_en:'Pickled radish roll.'},
 ];
 
-let cart = {};
 let lang = 'ja';
 
-function renderMenu() {
-  // Set menu
-  const setGrid = document.getElementById('setGrid');
-  setGrid.innerHTML = SETS.map(item => {
-    const qty = cart[item.id] || 0;
+// Box-first state
+let completedBoxes = []; // [{size:4, items:['akami','chutoro','salmon','kappa']}]
+let currentBoxSize = 0;
+let currentBoxItems = []; // item ids picked for current box
+
+function selectBox(size) {
+  // Highlight selected card
+  document.querySelectorAll('.box-card').forEach(c => c.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  currentBoxSize = size;
+  currentBoxItems = [];
+  showPicker();
+}
+
+function showPicker() {
+  const picker = document.getElementById('boxPicker');
+  picker.classList.add('active');
+  updatePickerHeader();
+  renderPickGrid();
+  // Scroll to picker
+  picker.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function updatePickerHeader() {
+  const isJa = lang === 'ja';
+  document.getElementById('pickerTitle').textContent = isJa
+    ? `${currentBoxSize}本 Box — 中身を選んでください`
+    : `${currentBoxSize}-Roll Box — Pick your rolls`;
+  // Progress dots
+  let dots = '';
+  for (let i = 0; i < currentBoxSize; i++) {
+    dots += `<span class="progress-dot ${i < currentBoxItems.length ? 'filled' : ''}"></span>`;
+  }
+  document.getElementById('progressDots').innerHTML = dots;
+  document.getElementById('progressText').textContent = `${currentBoxItems.length} / ${currentBoxSize}`;
+}
+
+function renderPickGrid() {
+  const grid = document.getElementById('pickGrid');
+  const isJa = lang === 'ja';
+  // Build a map of item id -> list of pick order numbers (1-based)
+  const orderMap = {};
+  currentBoxItems.forEach((id, i) => {
+    if (!orderMap[id]) orderMap[id] = [];
+    orderMap[id].push(i + 1);
+  });
+  grid.innerHTML = MENU.map(item => {
+    const orders = orderMap[item.id] || [];
+    const picked = orders.length > 0;
     return `
-    <div class="menu-item set-item reveal ${qty > 0 ? 'in-cart' : ''}">
-      <div class="set-dots"><svg viewBox="0 0 120 80" fill="var(--accent)"><circle cx="20" cy="20" r="14"/><circle cx="60" cy="20" r="14"/><circle cx="100" cy="20" r="14"/><circle cx="20" cy="60" r="14"/><circle cx="60" cy="60" r="14"/><circle cx="100" cy="60" r="14"/></svg></div>
-      <div class="menu-item-name">${item.name}</div>
-      <div class="menu-item-price" style="margin:.5rem 0">&yen;${item.price.toLocaleString()}<small style="font-size:.6rem;color:var(--fg-muted)"> (税別)</small></div>
-      <div class="menu-item-desc" data-ja="${item.desc_ja}" data-en="${item.desc_en}">${lang==='ja'?item.desc_ja:item.desc_en}</div>
-      <div class="qty-ctrl" style="justify-content:center;margin-top:1rem">
-        <button class="qty-btn" onclick="changeQty('${item.id}',-1)">−</button>
-        <span class="qty-num">${qty}</span>
-        <button class="qty-btn" onclick="changeQty('${item.id}',1)">+</button>
-      </div>
+    <div class="pick-item ${picked ? 'picked' : ''}" onclick="pickItem('${item.id}')">
+      <div class="pick-item-badge">${orders.join(',')}</div>
+      <div class="pick-item-name">${item.jp}</div>
+      <div class="pick-item-sub">${item.name}</div>
+      <div class="pick-item-price">&yen;${item.price.toLocaleString()}</div>
     </div>`;
   }).join('');
+}
 
-  // A la carte
-  const grid = document.getElementById('menuGrid');
-  grid.innerHTML = MENU.map(item => {
-    const qty = cart[item.id] || 0;
+function pickItem(id) {
+  if (currentBoxItems.length >= currentBoxSize) {
+    // Box is full — remove last and replace? Or just ignore.
+    const isJa = lang === 'ja';
+    alert(isJa ? `${currentBoxSize}本すべて選択済みです。変更するにはタップして外してください。` : `All ${currentBoxSize} rolls selected. Tap a selected item to remove it.`);
+    return;
+  }
+  currentBoxItems.push(id);
+  updatePickerHeader();
+  renderPickGrid();
+
+  // If box is now full, auto-complete it
+  if (currentBoxItems.length === currentBoxSize) {
+    setTimeout(() => completeCurrentBox(), 300);
+  }
+}
+
+// Allow removing by clicking a picked item
+const _origPickItem = pickItem;
+pickItem = function(id) {
+  const count = currentBoxItems.filter(x => x === id).length;
+  if (count > 0 && currentBoxItems.length >= currentBoxSize) {
+    // Remove one instance of this item
+    const idx = currentBoxItems.lastIndexOf(id);
+    currentBoxItems.splice(idx, 1);
+    updatePickerHeader();
+    renderPickGrid();
+    return;
+  }
+  _origPickItem(id);
+};
+
+function completeCurrentBox() {
+  completedBoxes.push({size: currentBoxSize, items: [...currentBoxItems]});
+  currentBoxSize = 0;
+  currentBoxItems = [];
+  // Hide picker, deselect box cards
+  document.getElementById('boxPicker').classList.remove('active');
+  document.querySelectorAll('.box-card').forEach(c => c.classList.remove('selected'));
+  renderCompletedBoxes();
+  updateCart();
+}
+
+function renderCompletedBoxes() {
+  const container = document.getElementById('completedBoxes');
+  const isJa = lang === 'ja';
+  container.innerHTML = completedBoxes.map((box, i) => {
+    const names = box.items.map(id => {
+      const m = MENU.find(x => x.id === id);
+      return m ? m.jp : id;
+    });
+    const subtotal = box.items.reduce((s, id) => {
+      const m = MENU.find(x => x.id === id);
+      return s + (m ? m.price : 0);
+    }, 0);
     return `
-    <div class="menu-item reveal ${qty > 0 ? 'in-cart' : ''}">
-      <div class="menu-item-name">${item.jp}</div>
-      <div class="menu-item-name-jp">${item.name}</div>
-      <div class="menu-item-bottom">
-        <div class="menu-item-price">&yen;${item.price.toLocaleString()}</div>
-        <div class="qty-ctrl">
-          <button class="qty-btn" onclick="changeQty('${item.id}',-1)">−</button>
-          <span class="qty-num">${qty}</span>
-          <button class="qty-btn" onclick="changeQty('${item.id}',1)">+</button>
+    <div class="completed-box">
+      <div class="completed-box-info">
+        <strong>Box #${i+1}</strong> (${box.size}${isJa?'本':'pcs'})
+        <div class="completed-box-items">${names.join('、')}</div>
+      </div>
+      <div style="display:flex;align-items:center">
+        <span class="completed-box-price">&yen;${subtotal.toLocaleString()}</span>
+        <div class="completed-box-actions" style="margin-left:1rem">
+          <button onclick="removeBox(${i})">${isJa?'削除':'Remove'}</button>
         </div>
       </div>
     </div>`;
   }).join('');
-  document.querySelectorAll('.menu-item.reveal:not(.visible)').forEach(el => observer.observe(el));
+  document.getElementById('addBoxBtn').style.display = completedBoxes.length > 0 ? 'block' : 'none';
 }
 
-function changeQty(id, delta) {
-  const cur = cart[id] || 0;
-  const next = Math.max(0, cur + delta);
-  if (next === 0) delete cart[id]; else cart[id] = next;
-  updateCart(); renderMenu();
+function removeBox(index) {
+  completedBoxes.splice(index, 1);
+  renderCompletedBoxes();
+  updateCart();
 }
 
-function allItems() { return [...SETS, ...MENU]; }
+function startNewBox() {
+  // Scroll to box selection
+  document.getElementById('boxStepTitle').scrollIntoView({behavior:'smooth', block:'start'});
+}
 
 function updateCart() {
-  let count = 0, total = 0;
-  for (const [id, qty] of Object.entries(cart)) {
-    const item = allItems().find(m => m.id === id);
-    if (item) { count += qty; total += item.price * qty; }
-  }
-  const setCount = Object.entries(cart).reduce((s,[id,q]) => s + (SETS.some(x=>x.id===id)?q:0), 0);
-  const rollCount = count - setCount;
-  const label = setCount > 0 && rollCount > 0 ? `${setCount}set + ${rollCount}${lang==='ja'?'本':'pcs'}` :
-    setCount > 0 ? `${setCount} set` : `${count}${lang==='ja'?'本':'pcs'}`;
+  let totalRolls = 0, totalPrice = 0;
+  completedBoxes.forEach(box => {
+    totalRolls += box.size;
+    box.items.forEach(id => {
+      const m = MENU.find(x => x.id === id);
+      if (m) totalPrice += m.price;
+    });
+  });
+  const isJa = lang === 'ja';
+  const label = `${completedBoxes.length} Box (${totalRolls}${isJa?'本':'pcs'})`;
   document.getElementById('cartCount').textContent = label;
-  document.getElementById('cartTotal').textContent = total.toLocaleString();
-  document.getElementById('cartBar').classList.toggle('show', count > 0);
+  document.getElementById('cartTotal').textContent = totalPrice.toLocaleString();
+  document.getElementById('cartBar').classList.toggle('show', completedBoxes.length > 0);
 }
 
 function openModal() {
-  // Minimum order validation: 2本以上（セットは除く）
-  const totalRolls = Object.entries(cart).reduce((sum, [id, qty]) => {
-    const isSet = SETS.some(s => s.id === id);
-    return sum + (isSet ? 0 : qty);
-  }, 0);
-  const totalSets = Object.entries(cart).reduce((sum, [id, qty]) => {
-    return sum + (SETS.some(s => s.id === id) ? qty : 0);
-  }, 0);
-  if (totalRolls < 2 && totalSets === 0) {
-    alert(lang==='ja'?'単品は2本からご注文いただけます。':'Minimum order is 2 rolls for individual items.');
-    return;
-  }
+  if (completedBoxes.length === 0) return;
+  const isJa = lang === 'ja';
 
-  const items = Object.entries(cart).map(([id, qty]) => {
-    const m = allItems().find(x => x.id === id);
-    return { name: `${m.jp}`, price: m.price, qty };
+  // Build line items from all boxes
+  const boxLines = completedBoxes.map((box, i) => {
+    const names = box.items.map(id => MENU.find(x=>x.id===id)?.jp || id);
+    const sub = box.items.reduce((s,id) => s + (MENU.find(x=>x.id===id)?.price||0), 0);
+    return {label: `Box #${i+1} (${box.size}${isJa?'本':'pcs'}): ${names.join('、')}`, price: sub};
   });
-  const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
-  const tax = Math.floor(subtotal * 0.1); // floor to match backend ceil on total
-  const boxCharge = 200;
+  const subtotal = boxLines.reduce((s,b) => s+b.price, 0);
+  const tax = Math.floor(subtotal * 0.1);
+  const boxCharge = completedBoxes.length * 200;
   const total = subtotal + tax + boxCharge;
-  // Note: actual charge is calculated server-side. This is display only.
 
   document.getElementById('modalContent').innerHTML = `
     <button class="modal-close" onclick="closeModal()">&times;</button>
-    <h2>${lang==='ja'?'ご注文':'Your Order'}</h2>
+    <h2>${isJa?'ご注文':'Your Order'}</h2>
     <ul class="modal-items">
-      ${items.map(i => `<li><span>${i.name} &times;${i.qty}</span><span>&yen;${(i.price*i.qty).toLocaleString()}</span></li>`).join('')}
-      <li style="color:var(--fg-muted);font-size:.8rem"><span>${lang==='ja'?'消費税 (10%)':'Tax (10%)'}</span><span>&yen;${tax.toLocaleString()}</span></li>
-      <li style="color:var(--fg-muted);font-size:.8rem"><span>${lang==='ja'?'箱代':'Box charge'}</span><span>&yen;${boxCharge}</span></li>
+      ${boxLines.map(b => `<li><span style="font-size:.8rem">${b.label}</span><span>&yen;${b.price.toLocaleString()}</span></li>`).join('')}
+      <li style="color:var(--fg-muted);font-size:.8rem"><span>${isJa?'消費税 (10%)':'Tax (10%)'}</span><span>&yen;${tax.toLocaleString()}</span></li>
+      <li style="color:var(--fg-muted);font-size:.8rem"><span>${isJa?'箱代':'Box charge'} &times;${completedBoxes.length}</span><span>&yen;${boxCharge.toLocaleString()}</span></li>
     </ul>
-    <div class="modal-total">${lang==='ja'?'合計':'Total'} &yen;${total.toLocaleString()}</div>
+    <div class="modal-total">${isJa?'合計':'Total'} &yen;${total.toLocaleString()}</div>
     <form onsubmit="submitOrder(event)">
       <div class="form-group">
-        <label>${lang==='ja'?'お名前':'Name'}</label>
-        <input type="text" id="oName" required placeholder="${lang==='ja'?'山田 太郎':'Taro Yamada'}">
+        <label>${isJa?'お名前':'Name'}</label>
+        <input type="text" id="oName" required placeholder="${isJa?'山田 太郎':'Taro Yamada'}">
       </div>
       <div class="form-group">
-        <label>${lang==='ja'?'電話番号':'Phone'}</label>
+        <label>${isJa?'電話番号':'Phone'}</label>
         <input type="tel" id="oPhone" required placeholder="090-1234-5678">
       </div>
       <div class="form-group">
-        <label>${lang==='ja'?'受取時間':'Pickup Time'}</label>
+        <label>${isJa?'受取時間':'Pickup Time'}</label>
         <select id="oTime">${generateTimeSlots()}</select>
       </div>
       <div class="form-group">
-        <label>${lang==='ja'?'備考（任意）':'Note (optional)'}</label>
-        <textarea id="oNote" placeholder="${lang==='ja'?'わさび抜き など':'No wasabi, etc.'}"></textarea>
+        <label>${isJa?'備考（任意）':'Note (optional)'}</label>
+        <textarea id="oNote" placeholder="${isJa?'わさび抜き など':'No wasabi, etc.'}"></textarea>
       </div>
-      <button type="submit" class="modal-submit" style="background:var(--accent)">${lang==='ja'?'カード決済で注文する':'Pay & Order with Card'}</button>
+      <button type="submit" class="modal-submit" style="background:var(--accent)">${isJa?'カード決済で注文する':'Pay & Order with Card'}</button>
     </form>`;
   document.getElementById('modalBg').classList.add('show');
 }
@@ -528,15 +677,23 @@ function generateTimeSlots() {
 }
 
 function getOrderBody() {
+  // Flatten all box items into order items with quantities
+  const itemMap = {};
+  completedBoxes.forEach(box => {
+    box.items.forEach(id => {
+      const m = MENU.find(x => x.id === id);
+      if (m) {
+        if (!itemMap[id]) itemMap[id] = {name: m.jp, price: m.price, qty: 0};
+        itemMap[id].qty++;
+      }
+    });
+  });
   return {
     name: document.getElementById('oName').value,
     phone: document.getElementById('oPhone').value,
     pickup_time: document.getElementById('oTime').value,
-    items: Object.entries(cart).map(([id, qty]) => {
-      const m = allItems().find(x => x.id === id);
-      return { name: m.jp, price: m.price, qty };
-    }),
-    note: document.getElementById('oNote').value,
+    items: Object.values(itemMap),
+    note: document.getElementById('oNote').value + ` [${completedBoxes.length} Box: ${completedBoxes.map((b,i)=>`#${i+1}(${b.size}本)`).join(', ')}]`,
   };
 }
 
@@ -550,7 +707,7 @@ async function submitOrder(e) {
     const res = await fetch('/api/checkout', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const data = await res.json();
     if (data.url) {
-      trk('stripe_redirect');
+      trk('square_redirect');
       window.location.href = data.url;
     } else if (data.error) {
       btn.disabled = false; btn.textContent = lang==='ja'?'カード決済で注文する':'Pay & Order with Card';
@@ -580,7 +737,7 @@ function showSuccess(data) {
     </div>`;
 }
 
-function resetCart() { cart = {}; updateCart(); renderMenu(); }
+function resetCart() { completedBoxes = []; currentBoxSize = 0; currentBoxItems = []; renderCompletedBoxes(); updateCart(); }
 
 // Check if returned from Stripe payment
 if (location.search.includes('paid=1')) {
@@ -694,11 +851,11 @@ const sectionObs = new IntersectionObserver(entries => {
 }, {threshold:.3});
 document.querySelectorAll('section[id]').forEach(s => sectionObs.observe(s));
 
-// Wrap changeQty to track cart_add
-const _origChangeQty = changeQty;
-changeQty = function(id, delta) {
-  if (delta > 0) trk('cart_add', id);
-  _origChangeQty(id, delta);
+// Track box selection
+const _origSelectBox = selectBox;
+selectBox = function(size) {
+  trk('box_select', size);
+  _origSelectBox(size);
 };
 
 // Track modal open
@@ -759,7 +916,8 @@ openModal = function() {
 };
 
 // INIT
-renderMenu();
+renderCompletedBoxes();
+updateCart();
 </script>
 </body>
 </html>

@@ -1,0 +1,16 @@
+{
+  "name": "makimaki POS",
+  "short_name": "POS",
+  "start_url": "/pos",
+  "display": "standalone",
+  "background_color": "#FDFBF8",
+  "theme_color": "#3A5A40",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "/logo-dark.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>まきちゃん アニメーションスタンプ — makimaki</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Zen Maru Gothic',sans-serif;background:#FDFBF8;color:#1C1917}
+.hero{text-align:center;padding:3rem 2rem 2rem;background:#3A5A40;color:#fff}
+.hero h1{font-size:1.8rem;font-weight:500;margin-bottom:.3rem}
+.hero p{font-size:.85rem;opacity:.7;max-width:500px;margin:.5rem auto 0}
+.tabs{display:flex;justify-content:center;gap:1rem;padding:1.5rem;border-bottom:1px solid #E7E0D8}
+.tab{padding:.5rem 1.5rem;border:1px solid #E7E0D8;border-radius:20px;font-size:.8rem;cursor:pointer;text-decoration:none;color:#78716C;transition:all .2s}
+.tab:hover,.tab.active{background:#3A5A40;color:#fff;border-color:#3A5A40}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;max-width:900px;margin:2rem auto;padding:0 1.5rem}
+.stamp{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06);text-align:center}
+.stamp video,.stamp img{width:100%;aspect-ratio:16/9;object-fit:contain;background:#f9f9f9}
+.stamp p{font-size:.75rem;color:#78716C;padding:.5rem}
+.info{max-width:600px;margin:2rem auto;padding:0 1.5rem 3rem;text-align:center;font-size:.85rem;color:#78716C;line-height:2}
+.info a{color:#3A5A40;text-decoration:none;border-bottom:1px solid #3A5A40}
+@media(max-width:700px){.grid{grid-template-columns:repeat(2,1fr);gap:.8rem}}
+</style>
+</head>
+<body>
+<div class="hero">
+  <h1>まきちゃん アニメーションスタンプ</h1>
+  <p>Veo 3で動くまきちゃん — 全16種</p>
+</div>
+<div class="tabs">
+  <a href="/stamps/" class="tab">静止画版</a>
+  <a href="/stamps/animated.html" class="tab active">アニメーション版</a>
+</div>
+<div class="grid" id="grid"></div>
+<div class="info">
+  <a href="/">makimaki.tokyo</a> に戻る
+</div>
+<script>
+const LABELS = [
+  'ありがとう','今日もいいネタ入ったよ！','おつかれさま〜','まかせて！',
+  'おいしくな〜れ','いただきます','がんばって！','ごめんなさい〜',
+  '大好き！！','わーーい！','心を込めて','おやすみ…',
+  '巻きたてお届け〜！','うえーん','一生懸命巻くね','また来てね♪'
+];
+const grid = document.getElementById('grid');
+for (let i = 1; i <= 16; i++) {
+  const num = String(i).padStart(2, '0');
+  const div = document.createElement('div');
+  div.className = 'stamp';
+  // Try video first, fallback to gif
+  div.innerHTML = `
+    <video autoplay loop muted playsinline>
+      <source src="/stamps/animated/${num}.mp4" type="video/mp4">
+    </video>
+    <p>${LABELS[i-1]}</p>`;
+  grid.appendChild(div);
+  // If video fails, swap to gif
+  const video = div.querySelector('video');
+  video.onerror = () => {
+    div.querySelector('video').outerHTML = `<img src="/stamps/animated/${num}.gif" alt="${LABELS[i-1]}">`;
+  };
+}
+</script>
+</body>
+</html>

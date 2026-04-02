@@ -9,138 +9,97 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Zen Maru Gothic',sans-serif;background:#000;color:#fff;overflow:hidden;height:100vh;width:100vw}
 
-/* BG */
-.mv-bg{position:fixed;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.2s ease;z-index:0;transform:scale(1.05)}
-.mv-bg.active{opacity:1;animation:kenBurns 8s ease-in-out infinite alternate}
-@keyframes kenBurns{0%{transform:scale(1.05) translate(0,0)}100%{transform:scale(1.12) translate(-1%,-1%)}}
-.mv-overlay{position:fixed;inset:0;z-index:1}
-.overlay-dark{background:linear-gradient(to bottom,rgba(0,0,0,.3),rgba(0,0,0,.6))}
-.overlay-light{background:linear-gradient(to bottom,rgba(0,0,0,.15),rgba(0,0,0,.45))}
+.mv-bg{position:fixed;inset:0;background-size:cover;background-position:center;z-index:0}
+.mv-overlay{position:fixed;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.25),rgba(0,0,0,.55));z-index:1}
 .beat-flash{position:fixed;inset:0;z-index:1;background:rgba(58,90,64,.18);opacity:0;pointer-events:none;transition:opacity .08s}
 .beat-flash.on{opacity:1}
 
-/* CONTENT */
 .mv-content{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:5;text-align:center;padding:2rem}
-
-/* LYRICS */
 .lyric{font-size:clamp(1.5rem,4.5vw,3rem);font-weight:700;letter-spacing:.08em;line-height:1.5;opacity:0;transform:translateY(24px);transition:all .5s cubic-bezier(.22,1,.36,1);max-width:750px;text-shadow:0 3px 30px rgba(0,0,0,.7)}
 .lyric.active{opacity:1;transform:translateY(0)}
 .lyric.fade{opacity:0;transform:translateY(-20px)}
 
-/* INFO TEXT (typewriter) */
-.info-text{position:fixed;z-index:6;opacity:0;transition:all .8s cubic-bezier(.22,1,.36,1);pointer-events:none}
-.info-text.show{opacity:1}
-.info-top{top:15%;left:50%;transform:translateX(-50%);text-align:center}
-.info-bottom{bottom:15%;left:50%;transform:translateX(-50%);text-align:center}
-.info-left{top:50%;left:5%;transform:translateY(-50%);text-align:left}
-.info-right{top:50%;right:5%;transform:translateY(-50%);text-align:right}
-.info-text h3{font-size:clamp(.7rem,1.5vw,1rem);font-weight:300;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:.5rem}
-.info-text p{font-size:clamp(.85rem,2vw,1.3rem);font-weight:400;line-height:1.8;text-shadow:0 2px 15px rgba(0,0,0,.5)}
-.typewriter{overflow:hidden;border-right:2px solid rgba(255,255,255,.6);white-space:nowrap;animation:typing 2s steps(20) forwards,blink .6s step-end infinite}
-@keyframes typing{from{width:0}to{width:100%}}
-@keyframes blink{50%{border-color:transparent}}
-
-/* MAKI-CHAN */
-.maki-chan{position:fixed;z-index:4;pointer-events:none;transition:all .8s cubic-bezier(.22,1,.36,1)}
-.maki-chan video{width:100%;height:100%;object-fit:contain;mix-blend-mode:screen;filter:brightness(1.15) contrast(1.3)}
-.maki-left{bottom:1.5rem;left:1.5rem;width:150px;height:112px;opacity:0;transform:translateX(-50px) scale(.8)}
-.maki-left.show{opacity:1;transform:translateX(0) scale(1)}
-.maki-right{bottom:1.5rem;right:1.5rem;width:150px;height:112px;opacity:0;transform:translateX(50px) scale(.8)}
-.maki-right.show{opacity:1;transform:translateX(0) scale(1)}
-.maki-center{top:50%;left:50%;width:240px;height:180px;transform:translate(-50%,-50%) scale(0);opacity:0;transition:all .5s cubic-bezier(.34,1.56,.64,1)}
+/* MAKI-CHAN APNG */
+.maki-chan{position:fixed;z-index:6;pointer-events:none;transition:all .6s cubic-bezier(.22,1,.36,1)}
+.maki-chan img{width:100%;height:100%;object-fit:contain}
+.maki-left{bottom:2rem;left:2rem;width:160px;height:160px;opacity:0;transform:translateX(-40px)}
+.maki-left.show{opacity:1;transform:translateX(0)}
+.maki-right{bottom:2rem;right:2rem;width:160px;height:160px;opacity:0;transform:translateX(40px)}
+.maki-right.show{opacity:1;transform:translateX(0)}
+.maki-center{top:50%;left:50%;width:220px;height:220px;transform:translate(-50%,-50%) scale(0);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1)}
 .maki-center.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
-@keyframes makiBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-.maki-bounce video{animation:makiBounce .4s ease}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.maki-left.bounce{animation:bounce .35s ease}
+.maki-right.bounce{animation:bounce .35s ease}
+.maki-center.bounce.show{animation:bouncec .35s ease;transform:translate(-50%,-50%) scale(1)}
+@keyframes bouncec{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1) translateY(-8px)}}
 
-/* LOGO */
 .mv-logo{position:fixed;top:1.5rem;left:50%;transform:translateX(-50%);z-index:10;transition:transform .15s}
 .mv-logo svg{height:24px;overflow:visible}
 .mv-logo circle{transition:transform .08s,fill .15s;transform-origin:center;transform-box:fill-box}
 
-/* VISUALIZER */
 .visualizer{position:fixed;bottom:0;left:0;right:0;height:60px;z-index:3;display:flex;align-items:flex-end;justify-content:center;gap:2px;padding:0 15%;pointer-events:none}
 .viz-bar{width:3px;background:rgba(58,90,64,.6);border-radius:2px 2px 0 0;min-height:2px}
 
-/* PARTICLES */
 .particles{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden}
 .particle{position:absolute;border-radius:50%;animation:float linear infinite}
 @keyframes float{0%{transform:translateY(100vh) scale(0);opacity:0}10%{opacity:1}90%{opacity:.3}100%{transform:translateY(-20vh) scale(1);opacity:0}}
 
-/* SUSHI RAIN */
 .sushi-rain{position:fixed;inset:0;z-index:4;pointer-events:none;overflow:hidden}
 .sushi-drop{position:absolute;animation:sushiFall linear forwards}
 @keyframes sushiFall{0%{transform:translateY(-40px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(360deg);opacity:0}}
 
-/* PROGRESS */
 .mv-progress{position:fixed;bottom:0;left:0;height:3px;background:linear-gradient(90deg,#3A5A40,#7CBA82);z-index:10;transition:width .3s linear}
 
-/* CTA */
 .mv-cta{position:fixed;bottom:2.5rem;left:50%;transform:translateX(-50%);z-index:10;opacity:0;transition:all .8s;pointer-events:none}
 .mv-cta.show{opacity:1;pointer-events:auto}
 .mv-cta a{display:inline-block;padding:.9rem 3rem;background:#3A5A40;color:#fff;text-decoration:none;font-size:1rem;letter-spacing:.15em;border-radius:30px;transition:all .3s;box-shadow:0 4px 20px rgba(58,90,64,.3)}
-.mv-cta a:hover{background:#2E4833;transform:translateY(-2px);box-shadow:0 6px 30px rgba(58,90,64,.4)}
+.mv-cta a:hover{background:#2E4833;transform:translateY(-2px)}
 
-/* PLAY */
 .play-overlay{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:20;background:rgba(0,0,0,.75);cursor:pointer;transition:opacity .6s}
 .play-overlay.hidden{opacity:0;pointer-events:none}
-.play-maki{width:120px;height:90px;margin-bottom:1rem}
-.play-maki video{width:100%;height:100%;object-fit:contain}
+.play-maki{width:120px;height:120px;margin-bottom:1rem}
+.play-maki img{width:100%;height:100%;object-fit:contain}
 .play-btn{width:80px;height:80px;border:2px solid rgba(255,255,255,.4);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .3s}
-.play-btn:hover{border-color:#fff;transform:scale(1.1);box-shadow:0 0 30px rgba(255,255,255,.1)}
+.play-btn:hover{border-color:#fff;transform:scale(1.1)}
 .play-btn svg{width:28px;height:28px;fill:#fff;margin-left:4px}
 .play-title{margin-top:1.5rem;font-size:1.5rem;font-weight:400;letter-spacing:.3em}
 .play-sub{margin-top:.4rem;font-size:.7rem;opacity:.35;letter-spacing:.15em}
 
-.mv-close{position:fixed;top:1.2rem;right:1.2rem;z-index:20;background:none;border:none;color:rgba(255,255,255,.4);font-size:1.3rem;cursor:pointer;transition:color .3s;text-decoration:none}
+.mv-close{position:fixed;top:1.2rem;right:1.2rem;z-index:20;color:rgba(255,255,255,.4);font-size:1.3rem;cursor:pointer;text-decoration:none}
 .mv-close:hover{color:#fff}
 
 @media(max-width:600px){
-  .maki-left,.maki-right{width:100px;height:75px}
-  .maki-center{width:180px;height:135px}
-  .info-text p{font-size:.85rem}
-  .info-left,.info-right{display:none}
+  .maki-left,.maki-right{width:110px;height:110px;bottom:1rem}
+  .maki-left{left:1rem}.maki-right{right:1rem}
+  .maki-center{width:160px;height:160px}
 }
 </style>
 </head>
 <body>
 
-<!-- BG -->
-<div class="mv-bg active" id="bg0" style="background-image:url('/img1110.jpg')"></div>
-<div class="mv-bg" id="bg1" style="background-image:url('/img1111.jpg')"></div>
-<div class="mv-bg" id="bg2" style="background-image:url('/img1108.jpg')"></div>
-<div class="mv-bg" id="bg3" style="background-image:url('/img1113.jpg')"></div>
-<div class="mv-bg" id="bg4" style="background-image:url('/img1114.jpg')"></div>
-<div class="mv-bg" id="bg5" style="background-image:url('/img1107.jpg')"></div>
-<div class="mv-bg" id="bg6" style="background-image:url('/img1109.jpg')"></div>
-<div class="mv-bg" id="bg7" style="background-image:url('/img1117.jpg')"></div>
-<div class="mv-bg" id="bg8" style="background-image:url('/img1112.jpg')"></div>
-<div class="mv-overlay overlay-dark" id="overlay"></div>
+<!-- SINGLE BG (no switching) -->
+<div class="mv-bg" id="mvBg" style="background-image:url('/img1110.jpg')"></div>
+<div class="mv-overlay"></div>
 <div class="beat-flash" id="beatFlash"></div>
 <div class="particles" id="particles"></div>
 <div class="sushi-rain" id="sushiRain"></div>
 <div class="visualizer" id="visualizer"></div>
 
-<!-- MAKI-CHAN -->
-<div class="maki-chan maki-left" id="makiL"><video muted loop playsinline id="makiLV"></video></div>
-<div class="maki-chan maki-right" id="makiR"><video muted loop playsinline id="makiRV"></video></div>
-<div class="maki-chan maki-center" id="makiC"><video muted loop playsinline id="makiCV"></video></div>
+<!-- MAKI-CHAN (APNG) -->
+<div class="maki-chan maki-left" id="makiL"><img id="makiLI" alt=""></div>
+<div class="maki-chan maki-right" id="makiR"><img id="makiRI" alt=""></div>
+<div class="maki-chan maki-center" id="makiC"><img id="makiCI" alt=""></div>
 
-<!-- INFO TEXT LAYERS -->
-<div class="info-text info-top" id="infoTop"></div>
-<div class="info-text info-bottom" id="infoBottom"></div>
-
-<!-- LOGO -->
 <div class="mv-logo"><svg viewBox="0 0 120 80" fill="white"><circle cx="20" cy="20" r="14"/><circle cx="60" cy="20" r="14"/><circle cx="100" cy="20" r="14"/><circle cx="20" cy="60" r="14"/><circle cx="60" cy="60" r="14"/><circle cx="100" cy="60" r="14"/></svg></div>
-
 <a href="/" class="mv-close">&times;</a>
 
 <div class="mv-content"><div class="lyric" id="lyric"></div></div>
 <div class="mv-progress" id="progress"></div>
 <div class="mv-cta" id="cta"><a href="/#menu">オーダーする</a></div>
 
-<!-- PLAY -->
 <div class="play-overlay" id="playOverlay" onclick="startMV()">
-  <div class="play-maki"><video autoplay muted loop playsinline src="/stamps/animated/16.mp4"></video></div>
+  <div class="play-maki"><img src="/stamps/animated/16.apng" alt="まきちゃん"></div>
   <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
   <div class="play-title">MAKIMAKI DAYS</div>
   <div class="play-sub">麻布十番 細巻き専門店</div>
@@ -149,95 +108,69 @@ body{font-family:'Zen Maru Gothic',sans-serif;background:#000;color:#fff;overflo
 <audio id="audio" preload="auto" src="/makimaki-days.mp3"></audio>
 
 <script>
+const A = '/stamps/animated/';
 const CLIPS = {
-  wave:'/stamps/animated/16.mp4', jump:'/stamps/animated/10.mp4',
-  love:'/stamps/animated/09.mp4', bow:'/stamps/animated/01.mp4',
-  cook:'/stamps/animated/05.mp4', cheer:'/stamps/animated/07.mp4',
-  run:'/stamps/animated/13.mp4',  cry:'/stamps/animated/14.mp4',
-  eat:'/stamps/animated/06.mp4',  sleep:'/stamps/animated/12.mp4',
+  wave:A+'16.apng', jump:A+'10.apng', love:A+'09.apng', bow:A+'01.apng',
+  cook:A+'05.apng', cheer:A+'07.apng', run:A+'13.apng', cry:A+'14.apng',
+  eat:A+'06.apng', sleep:A+'12.apng',
 };
 
-// Timeline: lyrics + shop info + maki-chan choreography
+// BG images - preload
+const BGS = ['/img1110.jpg','/img1111.jpg','/img1108.jpg','/img1113.jpg','/img1114.jpg','/img1107.jpg','/img1109.jpg','/img1117.jpg','/img1112.jpg'];
+BGS.forEach(s => { const i = new Image(); i.src = s; });
+
 const TIMELINE = [
-  // INTRO
-  {t:0, lyric:"Makimaki!", bg:0, maki:{p:'C',c:'jump'}, sushi:true},
-  {t:2.6, lyric:"Let's go!", bg:0, maki:{p:'L',c:'run'},
-   info:{pos:'top', html:'<h3>Azabu-Juban, Tokyo</h3><p>麻布十番の細巻き専門店</p>'}},
-  {t:5, lyric:"", bg:4, hideMaki:true, hideInfo:true,
-   info:{pos:'bottom', html:'<p>鮨めい乃のMaiがプロデュース</p>'}},
-  {t:8, lyric:"", bg:1, hideInfo:true},
-
-  // VERSE 1
-  {t:14.2, lyric:"十番の街　光るロゴ", bg:0, maki:{p:'R',c:'wave'},
-   info:{pos:'top', html:'<h3>Location</h3><p>麻布十番駅 徒歩1分</p>'}},
-  {t:16.7, lyric:"一本ずつ　巻くのがプロ", bg:4, maki:{p:'L',c:'cook'}, hideInfo:true,
-   info:{pos:'bottom', html:'<p>一本ずつ、心を込めて巻き上げます</p>'}},
-  {t:19.2, lyric:"旬の素材　光る彩り", bg:2,
-   info:{pos:'top', html:'<h3>Ingredients</h3><p>山幸の国産本マグロを使用</p>'}},
-  {t:21.6, lyric:"手にするだけで　心踊り", bg:6, maki:{p:'R',c:'love'}, hideInfo:true},
-
-  // CHORUS
-  {t:24.9, lyric:"MAKIMAKI!　どこでもパクり", bg:3, maki:{p:'C',c:'jump'}, sushi:true,
-   info:{pos:'top', html:'<h3>Takeout</h3><p>どこでも手軽に、美味しいお鮨を</p>'}},
-  {t:27.3, lyric:"MAKIMAKI!　笑顔がキラり", bg:7, maki:{p:'L',c:'cheer'}, sushi:true, hideInfo:true},
-  {t:29.8, lyric:"お家も外も　幸せガブリ", bg:1, maki:{p:'R',c:'love'},
-   info:{pos:'bottom', html:'<p>2本Box ¥1,200〜 / 4本Box ¥3,500〜</p>'}},
-  {t:32.3, lyric:"最高な時間を　巻き込んじゃえ！", bg:5, maki:{p:'C',c:'cheer'}, sushi:true, hideInfo:true},
-  {t:37.4, lyric:"It's a MAKIMAKI DAY!", bg:0, maki:{p:'C',c:'jump'}, sushi:true,
-   info:{pos:'top', html:'<h3>Online Order</h3><p>makimaki.tokyo でオンライン注文</p>'}},
-  {t:41, lyric:"", bg:4, hideMaki:true, hideInfo:true},
-
-  // OUTRO
-  {t:43.1, lyric:"できたてをどうぞ。", bg:6, maki:{p:'R',c:'bow'},
-   info:{pos:'top', html:'<h3>Open</h3><p>11:00 - 18:00 / 不定休</p>'}},
-  {t:47, lyric:"", bg:8, hideInfo:true},
-  {t:48.7, lyric:"Makimaki!", bg:0, maki:{p:'C',c:'wave'},
-   info:{pos:'bottom', html:'<p>@maki_maki_tokyo</p>'}},
-  {t:52, lyric:"", bg:4, cta:true, maki:{p:'L',c:'wave'}},
+  {t:0,    lyric:"Makimaki!", bg:0, maki:{p:'C',c:'jump'}, sushi:true},
+  {t:2.6,  lyric:"Let's go!", bg:0, maki:{p:'L',c:'run'}},
+  {t:5,    lyric:"Makimaki, Let's go!", bg:4, maki:{p:'R',c:'cheer'}, sushi:true},
+  {t:8,    lyric:"", bg:1, hideMaki:true},
+  {t:14.2, lyric:"十番の街　光るロゴ", bg:0, maki:{p:'R',c:'wave'}},
+  {t:16.7, lyric:"一本ずつ　巻くのがプロ", bg:4, maki:{p:'L',c:'cook'}},
+  {t:19.2, lyric:"旬の素材　光る彩り", bg:2, maki:{p:'R',c:'love'}},
+  {t:21.6, lyric:"手にするだけで　心踊り", bg:6, maki:{p:'L',c:'jump'}},
+  {t:24.9, lyric:"MAKIMAKI!　どこでもパクり", bg:3, maki:{p:'C',c:'jump'}, sushi:true},
+  {t:27.3, lyric:"MAKIMAKI!　笑顔がキラり", bg:7, maki:{p:'L',c:'cheer'}, sushi:true},
+  {t:29.8, lyric:"お家も外も　幸せガブリ", bg:1, maki:{p:'R',c:'love'}},
+  {t:32.3, lyric:"最高な時間を　巻き込んじゃえ！", bg:5, maki:{p:'C',c:'cheer'}, sushi:true},
+  {t:37.4, lyric:"It's a MAKIMAKI DAY!", bg:0, maki:{p:'C',c:'jump'}, sushi:true},
+  {t:41,   lyric:"", bg:4, hideMaki:true},
+  {t:43.1, lyric:"できたてをどうぞ。", bg:6, maki:{p:'R',c:'bow'}},
+  {t:47,   lyric:"", bg:8, hideMaki:true},
+  {t:48.7, lyric:"Makimaki!", bg:0, maki:{p:'C',c:'wave'}},
+  {t:52,   lyric:"", bg:4, cta:true, maki:{p:'L',c:'wave'}},
 ];
 
 const audio = document.getElementById('audio');
 const lyricEl = document.getElementById('lyric');
-const progressEl = document.getElementById('progress');
-let currentBg = 0, currentIdx = -1;
+const bgEl = document.getElementById('mvBg');
+let currentIdx = -1;
 let analyser, dataArray, vizBars = [], prevBass = 0;
-const NUM_BARS = 40;
 
 function showMaki(pos, clip) {
   ['L','R','C'].forEach(p => document.getElementById('maki'+p).classList.remove('show'));
   const el = document.getElementById('maki'+pos);
-  const vid = document.getElementById('maki'+pos+'V');
-  vid.src = CLIPS[clip]; vid.play().catch(()=>{});
+  const img = document.getElementById('maki'+pos+'I');
+  // Force APNG restart by adding cache-bust
+  img.src = CLIPS[clip] + '?' + Date.now();
   requestAnimationFrame(() => el.classList.add('show'));
 }
 function hideAllMaki() { ['L','R','C'].forEach(p => document.getElementById('maki'+p).classList.remove('show')); }
 
-function showInfo(pos, html) {
-  const el = document.getElementById(pos === 'top' ? 'infoTop' : 'infoBottom');
-  el.innerHTML = html;
-  el.classList.add('show');
-}
-function hideAllInfo() {
-  document.getElementById('infoTop').classList.remove('show');
-  document.getElementById('infoBottom').classList.remove('show');
-}
-
 function sushiRain() {
   const c = document.getElementById('sushiRain');
-  const e = ['🍣','🥢','🍙','🐟','💚','🟢'];
-  for (let i = 0; i < 12; i++) {
+  const e = ['🍣','🥢','🍙','🐟','💚'];
+  for (let i = 0; i < 10; i++) {
     const d = document.createElement('div'); d.className = 'sushi-drop';
     d.textContent = e[Math.floor(Math.random()*e.length)];
-    d.style.cssText = `left:${Math.random()*100}%;animation-duration:${2+Math.random()*2}s;animation-delay:${Math.random()*1}s;font-size:${1+Math.random()*1.2}rem`;
-    c.appendChild(d); setTimeout(() => d.remove(), 4500);
+    d.style.cssText = `left:${Math.random()*100}%;animation-duration:${2+Math.random()*2}s;animation-delay:${Math.random()*.8}s;font-size:${1+Math.random()*1}rem`;
+    c.appendChild(d); setTimeout(() => d.remove(), 4000);
   }
 }
 
 function spawnParticle() {
   const el = document.createElement('div'); el.className = 'particle';
-  const s = 2+Math.random()*6, d = 5+Math.random()*5;
-  const colors = ['rgba(58,90,64,.3)','rgba(255,255,255,.15)','rgba(184,146,106,.2)'];
-  el.style.cssText = `left:${Math.random()*100}%;width:${s}px;height:${s}px;background:${colors[Math.floor(Math.random()*3)]};animation-duration:${d}s`;
+  const s = 2+Math.random()*5, d = 5+Math.random()*5;
+  el.style.cssText = `left:${Math.random()*100}%;width:${s}px;height:${s}px;background:rgba(${Math.random()>.5?'58,90,64':'255,255,255'},${.15+Math.random()*.15});animation-duration:${d}s`;
   document.getElementById('particles').appendChild(el);
   setTimeout(() => el.remove(), (d+1)*1000);
 }
@@ -249,45 +182,48 @@ function initViz() {
   src.connect(analyser); analyser.connect(ctx.destination);
   dataArray = new Uint8Array(analyser.frequencyBinCount);
   const v = document.getElementById('visualizer');
-  for (let i = 0; i < NUM_BARS; i++) { const b = document.createElement('div'); b.className = 'viz-bar'; v.appendChild(b); vizBars.push(b); }
+  for (let i = 0; i < 40; i++) { const b = document.createElement('div'); b.className = 'viz-bar'; v.appendChild(b); vizBars.push(b); }
 }
 
-let pInterval;
+let pInt;
 function startMV() {
   document.getElementById('playOverlay').classList.add('hidden');
   initViz(); audio.play();
-  pInterval = setInterval(() => spawnParticle(), 800);
+  pInt = setInterval(spawnParticle, 900);
   requestAnimationFrame(tick);
 }
 
 function tick() {
   if (audio.paused && audio.currentTime > 0) return;
   const t = audio.currentTime;
-  if (audio.duration) progressEl.style.width = (t/audio.duration*100)+'%';
+  if (audio.duration) document.getElementById('progress').style.width = (t/audio.duration*100)+'%';
 
   if (analyser) {
     analyser.getByteFrequencyData(dataArray);
-    const step = Math.floor(dataArray.length/NUM_BARS);
-    for (let i = 0; i < NUM_BARS; i++) {
+    const step = Math.floor(dataArray.length/40);
+    for (let i = 0; i < 40; i++) {
       const v = dataArray[i*step]||0;
-      vizBars[i].style.height = (v/255*55+2)+'px';
+      vizBars[i].style.height = (v/255*50+2)+'px';
       vizBars[i].style.background = `rgba(58,90,64,${.3+(v/255)*.4})`;
     }
+    // Logo
     const dots = document.querySelectorAll('.mv-logo circle');
-    [0,4,8,16,24,32].forEach((band,i) => {
-      const v = dataArray[band]||0;
+    [0,4,8,16,24,32].forEach((b,i) => {
+      const v = dataArray[b]||0;
       dots[i].style.transform = `scale(${.7+(v/255)*.5}) translateY(${-(v/255)*5}px)`;
       dots[i].style.fill = v>200?'#7CBA82':v>150?'#B8926A':'white';
     });
+    // Beat
     const bass = (dataArray[0]+dataArray[1]+dataArray[2])/3;
-    if (bass > 175 && bass-prevBass > 35) {
+    if (bass > 170 && bass-prevBass > 30) {
       document.getElementById('beatFlash').classList.add('on');
-      setTimeout(() => document.getElementById('beatFlash').classList.remove('on'), 100);
-      document.querySelector('.mv-logo').style.transform = 'translateX(-50%) scale(1.15)';
-      setTimeout(() => document.querySelector('.mv-logo').style.transform = 'translateX(-50%) scale(1)', 130);
-      // Bounce visible maki
-      ['L','R','C'].forEach(p => { const el = document.getElementById('maki'+p); if (el.classList.contains('show')) el.classList.add('maki-bounce'); });
-      setTimeout(() => ['L','R','C'].forEach(p => document.getElementById('maki'+p).classList.remove('maki-bounce')), 400);
+      setTimeout(() => document.getElementById('beatFlash').classList.remove('on'), 90);
+      document.querySelector('.mv-logo').style.transform = 'translateX(-50%) scale(1.12)';
+      setTimeout(() => document.querySelector('.mv-logo').style.transform = 'translateX(-50%) scale(1)', 120);
+      ['L','R','C'].forEach(p => {
+        const el = document.getElementById('maki'+p);
+        if (el.classList.contains('show')) { el.classList.remove('bounce'); void el.offsetWidth; el.classList.add('bounce'); }
+      });
     }
     prevBass = bass;
   }
@@ -299,37 +235,26 @@ function tick() {
     currentIdx = idx;
     const ev = TIMELINE[idx];
     // Lyric
-    if (ev.lyric !== undefined) {
-      lyricEl.classList.remove('active'); lyricEl.classList.add('fade');
-      setTimeout(() => { lyricEl.textContent = ev.lyric; lyricEl.classList.remove('fade'); lyricEl.classList.add('active'); }, 250);
-    }
-    // BG
-    if (ev.bg !== undefined && ev.bg !== currentBg) {
-      document.querySelectorAll('.mv-bg')[currentBg].classList.remove('active');
-      currentBg = ev.bg % document.querySelectorAll('.mv-bg').length;
-      document.querySelectorAll('.mv-bg')[currentBg].classList.add('active');
-    }
+    lyricEl.classList.remove('active'); lyricEl.classList.add('fade');
+    setTimeout(() => { lyricEl.textContent = ev.lyric||''; lyricEl.classList.remove('fade'); if(ev.lyric) lyricEl.classList.add('active'); }, 200);
+    // BG - smooth crossfade via CSS transition
+    if (ev.bg !== undefined) bgEl.style.backgroundImage = `url('${BGS[ev.bg % BGS.length]}')`;
     // Maki
     if (ev.hideMaki) hideAllMaki();
     else if (ev.maki) showMaki(ev.maki.p, ev.maki.c);
-    // Info
-    if (ev.hideInfo) hideAllInfo();
-    if (ev.info) showInfo(ev.info.pos, ev.info.html);
-    // Sushi rain
+    // Sushi
     if (ev.sushi) sushiRain();
     // Particles burst
-    if (ev.lyric && (ev.lyric.includes('MAKIMAKI') || ev.lyric.includes('Let'))) { for (let i=0;i<6;i++) spawnParticle(); }
-    // CTA
+    if (ev.lyric && ev.lyric.includes('MAKIMAKI')) { for(let i=0;i<5;i++) spawnParticle(); }
     if (ev.cta) document.getElementById('cta').classList.add('show');
   }
   requestAnimationFrame(tick);
 }
 
 audio.addEventListener('ended', () => {
-  clearInterval(pInterval);
+  clearInterval(pInt);
   document.getElementById('cta').classList.add('show');
   showMaki('C','wave');
-  showInfo('top','<h3>makimaki</h3><p>麻布十番の細巻き専門テイクアウト店</p>');
   lyricEl.classList.remove('active');
   setTimeout(() => { lyricEl.textContent = 'また来てね♪'; lyricEl.classList.add('active'); }, 500);
 });

@@ -168,11 +168,8 @@ section{padding:7rem 3rem;max-width:1100px;margin:0 auto}
 .order-cta:hover{background:var(--accent-light);transform:translateY(-2px);box-shadow:0 8px 24px rgba(58,90,64,.15)}
 
 /* BOX COMPLETE CELEBRATION */
-@keyframes boxPop{0%{transform:scale(1)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
-@keyframes confettiFall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(120px) rotate(720deg);opacity:0}}
-.box-celebrate{animation:boxPop .4s var(--ease)}
-.confetti-container{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;overflow:hidden}
-.confetti{position:absolute;width:8px;height:8px;border-radius:2px;animation:confettiFall 1.5s ease-out forwards}
+@keyframes boxPop{0%{transform:scale(1)}30%{transform:scale(1.03)}60%{transform:scale(0.98)}100%{transform:scale(1)}}
+.box-celebrate{animation:boxPop .5s var(--ease);box-shadow:0 4px 20px rgba(58,90,64,.15)!important;border-color:var(--accent)!important}
 
 .qty-ctrl{display:flex;align-items:center;gap:.5rem}
 .qty-btn{width:28px;height:28px;border:1px solid var(--border);background:var(--white);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;border-radius:2px;color:var(--fg)}
@@ -473,8 +470,8 @@ function showPicker() {
   picker.classList.add('active');
   updatePickerHeader();
   renderPickGrid();
-  // Scroll to picker
-  picker.scrollIntoView({behavior:'smooth', block:'start'});
+  // Scroll to picker header
+  setTimeout(() => picker.scrollIntoView({behavior:'smooth', block:'nearest'}), 50);
 }
 
 function updatePickerHeader() {
@@ -546,6 +543,7 @@ pickItem = function(id) {
 };
 
 function completeCurrentBox() {
+  const newSize = currentBoxSize;
   completedBoxes.push({size: currentBoxSize, items: [...currentBoxItems]});
   currentBoxSize = 0;
   currentBoxItems = [];
@@ -554,34 +552,91 @@ function completeCurrentBox() {
   document.querySelectorAll('.box-card').forEach(c => c.classList.remove('selected'));
   renderCompletedBoxes();
   updateCart();
-  // Celebration!
-  celebrateBox();
+  // Scroll to the completed box, not to some random place
+  setTimeout(() => {
+    const boxes = document.querySelectorAll('.completed-box');
+    const last = boxes[boxes.length - 1];
+    if (last) {
+      last.scrollIntoView({behavior:'smooth', block:'center'});
+      // Celebration after scroll
+      setTimeout(() => celebrateBox(last, newSize), 300);
+    }
+  }, 50);
 }
 
-function celebrateBox() {
-  // Confetti burst
-  const container = document.createElement('div');
-  container.className = 'confetti-container';
-  document.body.appendChild(container);
-  const colors = ['#3A5A40','#5A7A60','#B8926A','#E7E0D8','#DC2626','#2563EB','#F59E0B'];
-  for (let i = 0; i < 40; i++) {
-    const c = document.createElement('div');
-    c.className = 'confetti';
-    c.style.left = (Math.random() * 100) + '%';
-    c.style.top = '-10px';
-    c.style.background = colors[Math.floor(Math.random() * colors.length)];
-    c.style.width = (5 + Math.random() * 8) + 'px';
-    c.style.height = (5 + Math.random() * 8) + 'px';
-    c.style.animationDelay = (Math.random() * 0.5) + 's';
-    c.style.animationDuration = (1 + Math.random() * 1) + 's';
-    container.appendChild(c);
-  }
-  setTimeout(() => container.remove(), 2500);
+function celebrateBox(boxEl, size) {
+  // 1. Pulse the completed box
+  if (boxEl) boxEl.classList.add('box-celebrate');
 
-  // Pulse the completed box card
-  const boxes = document.querySelectorAll('.completed-box');
-  const last = boxes[boxes.length - 1];
-  if (last) last.classList.add('box-celebrate');
+  // 2. Logo dots float up from the box
+  const rect = boxEl ? boxEl.getBoundingClientRect() : {left: window.innerWidth/2 - 50, top: window.innerHeight/2, width: 100};
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;overflow:hidden';
+  document.body.appendChild(container);
+
+  const dotCount = size || 4;
+  for (let i = 0; i < dotCount; i++) {
+    const dot = document.createElement('div');
+    const startX = rect.left + (rect.width / (dotCount + 1)) * (i + 1);
+    const startY = rect.top;
+    dot.style.cssText = `
+      position:absolute;
+      width:20px;height:20px;border-radius:50%;
+      background:#3A5A40;
+      left:${startX}px;top:${startY}px;
+      opacity:0;
+      transition:none;
+    `;
+    container.appendChild(dot);
+
+    // Animate: pop up, float, fade
+    setTimeout(() => {
+      dot.style.transition = 'all 0.8s cubic-bezier(.22,1,.36,1)';
+      dot.style.opacity = '1';
+      dot.style.transform = `translateY(-${40 + Math.random() * 30}px) scale(${0.8 + Math.random() * 0.5})`;
+    }, i * 100);
+
+    setTimeout(() => {
+      dot.style.transition = 'all 0.5s ease-out';
+      dot.style.opacity = '0';
+      dot.style.transform += ' translateY(-30px)';
+    }, 600 + i * 100);
+  }
+
+  // 3. "Box完成!" toast
+  const toast = document.createElement('div');
+  const isJa = lang === 'ja';
+  toast.innerHTML = `
+    <svg viewBox="0 0 60 40" fill="#3A5A40" style="width:28px;height:18px;vertical-align:middle;margin-right:6px">
+      <circle cx="10" cy="10" r="7"/><circle cx="30" cy="10" r="7"/><circle cx="50" cy="10" r="7"/>
+      <circle cx="10" cy="30" r="7"/><circle cx="30" cy="30" r="7"/><circle cx="50" cy="30" r="7"/>
+    </svg>
+    <span>${isJa ? 'Box完成！' : 'Box Complete!'}</span>
+  `;
+  toast.style.cssText = `
+    position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.5);
+    background:#fff;color:#3A5A40;
+    padding:1rem 2rem;border-radius:12px;
+    font-family:var(--serif);font-size:1.2rem;font-weight:500;
+    box-shadow:0 8px 40px rgba(0,0,0,.15);
+    z-index:1000;
+    opacity:0;
+    transition:all 0.4s cubic-bezier(.22,1,.36,1);
+    display:flex;align-items:center;
+    border:2px solid #3A5A40;
+  `;
+  document.body.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translate(-50%,-50%) scale(1)';
+  });
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translate(-50%,-50%) scale(0.8)';
+    setTimeout(() => { toast.remove(); container.remove(); }, 400);
+  }, 1500);
 }
 
 function renderCompletedBoxes() {

@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MAKIMAKI DAYS — makimaki</title>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Zen Kaku Gothic New',sans-serif;background:#000;color:#fff;overflow:hidden;height:100vh;width:100vw}
+body{font-family:'Zen Maru Gothic',sans-serif;background:#000;color:#fff;overflow:hidden;height:100vh;width:100vw}
 
 /* BACKGROUNDS */
 .mv-bg{position:fixed;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.5s ease;z-index:0}
@@ -15,7 +15,7 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;background:#000;color:#fff;ove
 .mv-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1}
 
 /* CONTENT */
-.mv-content{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:2;text-align:center;padding:2rem}
+.mv-content{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:5;text-align:center;padding:2rem}
 
 /* LYRICS */
 .lyric{font-size:clamp(1.4rem,4vw,2.8rem);font-weight:500;letter-spacing:.06em;line-height:1.6;opacity:0;transform:translateY(20px) scale(.95);transition:all .6s cubic-bezier(.22,1,.36,1);max-width:700px;text-shadow:0 2px 20px rgba(0,0,0,.5)}
@@ -28,26 +28,44 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;background:#000;color:#fff;ove
 .mv-logo{transition:transform .15s cubic-bezier(.22,1,.36,1)}
 .mv-logo circle{transition:transform .08s linear,fill .2s;transform-origin:center;transform-box:fill-box}
 
+/* MAKI-CHAN */
+.maki-chan{position:fixed;z-index:4;pointer-events:none;transition:all .8s cubic-bezier(.22,1,.36,1)}
+.maki-chan video{width:100%;height:100%;object-fit:contain}
+.maki-left{bottom:2rem;left:2rem;width:160px;height:120px;opacity:0;transform:translateX(-60px)}
+.maki-left.show{opacity:1;transform:translateX(0)}
+.maki-right{bottom:2rem;right:2rem;width:160px;height:120px;opacity:0;transform:translateX(60px)}
+.maki-right.show{opacity:1;transform:translateX(0)}
+.maki-center{top:50%;left:50%;width:280px;height:210px;transform:translate(-50%,-50%) scale(0);opacity:0;transition:all .5s cubic-bezier(.34,1.56,.64,1)}
+.maki-center.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.maki-bounce{animation:makiBounce .5s ease}
+@keyframes makiBounce{0%,100%{transform:translateX(0) translateY(0)}25%{transform:translateX(0) translateY(-12px)}50%{transform:translateX(0) translateY(0)}75%{transform:translateX(0) translateY(-6px)}}
+.maki-left.maki-bounce{animation:makiBounceL .5s ease}
+@keyframes makiBounceL{0%,100%{transform:translateX(0) translateY(0)}25%{transform:translateX(0) translateY(-12px)}50%{transform:translateX(0) translateY(0)}}
+.maki-right.maki-bounce{animation:makiBounceR .5s ease}
+@keyframes makiBounceR{0%,100%{transform:translateX(0) translateY(0)}25%{transform:translateX(0) translateY(-12px)}50%{transform:translateX(0) translateY(0)}}
+
 /* PROGRESS */
 .mv-progress{position:fixed;bottom:0;left:0;height:3px;background:#3A5A40;z-index:10;transition:width .3s linear}
 
 /* CTA */
 .mv-cta{position:fixed;bottom:3rem;left:50%;transform:translateX(-50%);z-index:10;opacity:0;transition:all .8s;pointer-events:none}
 .mv-cta.show{opacity:1;pointer-events:auto}
-.mv-cta a{display:inline-block;padding:.8rem 2.5rem;background:#3A5A40;color:#fff;text-decoration:none;font-size:.9rem;letter-spacing:.15em;border-radius:2px;transition:background .3s}
+.mv-cta a{display:inline-block;padding:.8rem 2.5rem;background:#3A5A40;color:#fff;text-decoration:none;font-size:.9rem;letter-spacing:.15em;border-radius:4px;transition:background .3s}
 .mv-cta a:hover{background:#2E4833}
 
 /* PLAY BUTTON */
 .play-overlay{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:20;background:rgba(0,0,0,.7);cursor:pointer;transition:opacity .5s}
 .play-overlay.hidden{opacity:0;pointer-events:none}
-.play-btn{width:80px;height:80px;border:2px solid rgba(255,255,255,.6);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .3s}
+.play-btn{width:90px;height:90px;border:2px solid rgba(255,255,255,.5);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .3s}
 .play-btn:hover{border-color:#fff;transform:scale(1.1)}
-.play-btn svg{width:30px;height:30px;fill:#fff;margin-left:4px}
-.play-title{margin-top:1.5rem;font-size:1.2rem;font-weight:300;letter-spacing:.2em;opacity:.7}
-.play-sub{margin-top:.5rem;font-size:.75rem;opacity:.4;letter-spacing:.1em}
+.play-btn svg{width:32px;height:32px;fill:#fff;margin-left:4px}
+.play-title{margin-top:1.5rem;font-size:1.4rem;font-weight:400;letter-spacing:.25em}
+.play-sub{margin-top:.5rem;font-size:.75rem;opacity:.4;letter-spacing:.15em}
+.play-maki{margin-top:1.5rem;width:100px;height:75px}
+.play-maki video{width:100%;height:100%;object-fit:contain}
 
 /* CLOSE */
-.mv-close{position:fixed;top:1.5rem;right:1.5rem;z-index:20;background:none;border:none;color:rgba(255,255,255,.5);font-size:1.5rem;cursor:pointer;transition:color .3s}
+.mv-close{position:fixed;top:1.5rem;right:1.5rem;z-index:20;background:none;border:none;color:rgba(255,255,255,.5);font-size:1.5rem;cursor:pointer;transition:color .3s;text-decoration:none}
 .mv-close:hover{color:#fff}
 
 /* VISUALIZER */
@@ -64,58 +82,72 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;background:#000;color:#fff;ove
   100%{transform:translateY(-20vh) scale(1);opacity:0}
 }
 
+/* SUSHI RAIN (chorus) */
+.sushi-rain{position:fixed;inset:0;z-index:4;pointer-events:none;overflow:hidden}
+.sushi-drop{position:absolute;font-size:1.5rem;animation:sushiFall linear forwards}
+@keyframes sushiFall{0%{transform:translateY(-30px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(360deg);opacity:0}}
+
 /* BEAT FLASH */
 .beat-flash{position:fixed;inset:0;z-index:1;background:rgba(58,90,64,.15);opacity:0;pointer-events:none;transition:opacity .1s}
 .beat-flash.on{opacity:1}
 
 @media(max-width:600px){
   .lyric{font-size:clamp(1.1rem,5vw,1.8rem)}
+  .maki-left,.maki-right{width:100px;height:75px;bottom:1rem}
+  .maki-left{left:1rem}.maki-right{right:1rem}
+  .maki-center{width:200px;height:150px}
 }
 </style>
 </head>
 <body>
 
-<!-- BACKGROUNDS (cycle through photos) -->
+<!-- BACKGROUNDS -->
 <div class="mv-bg active" id="bg0" style="background-image:url('/img1110.jpg')"></div>
-<div class="mv-bg" id="bg1" style="background-image:url('/sushi-concept.png')"></div>
+<div class="mv-bg" id="bg1" style="background-image:url('/img1111.jpg')"></div>
 <div class="mv-bg" id="bg2" style="background-image:url('/img1112.jpg')"></div>
-<div class="mv-bg" id="bg3" style="background-image:url('/sushi-mood.png')"></div>
-<div class="mv-bg" id="bg4" style="background-image:url('/img1108.jpg')"></div>
-<div class="mv-bg" id="bg5" style="background-image:url('/sushi-hero.png')"></div>
+<div class="mv-bg" id="bg3" style="background-image:url('/img1108.jpg')"></div>
+<div class="mv-bg" id="bg4" style="background-image:url('/img1113.jpg')"></div>
+<div class="mv-bg" id="bg5" style="background-image:url('/img1107.jpg')"></div>
 <div class="mv-bg" id="bg6" style="background-image:url('/img1114.jpg')"></div>
-<div class="mv-bg" id="bg7" style="background-image:url('/img1111.jpg')"></div>
-<div class="mv-bg" id="bg8" style="background-image:url('/img1109.jpg')"></div>
-<div class="mv-bg" id="bg9" style="background-image:url('/sushi-original-1.jpg')"></div>
-<div class="mv-bg" id="bg10" style="background-image:url('/img1107.jpg')"></div>
-<div class="mv-bg" id="bg11" style="background-image:url('/sushi-original-2.jpg')"></div>
+<div class="mv-bg" id="bg7" style="background-image:url('/img1109.jpg')"></div>
+<div class="mv-bg" id="bg8" style="background-image:url('/img1117.jpg')"></div>
 <div class="mv-overlay"></div>
 <div class="beat-flash" id="beatFlash"></div>
 <div class="particles" id="particles"></div>
+<div class="sushi-rain" id="sushiRain"></div>
 <div class="visualizer" id="visualizer"></div>
+
+<!-- MAKI-CHAN CHARACTERS -->
+<div class="maki-chan maki-left" id="makiL">
+  <video muted loop playsinline id="makiLV"></video>
+</div>
+<div class="maki-chan maki-right" id="makiR">
+  <video muted loop playsinline id="makiRV"></video>
+</div>
+<div class="maki-chan maki-center" id="makiC">
+  <video muted loop playsinline id="makiCV"></video>
+</div>
 
 <!-- LOGO -->
 <div class="mv-logo">
   <svg viewBox="0 0 120 80" fill="white"><circle id="d0" cx="20" cy="20" r="14"/><circle id="d1" cx="60" cy="20" r="14"/><circle id="d2" cx="100" cy="20" r="14"/><circle id="d3" cx="20" cy="60" r="14"/><circle id="d4" cx="60" cy="60" r="14"/><circle id="d5" cx="100" cy="60" r="14"/></svg>
 </div>
 
-<!-- CLOSE -->
 <a href="/" class="mv-close">&times;</a>
 
-<!-- CONTENT -->
 <div class="mv-content">
   <div class="lyric" id="lyric"></div>
 </div>
 
-<!-- PROGRESS -->
 <div class="mv-progress" id="progress"></div>
 
-<!-- CTA -->
 <div class="mv-cta" id="cta">
   <a href="/#menu">オーダーする</a>
 </div>
 
 <!-- PLAY OVERLAY -->
 <div class="play-overlay" id="playOverlay" onclick="startMV()">
+  <div class="play-maki"><video autoplay muted loop playsinline src="/stamps/animated/16.mp4"></video></div>
   <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
   <div class="play-title">MAKIMAKI DAYS</div>
   <div class="play-sub">マキマキ・デイズ</div>
@@ -124,29 +156,85 @@ body{font-family:'Zen Kaku Gothic New',sans-serif;background:#000;color:#fff;ove
 <audio id="audio" preload="auto" src="/makimaki-days.mp3"></audio>
 
 <script>
+// Maki-chan animation clips mapped to moods
+const MAKI_CLIPS = {
+  wave: '/stamps/animated/16.mp4',    // また来てね (wave)
+  jump: '/stamps/animated/10.mp4',    // わーい (jump)
+  love: '/stamps/animated/09.mp4',    // 大好き (hug sushi)
+  bow:  '/stamps/animated/01.mp4',    // ありがとう (bow)
+  cook: '/stamps/animated/05.mp4',    // おいしくなれ (rolling)
+  cheer:'/stamps/animated/07.mp4',    // がんばって (cheer)
+  run:  '/stamps/animated/13.mp4',    // お届け (running)
+  cry:  '/stamps/animated/14.mp4',    // うえーん (cry)
+  eat:  '/stamps/animated/06.mp4',    // いただきます
+  sleep:'/stamps/animated/12.mp4',    // おやすみ
+};
+
+function showMaki(position, clip) {
+  const el = document.getElementById('maki'+position);
+  const vid = document.getElementById('maki'+position+'V');
+  // Hide all first
+  ['L','R','C'].forEach(p => document.getElementById('maki'+p).classList.remove('show'));
+  vid.src = MAKI_CLIPS[clip] || MAKI_CLIPS.wave;
+  vid.play().catch(()=>{});
+  requestAnimationFrame(() => el.classList.add('show'));
+}
+
+function hideMaki(position) {
+  document.getElementById('maki'+position).classList.remove('show');
+}
+
+function hideAllMaki() {
+  ['L','R','C'].forEach(p => document.getElementById('maki'+p).classList.remove('show'));
+}
+
+function bounceMaki(position) {
+  const el = document.getElementById('maki'+position);
+  el.classList.remove('maki-bounce');
+  void el.offsetWidth; // reflow
+  el.classList.add('maki-bounce');
+}
+
+// Sushi rain effect for chorus
+function sushiRain() {
+  const container = document.getElementById('sushiRain');
+  const emojis = ['🍣','🥢','🍙','🐟','💚'];
+  for (let i = 0; i < 15; i++) {
+    const drop = document.createElement('div');
+    drop.className = 'sushi-drop';
+    drop.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    drop.style.left = (Math.random()*100)+'%';
+    drop.style.animationDuration = (2+Math.random()*3)+'s';
+    drop.style.animationDelay = (Math.random()*1.5)+'s';
+    drop.style.fontSize = (1+Math.random()*1.5)+'rem';
+    container.appendChild(drop);
+    setTimeout(() => drop.remove(), 5000);
+  }
+}
+
 const LYRICS = [
   // Intro
-  {t:0,    text:"Makimaki!", bg:0},
-  {t:2.6,  text:"Let's go!", bg:0},
-  {t:5,    text:"Makimaki, Let's go!", bg:5},
-  {t:8,    text:"", bg:1},
+  {t:0,    text:"Makimaki!", bg:0, maki:{pos:'C', clip:'jump'}},
+  {t:2.6,  text:"Let's go!", bg:0, maki:{pos:'L', clip:'run'}},
+  {t:5,    text:"Makimaki, Let's go!", bg:4, maki:{pos:'R', clip:'cheer'}, sushi:true},
+  {t:8,    text:"", bg:1, hideMaki:true},
   // Verse
-  {t:14.2, text:"十番の街　光るロゴ", bg:0},
-  {t:16.7, text:"一本ずつ　巻くのがプロ", bg:9},
-  {t:19.2, text:"旬の素材　光る彩り", bg:3},
-  {t:21.6, text:"手にするだけで　心踊り", bg:11},
+  {t:14.2, text:"十番の街　光るロゴ", bg:0, maki:{pos:'L', clip:'wave'}},
+  {t:16.7, text:"一本ずつ　巻くのがプロ", bg:6, maki:{pos:'R', clip:'cook'}},
+  {t:19.2, text:"旬の素材　光る彩り", bg:3, maki:{pos:'L', clip:'love'}},
+  {t:21.6, text:"手にするだけで　心踊り", bg:7, maki:{pos:'R', clip:'jump'}},
   // Chorus
-  {t:24.9, text:"MAKIMAKI!　どこでもパクり", bg:5},
-  {t:27.3, text:"MAKIMAKI!　笑顔がキラり", bg:9},
-  {t:29.8, text:"お家も外も　幸せガブリ", bg:7},
-  {t:32.3, text:"最高な時間を　巻き込んじゃえ！", bg:3},
-  {t:37.4, text:"It's a MAKIMAKI DAY!", bg:0},
-  {t:41,   text:"", bg:6},
+  {t:24.9, text:"MAKIMAKI!　どこでもパクり", bg:4, maki:{pos:'C', clip:'jump'}, sushi:true},
+  {t:27.3, text:"MAKIMAKI!　笑顔がキラり", bg:8, maki:{pos:'L', clip:'cheer'}, sushi:true},
+  {t:29.8, text:"お家も外も　幸せガブリ", bg:1, maki:{pos:'R', clip:'love'}},
+  {t:32.3, text:"最高な時間を　巻き込んじゃえ！", bg:3, maki:{pos:'C', clip:'cheer'}, sushi:true},
+  {t:37.4, text:"It's a MAKIMAKI DAY!", bg:0, maki:{pos:'C', clip:'jump'}, sushi:true},
+  {t:41,   text:"", bg:6, hideMaki:true},
   // Outro
-  {t:43.1, text:"できたてをどうぞ。", bg:11},
-  {t:47,   text:"", bg:1},
-  {t:48.7, text:"Makimaki!", bg:0},
-  {t:52,   text:"", bg:5, cta:true},
+  {t:43.1, text:"できたてをどうぞ。", bg:7, maki:{pos:'R', clip:'bow'}},
+  {t:47,   text:"", bg:1, hideMaki:true},
+  {t:48.7, text:"Makimaki!", bg:0, maki:{pos:'C', clip:'wave'}},
+  {t:52,   text:"", bg:4, cta:true, maki:{pos:'L', clip:'wave'}},
 ];
 
 const audio = document.getElementById('audio');
@@ -158,7 +246,6 @@ const beatFlash = document.getElementById('beatFlash');
 let currentBg = 0;
 let currentLyricIdx = -1;
 
-// Audio Analyser
 let analyser, dataArray, vizBars = [];
 const NUM_BARS = 48;
 
@@ -170,8 +257,6 @@ function initVisualizer() {
   source.connect(analyser);
   analyser.connect(ctx.destination);
   dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-  // Create bars
   const vizEl = document.getElementById('visualizer');
   for (let i = 0; i < NUM_BARS; i++) {
     const bar = document.createElement('div');
@@ -181,15 +266,13 @@ function initVisualizer() {
   }
 }
 
-// Particles
 function spawnParticle() {
   const el = document.createElement('div');
   el.className = 'particle';
   const size = 3 + Math.random() * 8;
-  const x = Math.random() * 100;
   const dur = 4 + Math.random() * 6;
   const colors = ['rgba(58,90,64,.4)', 'rgba(255,255,255,.2)', 'rgba(184,146,106,.3)'];
-  el.style.cssText = `left:${x}%;width:${size}px;height:${size}px;background:${colors[Math.floor(Math.random()*3)]};animation-duration:${dur}s;animation-delay:${Math.random()*2}s`;
+  el.style.cssText = `left:${Math.random()*100}%;width:${size}px;height:${size}px;background:${colors[Math.floor(Math.random()*3)]};animation-duration:${dur}s`;
   document.getElementById('particles').appendChild(el);
   setTimeout(() => el.remove(), (dur + 2) * 1000);
 }
@@ -200,10 +283,7 @@ function startMV() {
   document.getElementById('playOverlay').classList.add('hidden');
   initVisualizer();
   audio.play();
-  // Spawn particles periodically
-  particleInterval = setInterval(() => {
-    for (let i = 0; i < 3; i++) spawnParticle();
-  }, 600);
+  particleInterval = setInterval(() => { for (let i = 0; i < 2; i++) spawnParticle(); }, 600);
   requestAnimationFrame(tick);
 }
 
@@ -213,53 +293,42 @@ function tick() {
   if (audio.paused && audio.currentTime > 0) return;
   const t = audio.currentTime;
 
-  // Progress bar
-  if (audio.duration) {
-    progressEl.style.width = (t / audio.duration * 100) + '%';
-  }
+  if (audio.duration) progressEl.style.width = (t / audio.duration * 100) + '%';
 
-  // Visualizer bars
   if (analyser) {
     analyser.getByteFrequencyData(dataArray);
     const step = Math.floor(dataArray.length / NUM_BARS);
     for (let i = 0; i < NUM_BARS; i++) {
       const val = dataArray[i * step] || 0;
       vizBars[i].style.height = (val / 255 * 70 + 2) + 'px';
-      const intensity = val / 255;
-      vizBars[i].style.background = `rgba(58,90,64,${0.3 + intensity * 0.5})`;
+      vizBars[i].style.background = `rgba(58,90,64,${0.3 + (val/255) * 0.5})`;
     }
 
-    // Animate logo dots with different frequency bands
+    // Logo dots react to frequency
     const dots = document.querySelectorAll('.mv-logo circle');
-    const bands = [0, 4, 8, 16, 24, 32]; // different frequency bands per dot
+    const bands = [0, 4, 8, 16, 24, 32];
     dots.forEach((dot, i) => {
       const val = dataArray[bands[i]] || 0;
-      const scale = 0.7 + (val / 255) * 0.6;
-      const ty = -(val / 255) * 6;
-      dot.style.transform = `scale(${scale}) translateY(${ty}px)`;
-      // Color shift on high energy
-      if (val > 200) {
-        dot.style.fill = '#7CBA82';
-      } else if (val > 150) {
-        dot.style.fill = '#B8926A';
-      } else {
-        dot.style.fill = 'white';
-      }
+      dot.style.transform = `scale(${0.7 + (val/255)*0.6}) translateY(${-(val/255)*6}px)`;
+      dot.style.fill = val > 200 ? '#7CBA82' : val > 150 ? '#B8926A' : 'white';
     });
 
-    // Beat detection (bass frequencies)
+    // Beat detection
     const bass = (dataArray[0] + dataArray[1] + dataArray[2]) / 3;
     if (bass > 180 && bass - prevBass > 40) {
       beatFlash.classList.add('on');
       setTimeout(() => beatFlash.classList.remove('on'), 120);
-      // Logo bounce on beat
       document.querySelector('.mv-logo').style.transform = 'translateX(-50%) scale(1.2)';
       setTimeout(() => document.querySelector('.mv-logo').style.transform = 'translateX(-50%) scale(1)', 150);
+      // Bounce maki-chan on beat
+      ['L','R','C'].forEach(p => {
+        if (document.getElementById('maki'+p).classList.contains('show')) bounceMaki(p);
+      });
     }
     prevBass = bass;
   }
 
-  // Find current lyric
+  // Lyrics sync
   let idx = -1;
   for (let i = LYRICS.length - 1; i >= 0; i--) {
     if (t >= LYRICS[i].t) { idx = i; break; }
@@ -269,7 +338,6 @@ function tick() {
     currentLyricIdx = idx;
     const lyric = LYRICS[idx];
 
-    // Animate lyric
     lyricEl.classList.remove('active');
     lyricEl.classList.add('fade');
     setTimeout(() => {
@@ -278,22 +346,28 @@ function tick() {
       lyricEl.classList.add('active');
     }, 300);
 
-    // Change background
     if (lyric.bg !== currentBg) {
       bgs[currentBg].classList.remove('active');
       currentBg = lyric.bg % bgs.length;
       bgs[currentBg].classList.add('active');
     }
 
-    // Burst particles on chorus
-    if (lyric.text.includes('MAKIMAKI!') || lyric.text.includes('巻き込んじゃえ')) {
-      for (let i = 0; i < 10; i++) spawnParticle();
+    // Maki-chan choreography
+    if (lyric.hideMaki) {
+      hideAllMaki();
+    } else if (lyric.maki) {
+      showMaki(lyric.maki.pos, lyric.maki.clip);
     }
 
-    // Show CTA at end
-    if (lyric.cta) {
-      ctaEl.classList.add('show');
+    // Sushi rain on chorus
+    if (lyric.sushi) sushiRain();
+
+    // Burst particles on energy moments
+    if (lyric.text.includes('MAKIMAKI') || lyric.text.includes('巻き込んじゃえ') || lyric.text.includes("Let's go")) {
+      for (let i = 0; i < 8; i++) spawnParticle();
     }
+
+    if (lyric.cta) ctaEl.classList.add('show');
   }
 
   requestAnimationFrame(tick);
@@ -302,11 +376,9 @@ function tick() {
 audio.addEventListener('ended', () => {
   clearInterval(particleInterval);
   ctaEl.classList.add('show');
+  showMaki('C', 'wave');
   lyricEl.classList.remove('active');
-  setTimeout(() => {
-    lyricEl.textContent = 'オーダーする？';
-    lyricEl.classList.add('active');
-  }, 500);
+  setTimeout(() => { lyricEl.textContent = 'オーダーする？'; lyricEl.classList.add('active'); }, 500);
 });
 </script>
 </body>

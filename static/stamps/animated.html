@@ -16,7 +16,7 @@ body{font-family:'Zen Maru Gothic',sans-serif;background:#FDFBF8;color:#1C1917}
 .tab:hover,.tab.active{background:#3A5A40;color:#fff;border-color:#3A5A40}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;max-width:900px;margin:2rem auto;padding:0 1.5rem}
 .stamp{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06);text-align:center}
-.stamp video,.stamp img{width:100%;aspect-ratio:16/9;object-fit:contain;background:#f9f9f9}
+.stamp video,.stamp img{width:100%;aspect-ratio:16/9;object-fit:contain;background:repeating-conic-gradient(#f0f0f0 0% 25%,#fff 0% 50%) 50%/16px 16px}
 .stamp p{font-size:.75rem;color:#78716C;padding:.5rem}
 .info{max-width:600px;margin:2rem auto;padding:0 1.5rem 3rem;text-align:center;font-size:.85rem;color:#78716C;line-height:2}
 .info a{color:#3A5A40;text-decoration:none;border-bottom:1px solid #3A5A40}
@@ -51,15 +51,11 @@ for (let i = 1; i <= 16; i++) {
   // Try video first, fallback to gif
   div.innerHTML = `
     <video autoplay loop muted playsinline>
+      <source src="/stamps/animated/${num}.webm" type="video/webm">
       <source src="/stamps/animated/${num}.mp4" type="video/mp4">
     </video>
     <p>${LABELS[i-1]}</p>`;
   grid.appendChild(div);
-  // If video fails, swap to gif
-  const video = div.querySelector('video');
-  video.onerror = () => {
-    div.querySelector('video').outerHTML = `<img src="/stamps/animated/${num}.gif" alt="${LABELS[i-1]}">`;
-  };
 }
 </script>
 </body>

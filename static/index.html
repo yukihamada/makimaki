@@ -163,6 +163,17 @@ section{padding:7rem 3rem;max-width:1100px;margin:0 auto}
 .add-box-btn{display:block;max-width:720px;margin:1.5rem auto;padding:.8rem 2rem;background:var(--white);border:2px dashed var(--border);color:var(--fg-muted);font-size:.85rem;cursor:pointer;font-family:var(--sans);letter-spacing:.05em;transition:all .3s;border-radius:4px;width:100%}
 .add-box-btn:hover{border-color:var(--accent);color:var(--accent)}
 
+/* ORDER CTA */
+.order-cta{display:block;max-width:420px;margin:2rem auto;padding:1rem 2rem;background:var(--accent);color:#fff;text-decoration:none;font-size:1rem;letter-spacing:.12em;text-align:center;border-radius:4px;transition:all .3s var(--ease);font-family:var(--sans)}
+.order-cta:hover{background:var(--accent-light);transform:translateY(-2px);box-shadow:0 8px 24px rgba(58,90,64,.15)}
+
+/* BOX COMPLETE CELEBRATION */
+@keyframes boxPop{0%{transform:scale(1)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
+@keyframes confettiFall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(120px) rotate(720deg);opacity:0}}
+.box-celebrate{animation:boxPop .4s var(--ease)}
+.confetti-container{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;overflow:hidden}
+.confetti{position:absolute;width:8px;height:8px;border-radius:2px;animation:confettiFall 1.5s ease-out forwards}
+
 .qty-ctrl{display:flex;align-items:center;gap:.5rem}
 .qty-btn{width:28px;height:28px;border:1px solid var(--border);background:var(--white);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;border-radius:2px;color:var(--fg)}
 .qty-btn:hover{background:var(--fg);color:var(--white);border-color:var(--fg)}
@@ -302,6 +313,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
       </div>
     </div>
     <div class="takeout-img reveal"><img src="/sushi-original-2.jpg" alt="makimaki hosomaki box"></div>
+    <a href="#menu" class="order-cta reveal" style="margin-top:2.5rem;display:inline-block" data-ja="ご注文はこちら" data-en="Order Now">ご注文はこちら</a>
   </div>
 </div>
 
@@ -353,6 +365,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
   <!-- COMPLETED BOXES -->
   <div class="completed-boxes" id="completedBoxes"></div>
   <button class="add-box-btn" id="addBoxBtn" style="display:none" onclick="startNewBox()" data-ja="＋ もう1ボックス追加する" data-en="+ Add another box">＋ もう1ボックス追加する</button>
+  <a href="#" class="order-cta" id="orderCtaBottom" style="display:none" onclick="openModal();return false" data-ja="注文に進む" data-en="Proceed to Order">注文に進む</a>
 </section>
 
 <!-- ACCESS -->
@@ -541,6 +554,34 @@ function completeCurrentBox() {
   document.querySelectorAll('.box-card').forEach(c => c.classList.remove('selected'));
   renderCompletedBoxes();
   updateCart();
+  // Celebration!
+  celebrateBox();
+}
+
+function celebrateBox() {
+  // Confetti burst
+  const container = document.createElement('div');
+  container.className = 'confetti-container';
+  document.body.appendChild(container);
+  const colors = ['#3A5A40','#5A7A60','#B8926A','#E7E0D8','#DC2626','#2563EB','#F59E0B'];
+  for (let i = 0; i < 40; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = (Math.random() * 100) + '%';
+    c.style.top = '-10px';
+    c.style.background = colors[Math.floor(Math.random() * colors.length)];
+    c.style.width = (5 + Math.random() * 8) + 'px';
+    c.style.height = (5 + Math.random() * 8) + 'px';
+    c.style.animationDelay = (Math.random() * 0.5) + 's';
+    c.style.animationDuration = (1 + Math.random() * 1) + 's';
+    container.appendChild(c);
+  }
+  setTimeout(() => container.remove(), 2500);
+
+  // Pulse the completed box card
+  const boxes = document.querySelectorAll('.completed-box');
+  const last = boxes[boxes.length - 1];
+  if (last) last.classList.add('box-celebrate');
 }
 
 function renderCompletedBoxes() {
@@ -570,6 +611,7 @@ function renderCompletedBoxes() {
     </div>`;
   }).join('');
   document.getElementById('addBoxBtn').style.display = completedBoxes.length > 0 ? 'block' : 'none';
+  document.getElementById('orderCtaBottom').style.display = completedBoxes.length > 0 ? 'block' : 'none';
 }
 
 function removeBox(index) {

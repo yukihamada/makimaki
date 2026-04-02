@@ -141,14 +141,16 @@ section{padding:7rem 3rem;max-width:1100px;margin:0 auto}
 .progress-dot.filled{background:var(--accent);border-color:var(--accent)}
 .progress-text{font-size:.75rem;color:var(--fg-muted)}
 .pick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem}
-.pick-item{padding:1.2rem;border:1px solid var(--border);background:var(--white);text-align:left;transition:all .3s var(--ease);cursor:pointer;border-radius:4px;position:relative}
-.pick-item:hover{border-color:var(--accent-light);box-shadow:0 4px 16px rgba(0,0,0,.04)}
+.pick-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))!important}
+.pick-item{padding:.8rem;border:1px solid var(--border);background:var(--white);text-align:center;transition:all .3s var(--ease);cursor:pointer;border-radius:4px;position:relative}
+.pick-item:hover{border-color:var(--accent-light);box-shadow:0 4px 16px rgba(0,0,0,.04);transform:translateY(-2px)}
 .pick-item.picked{border-color:var(--accent);background:var(--accent-bg)}
 .pick-item-badge{position:absolute;top:-.5rem;right:-.5rem;min-width:22px;height:22px;padding:0 5px;background:var(--accent);color:#fff;border-radius:11px;font-size:.7rem;display:none;align-items:center;justify-content:center;font-weight:500;white-space:nowrap}
 .pick-item.picked .pick-item-badge{display:flex}
-.pick-item-name{font-family:var(--serif);font-size:1rem;font-weight:400}
-.pick-item-sub{font-size:.6rem;color:var(--fg-muted);letter-spacing:.08em;margin-top:.1rem}
-.pick-item-price{font-size:.8rem;color:var(--accent);margin-top:.4rem}
+.pick-item-img{width:72px;height:72px;object-fit:contain;margin:0 auto .4rem;display:block;border-radius:50%;background:var(--bg)}
+.pick-item-name{font-family:var(--serif);font-size:.9rem;font-weight:400}
+.pick-item-sub{font-size:.55rem;color:var(--fg-muted);letter-spacing:.08em;margin-top:.1rem}
+.pick-item-price{font-size:.75rem;color:var(--accent);margin-top:.3rem}
 
 /* COMPLETED BOXES */
 .completed-boxes{max-width:720px;margin:2rem auto 0}
@@ -214,9 +216,9 @@ section{padding:7rem 3rem;max-width:1100px;margin:0 auto}
 
 /* ACCESS */
 .access{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start}
-.access-photo{aspect-ratio:4/3;background:#E7E0D8;overflow:hidden;border-radius:2px}
-.access-photo iframe{width:100%;height:100%;border:0;filter:grayscale(80%);transition:filter .5s}
-.access-photo:hover iframe{filter:grayscale(20%)}
+.access-photo{aspect-ratio:16/9;max-height:280px;background:#E7E0D8;overflow:hidden;border-radius:4px}
+.access-photo iframe{width:100%;height:100%;border:0;filter:grayscale(60%);transition:filter .5s}
+.access-photo:hover iframe{filter:grayscale(10%)}
 .access-info dl{display:grid;grid-template-columns:90px 1fr;gap:1rem 1.5rem;font-size:.85rem}
 .access-info dt{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--fg-muted);font-weight:400;padding-top:.2rem}
 .access-info dd{font-weight:300;line-height:1.8}
@@ -314,6 +316,18 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
   </div>
 </div>
 
+<!-- KODAWARI -->
+<div style="background:var(--warm);padding:5rem 3rem;text-align:center">
+  <div style="max-width:700px;margin:0 auto">
+    <span class="section-label reveal" data-ja="こだわり" data-en="Our Commitment">こだわり</span>
+    <h2 class="section-title reveal" style="text-align:center" data-ja="山幸の国産本マグロ。" data-en="Yamako's Domestic Bluefin Tuna.">山幸の国産本マグロ。</h2>
+    <p class="section-text reveal" style="max-width:560px;margin:0 auto;text-align:center" data-ja="makimakiのマグロは、築地で信頼を積み重ねてきたマグロの山幸さんから仕入れる国産本マグロ。赤身の深い旨味、中トロのとろける脂 — 素材の良さを、細巻きという形でまっすぐにお届けします。" data-en="Our tuna comes from Yamako — a trusted name in Tsukiji for premium domestic bluefin. The deep umami of lean akami, the melting richness of chutoro — delivered simply and honestly through hosomaki.">makimakiのマグロは、築地で信頼を積み重ねてきたマグロの山幸さんから仕入れる国産本マグロ。赤身の深い旨味、中トロのとろける脂 — 素材の良さを、細巻きという形でまっすぐにお届けします。</p>
+    <div class="reveal rd1" style="margin-top:2.5rem;padding:1.5rem 2rem;background:var(--white);display:inline-block;border-radius:4px;border:1px solid var(--border)">
+      <p style="font-family:var(--serif);font-size:1rem;font-weight:400;color:var(--fg);line-height:1.8" data-ja="麻布十番の名店 <strong>鮨 Mai</strong> のMaiがプロデュース。<br>本格寿司店のクオリティを、もっと気軽に。" data-en="Produced by <strong>Mai</strong> of <strong>Sushi Mai</strong>, Azabu-Juban.<br>Fine sushi quality, made accessible.">麻布十番の名店 <strong>鮨 Mai</strong> のMaiがプロデュース。<br>本格寿司店のクオリティを、もっと気軽に。</p>
+    </div>
+  </div>
+</div>
+
 <!-- PHOTO: COUNTER -->
 <div class="parallax photo-div p3">
   <div class="parallax-bg"></div>
@@ -327,8 +341,37 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
   <h2 class="section-title reveal" data-ja="ボックスを選んで、<br>お好みの巻きを詰めて。" data-en="Choose a box,<br>fill it with your favorites.">ボックスを選んで、<br>お好みの巻きを詰めて。</h2>
   <p class="section-text reveal" data-ja="1本＝6カット。お好きなボックスサイズを選び、中身をお選びください。<br>価格は税別です。箱代 ¥200を頂戴しております。" data-en="1 roll = 6 cuts. Pick your box size, then choose your rolls.<br>Prices exclude tax. Box charge ¥200.">1本＝6カット。お好きなボックスサイズを選び、中身をお選びください。<br>価格は税別です。箱代 ¥200を頂戴しております。</p>
 
-  <!-- STEP 1: BOX SIZE -->
-  <h3 class="menu-cat-title reveal" data-ja="ボックスを選ぶ" data-en="Choose Your Box" id="boxStepTitle">ボックスを選ぶ</h3>
+  <!-- SET MENU -->
+  <h3 class="menu-cat-title reveal" data-ja="セットメニュー" data-en="Set Menu">セットメニュー</h3>
+  <div class="box-select-grid" style="grid-template-columns:repeat(2,1fr);max-width:520px" id="setMenuGrid">
+    <div class="box-card reveal" onclick="addSetMenu('makimaki_box')">
+      <div class="box-dots"><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span></div>
+      <div class="box-card-title">makimaki Box</div>
+      <div style="font-size:.7rem;color:var(--fg-muted);margin:.2rem 0">4本入り</div>
+      <div class="box-card-price" style="font-size:1.1rem;color:var(--accent);margin:.3rem 0">&yen;3,500 <small style="font-size:.65rem;color:var(--fg-muted)">(税別)</small></div>
+      <div class="box-card-desc" data-ja="赤身鉄火、とろたく、日替わり2種" data-en="Akami, torotaku, 2 daily specials">赤身鉄火、とろたく、日替わり2種</div>
+      <div class="qty-ctrl" style="justify-content:center;margin-top:.8rem" onclick="event.stopPropagation()">
+        <button class="qty-btn" onclick="changeSetQty('makimaki_box',-1)">−</button>
+        <span class="qty-num" id="sq-makimaki_box">0</span>
+        <button class="qty-btn" onclick="changeSetQty('makimaki_box',1)">+</button>
+      </div>
+    </div>
+    <div class="box-card reveal rd1" onclick="addSetMenu('maguro_box')">
+      <div class="box-dots"><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span><span class="box-dot"></span></div>
+      <div class="box-card-title" data-ja="まぐろBox" data-en="Maguro Box">まぐろBox</div>
+      <div style="font-size:.7rem;color:var(--fg-muted);margin:.2rem 0">4本入り</div>
+      <div class="box-card-price" style="font-size:1.1rem;color:var(--accent);margin:.3rem 0">&yen;5,000 <small style="font-size:.65rem;color:var(--fg-muted)">(税別)</small></div>
+      <div class="box-card-desc" data-ja="赤身、中トロ、ネギトロ、とろたく" data-en="Akami, chutoro, negitoro, torotaku">赤身、中トロ、ネギトロ、とろたく</div>
+      <div class="qty-ctrl" style="justify-content:center;margin-top:.8rem" onclick="event.stopPropagation()">
+        <button class="qty-btn" onclick="changeSetQty('maguro_box',-1)">−</button>
+        <span class="qty-num" id="sq-maguro_box">0</span>
+        <button class="qty-btn" onclick="changeSetQty('maguro_box',1)">+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OKONOMI BOX -->
+  <h3 class="menu-cat-title reveal" data-ja="おこのみ Box" data-en="Build Your Own Box" id="boxStepTitle">おこのみ Box</h3>
   <div class="box-select-grid" id="boxSelectGrid">
     <div class="box-card reveal" onclick="selectBox(2)">
       <div class="box-dots"><span class="box-dot"></span><span class="box-dot"></span></div>
@@ -449,6 +492,12 @@ const MENU = [
   {id:'oshinko',   name:'Oshinko',         jp:'おしんこ',           price:500,  desc_ja:'お漬物の巻き。', desc_en:'Pickled radish roll.'},
 ];
 
+const SETS = {
+  makimaki_box: {name:'makimaki Box', jp:'makimaki Box', price:3500},
+  maguro_box:   {name:'Maguro Box',   jp:'まぐろBox',    price:5000},
+};
+let setQty = {}; // {makimaki_box: 2, maguro_box: 1}
+
 let lang = 'ja';
 
 // Box-first state
@@ -503,6 +552,7 @@ function renderPickGrid() {
     return `
     <div class="pick-item ${picked ? 'picked' : ''}" onclick="pickItem('${item.id}')">
       <div class="pick-item-badge">${orders.join(',')}</div>
+      <img class="pick-item-img" src="/menu/${item.id}.png" alt="${item.jp}" loading="lazy">
       <div class="pick-item-name">${item.jp}</div>
       <div class="pick-item-sub">${item.name}</div>
       <div class="pick-item-price">&yen;${item.price.toLocaleString()}</div>
@@ -680,6 +730,17 @@ function startNewBox() {
   document.getElementById('boxStepTitle').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
+// --- Set Menu ---
+function addSetMenu(id) {
+  changeSetQty(id, 1);
+}
+function changeSetQty(id, delta) {
+  setQty[id] = Math.max(0, (setQty[id]||0) + delta);
+  if (setQty[id] === 0) delete setQty[id];
+  document.getElementById('sq-'+id).textContent = setQty[id] || 0;
+  updateCart();
+}
+
 function updateCart() {
   let totalRolls = 0, totalPrice = 0;
   completedBoxes.forEach(box => {
@@ -689,35 +750,53 @@ function updateCart() {
       if (m) totalPrice += m.price;
     });
   });
+  // Add set menu totals
+  let setCount = 0;
+  for (const [id, qty] of Object.entries(setQty)) {
+    if (SETS[id]) { totalPrice += SETS[id].price * qty; setCount += qty; }
+  }
   const isJa = lang === 'ja';
-  const label = `${completedBoxes.length} Box (${totalRolls}${isJa?'本':'pcs'})`;
+  const parts = [];
+  if (setCount > 0) parts.push(`${setCount} Set`);
+  if (completedBoxes.length > 0) parts.push(`${completedBoxes.length} Box (${totalRolls}${isJa?'本':'pcs'})`);
+  const label = parts.join(' + ') || '0';
   document.getElementById('cartCount').textContent = label;
   document.getElementById('cartTotal').textContent = totalPrice.toLocaleString();
-  document.getElementById('cartBar').classList.toggle('show', completedBoxes.length > 0);
+  const hasItems = completedBoxes.length > 0 || setCount > 0;
+  document.getElementById('cartBar').classList.toggle('show', hasItems);
 }
 
 function openModal() {
-  if (completedBoxes.length === 0) return;
+  const hasBoxes = completedBoxes.length > 0;
+  const hasSets = Object.keys(setQty).length > 0;
+  if (!hasBoxes && !hasSets) return;
   const isJa = lang === 'ja';
 
-  // Build line items from all boxes
+  // Build line items from sets
+  const setLines = Object.entries(setQty).map(([id, qty]) => {
+    const s = SETS[id];
+    return {label: `${s.jp} x${qty}`, price: s.price * qty};
+  });
+  // Build line items from boxes
   const boxLines = completedBoxes.map((box, i) => {
     const names = box.items.map(id => MENU.find(x=>x.id===id)?.jp || id);
     const sub = box.items.reduce((s,id) => s + (MENU.find(x=>x.id===id)?.price||0), 0);
     return {label: `Box #${i+1} (${box.size}${isJa?'本':'pcs'}): ${names.join('、')}`, price: sub};
   });
-  const subtotal = boxLines.reduce((s,b) => s+b.price, 0);
+  const allLines = [...setLines, ...boxLines];
+  const subtotal = allLines.reduce((s,b) => s+b.price, 0);
   const tax = Math.floor(subtotal * 0.1);
-  const boxCharge = completedBoxes.length * 200;
+  const totalBoxes = completedBoxes.length + Object.values(setQty).reduce((s,q)=>s+q,0);
+  const boxCharge = totalBoxes * 200;
   const total = subtotal + tax + boxCharge;
 
   document.getElementById('modalContent').innerHTML = `
     <button class="modal-close" onclick="closeModal()">&times;</button>
     <h2>${isJa?'ご注文':'Your Order'}</h2>
     <ul class="modal-items">
-      ${boxLines.map(b => `<li><span style="font-size:.8rem">${b.label}</span><span>&yen;${b.price.toLocaleString()}</span></li>`).join('')}
+      ${allLines.map(b => `<li><span style="font-size:.8rem">${b.label}</span><span>&yen;${b.price.toLocaleString()}</span></li>`).join('')}
       <li style="color:var(--fg-muted);font-size:.8rem"><span>${isJa?'消費税 (10%)':'Tax (10%)'}</span><span>&yen;${tax.toLocaleString()}</span></li>
-      <li style="color:var(--fg-muted);font-size:.8rem"><span>${isJa?'箱代':'Box charge'} &times;${completedBoxes.length}</span><span>&yen;${boxCharge.toLocaleString()}</span></li>
+      <li style="color:var(--fg-muted);font-size:.8rem"><span>${isJa?'箱代':'Box charge'} &times;${totalBoxes}</span><span>&yen;${boxCharge.toLocaleString()}</span></li>
     </ul>
     <div class="modal-total">${isJa?'合計':'Total'} &yen;${total.toLocaleString()}</div>
     <form onsubmit="submitOrder(event)">
@@ -774,8 +853,12 @@ function generateTimeSlots() {
 }
 
 function getOrderBody() {
-  // Flatten all box items into order items with quantities
   const itemMap = {};
+  // Set menus
+  for (const [id, qty] of Object.entries(setQty)) {
+    if (SETS[id]) itemMap[id] = {name: SETS[id].jp, price: SETS[id].price, qty};
+  }
+  // Box items
   completedBoxes.forEach(box => {
     box.items.forEach(id => {
       const m = MENU.find(x => x.id === id);
@@ -785,12 +868,15 @@ function getOrderBody() {
       }
     });
   });
+  const noteParts = [];
+  if (Object.keys(setQty).length) noteParts.push(`Set: ${Object.entries(setQty).map(([id,q])=>`${SETS[id].jp}x${q}`).join(', ')}`);
+  if (completedBoxes.length) noteParts.push(`Box: ${completedBoxes.map((b,i)=>`#${i+1}(${b.size}本)`).join(', ')}`);
   return {
     name: document.getElementById('oName').value,
     phone: document.getElementById('oPhone').value,
     pickup_time: document.getElementById('oTime').value,
     items: Object.values(itemMap),
-    note: document.getElementById('oNote').value + ` [${completedBoxes.length} Box: ${completedBoxes.map((b,i)=>`#${i+1}(${b.size}本)`).join(', ')}]`,
+    note: document.getElementById('oNote').value + ` [${noteParts.join(' / ')}]`,
   };
 }
 
@@ -834,7 +920,12 @@ function showSuccess(data) {
     </div>`;
 }
 
-function resetCart() { completedBoxes = []; currentBoxSize = 0; currentBoxItems = []; renderCompletedBoxes(); updateCart(); }
+function resetCart() {
+  completedBoxes = []; currentBoxSize = 0; currentBoxItems = [];
+  setQty = {};
+  document.querySelectorAll('[id^="sq-"]').forEach(el => el.textContent = '0');
+  renderCompletedBoxes(); updateCart();
+}
 
 // Check if returned from Stripe payment
 if (location.search.includes('paid=1')) {

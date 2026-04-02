@@ -12,7 +12,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%233A5A40' width='100' height='100' rx='12'/><circle cx='28' cy='38' r='12' fill='white'/><circle cx='50' cy='38' r='12' fill='white'/><circle cx='72' cy='38' r='12' fill='white'/><circle cx='28' cy='62' r='12' fill='white'/><circle cx='50' cy='62' r='12' fill='white'/><circle cx='72' cy='62' r='12' fill='white'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@300;400;500;700&family=Zen+Old+Mincho:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -20,7 +20,7 @@
   --accent:#3A5A40;--accent-light:#5A7A60;--accent-bg:#EDF2EE;
   --gold:#B8926A;
   --border:#E7E0D8;--warm:#F5F0EA;--white:#FFF;
-  --serif:'Zen Old Mincho','Georgia',serif;--sans:'Zen Kaku Gothic New',-apple-system,sans-serif;
+  --serif:'Zen Maru Gothic','Zen Old Mincho',serif;--sans:'Zen Maru Gothic',-apple-system,sans-serif;
   --ease:cubic-bezier(.22,1,.36,1);
 }
 html{scroll-behavior:smooth;font-size:16px}
@@ -49,9 +49,13 @@ nav.scrolled .nav-ham span{background:var(--fg)}
 
 @media(max-width:768px){
   nav{padding:1.2rem 1.5rem}nav.scrolled{padding:.8rem 1.5rem}
-  .nav-links{display:none;position:fixed;inset:0;background:rgba(28,25,23,.97);flex-direction:column;justify-content:center;align-items:center;gap:2rem}
-  .nav-links.show{display:flex}.nav-links.show a{color:#fff;font-size:1rem;letter-spacing:.2em}
-  .nav-ham{display:flex}
+  .nav-links{display:none;position:fixed;inset:0;background:rgba(28,25,23,.97);flex-direction:column;justify-content:center;align-items:center;gap:2.5rem;z-index:100}
+  .nav-links.show{display:flex}.nav-links.show a{color:#fff;font-size:1.1rem;letter-spacing:.2em}
+  .nav-ham{display:flex;z-index:101}
+  .nav-ham.open span:nth-child(1){transform:rotate(45deg) translate(4px,4px)}
+  .nav-ham.open span:nth-child(2){opacity:0}
+  .nav-ham.open span:nth-child(3){transform:rotate(-45deg) translate(4px,-4px)}
+  .nav-ham.open span{background:#fff!important}
 }
 
 /* PARALLAX SECTIONS */
@@ -311,7 +315,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
         <div class="takeout-step-desc" data-ja="専用パッケージで<br>巻きたてをお届けします。" data-en="Packed in our special box,<br>ready to enjoy.">専用パッケージで<br>巻きたてをお届けします。</div>
       </div>
     </div>
-    <div class="takeout-img reveal"><img src="/sushi-original-2.jpg" alt="makimaki hosomaki box"></div>
+    <div class="takeout-img reveal"><img src="/takeout-box.webp" alt="makimaki hosomaki box"></div>
     <a href="#menu" class="order-cta reveal" style="margin-top:2.5rem;display:inline-block" data-ja="ご注文はこちら" data-en="Order Now">ご注文はこちら</a>
   </div>
 </div>
@@ -323,7 +327,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
     <h2 class="section-title reveal" style="text-align:center" data-ja="山幸の国産本マグロ。" data-en="Yamako's Domestic Bluefin Tuna.">山幸の国産本マグロ。</h2>
     <p class="section-text reveal" style="max-width:560px;margin:0 auto;text-align:center" data-ja="makimakiのマグロは、築地で信頼を積み重ねてきたマグロの山幸さんから仕入れる国産本マグロ。赤身の深い旨味、中トロのとろける脂 — 素材の良さを、細巻きという形でまっすぐにお届けします。" data-en="Our tuna comes from Yamako — a trusted name in Tsukiji for premium domestic bluefin. The deep umami of lean akami, the melting richness of chutoro — delivered simply and honestly through hosomaki.">makimakiのマグロは、築地で信頼を積み重ねてきたマグロの山幸さんから仕入れる国産本マグロ。赤身の深い旨味、中トロのとろける脂 — 素材の良さを、細巻きという形でまっすぐにお届けします。</p>
     <div class="reveal rd1" style="margin-top:2.5rem;padding:1.5rem 2rem;background:var(--white);display:inline-block;border-radius:4px;border:1px solid var(--border)">
-      <p style="font-family:var(--serif);font-size:1rem;font-weight:400;color:var(--fg);line-height:1.8" data-ja="麻布十番の名店 <strong>鮨 Mai</strong> のMaiがプロデュース。<br>本格寿司店のクオリティを、もっと気軽に。" data-en="Produced by <strong>Mai</strong> of <strong>Sushi Mai</strong>, Azabu-Juban.<br>Fine sushi quality, made accessible.">麻布十番の名店 <strong>鮨 Mai</strong> のMaiがプロデュース。<br>本格寿司店のクオリティを、もっと気軽に。</p>
+      <p style="font-family:var(--serif);font-size:1rem;font-weight:400;color:var(--fg);line-height:1.8" data-ja="麻布十番 <strong>鮨めい乃</strong> のMaiがプロデュース。<br>本格寿司店のクオリティを、もっと気軽に。" data-en="Produced by <strong>Mai</strong> of <strong>Sushi Meino</strong>, Azabu-Juban.<br>Fine sushi quality, made accessible.">麻布十番 <strong>鮨めい乃</strong> のMaiがプロデュース。<br>本格寿司店のクオリティを、もっと気軽に。</p>
     </div>
   </div>
 </div>
@@ -332,7 +336,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
 <div class="parallax photo-div p3">
   <div class="parallax-bg"></div>
   <div class="parallax-overlay"></div>
-  <div class="parallax-content"><p data-ja="素材と向き合う、<br>まっすぐな仕事。" data-en="Honest craft,<br>pure ingredients.">素材と向き合う、<br>まっすぐな仕事。</p></div>
+  <div class="parallax-content"><p data-ja="ひとつひとつ、<br>心を込めて。" data-en="Each one,<br>with all our heart.">ひとつひとつ、<br>心を込めて。</p></div>
 </div>
 
 <!-- MENU + ORDER -->
@@ -416,7 +420,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
     <div class="access-photo reveal"><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d811.5!2d139.7369!3d35.6536!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188b9a9a9a9a9a%3A0x1!2z6bq75biD5Y2B55Wq!5e0!3m2!1sja!2sjp!4v1" loading="lazy" allowfullscreen></iframe></div>
     <div class="reveal rd1">
       <span class="section-label">Access</span>
-      <h2 class="section-title" data-ja="麻布十番。" data-en="Azabu-Juban.">麻布十番。</h2>
+      <h2 class="section-title" data-ja="アクセス" data-en="Access">アクセス</h2>
       <div class="access-info">
         <dl>
           <dt data-ja="住所" data-en="Address">住所</dt>
@@ -989,11 +993,15 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
     const el = document.querySelector(a.getAttribute('href'));
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     document.getElementById('navLinks').classList.remove('show');
+    document.getElementById('hamburger').classList.remove('open');
   });
 });
 
 // HAMBURGER
-document.getElementById('hamburger').addEventListener('click', () => document.getElementById('navLinks').classList.toggle('show'));
+document.getElementById('hamburger').addEventListener('click', () => {
+  document.getElementById('navLinks').classList.toggle('show');
+  document.getElementById('hamburger').classList.toggle('open');
+});
 
 // MODAL
 document.getElementById('modalBg').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });

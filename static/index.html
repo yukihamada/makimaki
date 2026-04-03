@@ -1204,14 +1204,15 @@ openModal = function() {
   _origOpen();
 };
 
-// MV A/B TEST
+// MV A/B TEST (exclude admin: check if URL has ?key= or referrer is /admin)
+const isAdmin = location.search.includes('key=') || document.referrer.includes('/admin') || document.referrer.includes('/pos');
 const mvGroup = localStorage.getItem('mv_ab') || (Math.random() < 0.5 ? 'A' : 'B');
 localStorage.setItem('mv_ab', mvGroup);
 if (mvGroup === 'A') {
   document.getElementById('mvSection').style.display = '';
-  trk('mv_shown');
+  if (!isAdmin) trk('mv_shown');
 }
-trk('ab_group', mvGroup);
+if (!isAdmin) trk('ab_group', mvGroup);
 
 let mvPlaying = false, mvListenStart = 0, mvTotalListenMs = 0;
 function togglePreview() {

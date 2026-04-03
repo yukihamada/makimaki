@@ -142,8 +142,7 @@ body{font-family:-apple-system,'Noto Sans JP',sans-serif;background:#F5F3F0;colo
     <button data-tab="printer">プリンター</button>
     <button data-tab="line">LINE</button>
     <button data-tab="analytics">統計</button>
-    <button data-tab="mv">MV分析</button>
-    <button data-tab="requests">要望</button>
+    <button data-tab="ai-fix">AI修正</button>
   </div>
 
   <!-- DASHBOARD -->
@@ -286,26 +285,22 @@ body{font-family:-apple-system,'Noto Sans JP',sans-serif;background:#F5F3F0;colo
         <tbody id="orderStatsBody"></tbody>
       </table></div>
     </div>
-    <div style="background:#fff;padding:1rem;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+    <div style="background:#fff;padding:1rem;border-radius:4px;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,.05)">
       <h4 style="font-size:.7rem;color:#78716C;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:.08em">人気メニュー（累計カート追加数）</h4>
       <div id="popularItems"></div>
     </div>
-  </div>
-
-  <!-- MV ANALYTICS -->
-  <div class="panel" id="panel-mv">
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:1.5rem">
-      <div style="background:#fff;padding:1.2rem;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
-        <h4 style="font-size:.7rem;color:#3A5A40;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:.08em">A/B テスト結果</h4>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:1rem">
+      <div style="background:#fff;padding:1rem;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+        <h4 style="font-size:.7rem;color:#3A5A40;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.08em">MV A/B テスト</h4>
         <div style="font-size:.75rem;line-height:2" id="mvAbTest">読み込み中...</div>
       </div>
-      <div style="background:#fff;padding:1.2rem;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
-        <h4 style="font-size:.7rem;color:#3A5A40;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:.08em">MV エンゲージメント</h4>
+      <div style="background:#fff;padding:1rem;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+        <h4 style="font-size:.7rem;color:#3A5A40;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.08em">MV エンゲージメント</h4>
         <div style="font-size:.75rem;line-height:2" id="mvEngagement">読み込み中...</div>
       </div>
     </div>
-    <div style="background:#fff;padding:1.2rem;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
-      <h4 style="font-size:.7rem;color:#78716C;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:.08em">日別MV指標</h4>
+    <div style="background:#fff;padding:1rem;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+      <h4 style="font-size:.7rem;color:#78716C;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.08em">日別MV指標</h4>
       <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.75rem">
         <thead><tr style="border-bottom:2px solid #E7E0D8">
           <th style="text-align:left;padding:.4rem .5rem;font-weight:500;color:#78716C">日付</th>
@@ -319,16 +314,38 @@ body{font-family:-apple-system,'Noto Sans JP',sans-serif;background:#F5F3F0;colo
     </div>
   </div>
 
-  <!-- REQUESTS -->
-  <div class="panel" id="panel-requests">
-    <div style="background:#fff;padding:1rem;border-radius:4px;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,.05)">
-      <div style="display:flex;gap:.5rem">
-        <input type="text" id="reqBody" placeholder="機能要望・改善メモを入力..." style="flex:1;padding:.5rem .8rem;border:1px solid #ddd;font-size:.82rem;border-radius:2px">
-        <button onclick="addRequest()" style="padding:.5rem 1rem;background:#3A5A40;color:#fff;border:none;cursor:pointer;font-size:.75rem;border-radius:2px;white-space:nowrap">追加</button>
+  <!-- AI FIX -->
+  <div class="panel" id="panel-ai-fix">
+    <div style="background:#fff;padding:1.5rem;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:1rem">
+      <h4 style="font-size:.8rem;font-weight:500;margin-bottom:.8rem">サイト修正依頼（Claude Code）</h4>
+      <p style="font-size:.7rem;color:#78716C;margin-bottom:1rem;line-height:1.8">修正内容を入力すると、Claude CodeがGitHub上で自動修正→PR作成→デプロイします。<br>HTML/CSS/テキストの変更のみ対応。画像生成やサーバー設定変更は手動対応。</p>
+      <textarea id="aiFixBody" placeholder="例: トップページのロゴをもう少し大きくしてほしい&#10;例: メニューの価格を赤身鉄火 ¥1,500 に変更&#10;例: 営業時間を 11:00-19:00 に変更" style="width:100%;height:100px;padding:.8rem;border:1px solid #E7E0D8;font-size:.82rem;border-radius:4px;font-family:inherit;resize:vertical"></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.8rem">
+        <div style="font-size:.7rem;color:#78716C">
+          推定コスト: <strong style="color:#3A5A40" id="aiCostEst">~¥5-15</strong>（Claude API使用量）
+        </div>
+        <button onclick="submitAiFix()" id="aiFixBtn" style="padding:.5rem 1.5rem;background:#3A5A40;color:#fff;border:none;cursor:pointer;font-size:.8rem;border-radius:4px;font-family:inherit">修正依頼を送信</button>
       </div>
     </div>
-    <div id="requestsList"></div>
+    <div style="background:#fff;padding:1.2rem;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:1rem">
+      <h4 style="font-size:.7rem;color:#78716C;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.08em">コスト目安</h4>
+      <div style="font-size:.75rem;line-height:2;color:#78716C">
+        <div style="display:grid;grid-template-columns:1fr auto;gap:.3rem .8rem">
+          <span>テキスト変更（価格・時間・文言）</span><span style="color:#3A5A40;font-weight:500">~¥3-5</span>
+          <span>レイアウト調整（サイズ・色・位置）</span><span style="color:#3A5A40;font-weight:500">~¥5-15</span>
+          <span>新セクション追加・大きな変更</span><span style="color:#3A5A40;font-weight:500">~¥15-30</span>
+          <span>複数ページ横断の修正</span><span style="color:#3A5A40;font-weight:500">~¥20-50</span>
+        </div>
+        <p style="margin-top:.8rem;font-size:.65rem;color:#999">※ Claude API (Sonnet) の入出力トークン従量課金。1回の修正で約2,000-10,000トークン使用。</p>
+      </div>
+    </div>
+    <div id="aiFixHistory">
+      <h4 style="font-size:.7rem;color:#78716C;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:.08em">修正履歴</h4>
+      <div id="aiFixList" style="font-size:.8rem;color:#78716C">読み込み中...</div>
+    </div>
   </div>
+
+  <!-- REQUESTS -->
 </div>
 
 <!-- NOTIFICATION SOUND (Web Audio API) -->
@@ -792,6 +809,44 @@ async function loadMvAnalytics() {
       </tr>`).join('');
   } catch(e) { console.error('MV analytics error', e); }
 }
+
+// AI Fix
+async function submitAiFix() {
+  const body = document.getElementById('aiFixBody').value.trim();
+  if (!body) return alert('修正内容を入力してください');
+  const btn = document.getElementById('aiFixBtn');
+  btn.disabled = true; btn.textContent = '送信中...';
+  try {
+    const res = await fetch('/api/ai-fix', {method:'POST',headers:headers(),body:JSON.stringify({body})});
+    const data = await res.json();
+    if (data.ok) {
+      alert('修正依頼送信完了。GitHub Issue #' + (data.issue_number||'') + ' が作成されました。');
+      document.getElementById('aiFixBody').value = '';
+      loadAiFixHistory();
+    } else { alert('エラー: ' + (data.error||'送信失敗')); }
+  } catch(e) { alert('通信エラー'); }
+  btn.disabled = false; btn.textContent = '修正依頼を送信';
+}
+document.getElementById('aiFixBody')?.addEventListener('input', function() {
+  const len = this.value.length;
+  document.getElementById('aiCostEst').textContent = len<30?'~¥3-5':len<100?'~¥5-15':len<200?'~¥15-30':'~¥20-50';
+});
+async function loadAiFixHistory() {
+  try {
+    const res = await fetch('/api/ai-fix-history', {headers:{'x-admin-key':adminKey}});
+    const data = await res.json();
+    const list = document.getElementById('aiFixList');
+    if (!data.length) { list.textContent = 'まだ修正依頼はありません'; return; }
+    list.innerHTML = data.map(r => `
+      <div style="padding:.8rem;background:#fff;border:1px solid #E7E0D8;border-radius:6px;margin-bottom:.5rem">
+        <div style="display:flex;justify-content:space-between"><span style="font-size:.7rem;color:#3A5A40;font-weight:500">#${r.id}</span><span style="font-size:.65rem;color:#999">${r.created_at}</span></div>
+        <p style="font-size:.8rem;margin-top:.3rem">${r.body}</p>
+        <span style="font-size:.65rem;padding:.1rem .4rem;border-radius:3px;background:${r.status==='done'?'#EDF2EE':r.status==='processing'?'#FEF3C7':'#F5F0EA'};color:${r.status==='done'?'#3A5A40':r.status==='processing'?'#92400E':'#78716C'}">${r.status==='done'?'完了':r.status==='processing'?'処理中':'待機'}</span>
+        ${r.cost?'<span style="font-size:.65rem;color:#78716C;margin-left:.5rem">コスト: '+r.cost+'</span>':''}
+      </div>`).join('');
+  } catch(e) {}
+}
+document.querySelectorAll('[data-tab="ai-fix"]').forEach(b=>b.addEventListener('click',loadAiFixHistory));
 </script>
 </body>
 </html>

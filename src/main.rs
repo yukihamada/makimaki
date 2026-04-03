@@ -121,6 +121,16 @@ fn init_db(conn: &Connection) {
         );",
     )
     .expect("Failed to create tables");
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS ai_fixes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            body TEXT NOT NULL,
+            status TEXT DEFAULT 'pending',
+            issue_number INTEGER DEFAULT 0,
+            cost TEXT DEFAULT '',
+            created_at TEXT NOT NULL
+        );"
+    ).ok();
     // Migrations (add columns if missing)
     conn.execute_batch("ALTER TABLE orders ADD COLUMN paid INTEGER DEFAULT 0").ok();
     conn.execute_batch("ALTER TABLE orders ADD COLUMN stripe_session TEXT DEFAULT ''").ok();
@@ -176,6 +186,8 @@ async fn main() {
         .route("/api/events", post(track_event).get(get_events))
         .route("/api/analytics", get(get_analytics))
         .route("/api/mv-analytics", get(get_mv_analytics))
+        .route("/api/ai-fix", post(create_ai_fix))
+        .route("/api/ai-fix-history", get(list_ai_fixes))
         .route("/api/cloudprnt", post(cloudprnt_poll))
         .route("/api/cloudprnt/job", get(cloudprnt_job))
         .route("/api/orders/{id}/cancel", post(cancel_order))
@@ -532,8 +544,16 @@ async fn admin_page() -> Html<&'static str> {
     Html(include_str!("../static/admin.html"))
 }
 
-async fn guide_page() -> Html<&'static str> {
-    Html(include_str!("../static/guide.html"))
+async fn guide_page(
+    State(state): State<Arc<AppState>>,
+    Query(q): Query<std::collections::HashMap<String, String>>,
+) -> impl IntoResponse {
+    let key = q.get("key").map(|s| s.as_str()).unwrap_or("");
+    if key == state.admin_key {
+        Html(include_str!("../static/guide.html")).into_response()
+    } else {
+        Html("<html><body style='font-family:sans-serif;display:flex;height:100vh;align-items:center;justify-content:center'><div style='text-align:center'><h2>makimaki ガイド</h2><p style='color:#999;margin:1rem 0'>認証が必要です。URLに ?key=xxx を付けてアクセスしてください。</p></div></body></html>").into_response()
+    }
 }
 
 // --- Requests (feature requests / feedback) ---
@@ -633,7 +653,9 @@ async fn track_event(
         return StatusCode::BAD_REQUEST;
     }
     let data = input.data.unwrap_or_default();
-    if data.len() > 100 { return StatusCode::BAD_REQUEST; }
+    if data.len() > 200 { return StatusCode::BAD_REQUEST; }
+    // Skip admin events (data starts with "admin:")
+    if data.starts_with("admin:") { return StatusCode::OK; }
 
     let now = chrono::Utc::now()
         .with_timezone(&chrono::FixedOffset::east_opt(9 * 3600).unwrap())
@@ -1290,6 +1312,81 @@ async fn pos_page(
 
 async fn order_page() -> Html<&'static str> {
     Html(include_str!("../static/order.html"))
+}
+
+// --- AI Fix (GitHub Issue creation) ---
+#[derive(Deserialize)]
+struct AiFixRequest { body: String }
+
+async fn create_ai_fix(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Json(input): Json<AiFixRequest>,
+) -> impl IntoResponse {
+    if !check_admin(&state, &headers) {
+        return (StatusCode::UNAUTHORIZED, Json(serde_json::json!({"error":"unauthorized"})));
+    }
+    let now = chrono::Utc::now()
+        .with_timezone(&chrono::FixedOffset::east_opt(9 * 3600).unwrap())
+        .format("%Y-%m-%d %H:%M").to_string();
+
+    // Save to DB
+    let fix_id = {
+        let db = state.db.lock().unwrap();
+        db.execute(
+            "INSERT INTO ai_fixes (body, status, created_at) VALUES (?1, 'pending', ?2)",
+            rusqlite::params![input.body, now],
+        ).ok();
+        db.last_insert_rowid()
+    };
+
+    // Create GitHub Issue via API
+    let gh_token = std::env::var("GITHUB_TOKEN").ok();
+    let mut issue_number = 0i64;
+    if let Some(token) = gh_token {
+        let client = reqwest::Client::new();
+        let resp = client.post("https://api.github.com/repos/yukihamada/makimaki/issues")
+            .header("Authorization", format!("Bearer {token}"))
+            .header("User-Agent", "makimaki-bot")
+            .json(&serde_json::json!({
+                "title": format!("[AI修正] {}", if input.body.len() > 50 { &input.body[..50] } else { &input.body }),
+                "body": format!("## 修正依頼\n\n{}\n\n---\n管理画面から送信 (fix_id: {})", input.body, fix_id),
+                "labels": ["fix-request"]
+            }))
+            .send().await;
+        if let Ok(r) = resp {
+            if let Ok(body) = r.json::<serde_json::Value>().await {
+                issue_number = body["number"].as_i64().unwrap_or(0);
+                let db = state.db.lock().unwrap();
+                db.execute("UPDATE ai_fixes SET issue_number=?1 WHERE id=?2",
+                    rusqlite::params![issue_number, fix_id]).ok();
+            }
+        }
+    }
+
+    (StatusCode::OK, Json(serde_json::json!({"ok": true, "fix_id": fix_id, "issue_number": issue_number})))
+}
+
+async fn list_ai_fixes(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+) -> impl IntoResponse {
+    if !check_admin(&state, &headers) {
+        return (StatusCode::UNAUTHORIZED, Json(serde_json::json!([])));
+    }
+    let db = state.db.lock().unwrap();
+    let mut stmt = db.prepare("SELECT id, body, status, issue_number, cost, created_at FROM ai_fixes ORDER BY id DESC LIMIT 50").unwrap();
+    let fixes: Vec<serde_json::Value> = stmt.query_map([], |row| {
+        Ok(serde_json::json!({
+            "id": row.get::<_,i64>(0)?,
+            "body": row.get::<_,String>(1)?,
+            "status": row.get::<_,String>(2)?,
+            "issue_number": row.get::<_,i64>(3)?,
+            "cost": row.get::<_,String>(4)?,
+            "created_at": row.get::<_,String>(5)?,
+        }))
+    }).unwrap().filter_map(|r| r.ok()).collect();
+    (StatusCode::OK, Json(serde_json::json!(fixes)))
 }
 
 async fn docs_page(

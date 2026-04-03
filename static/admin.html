@@ -142,6 +142,7 @@ body{font-family:-apple-system,'Noto Sans JP',sans-serif;background:#F5F3F0;colo
     <button data-tab="printer">プリンター</button>
     <button data-tab="line">LINE</button>
     <button data-tab="analytics">統計</button>
+    <button data-tab="mv">MV分析</button>
     <button data-tab="requests">要望</button>
   </div>
 
@@ -291,6 +292,33 @@ body{font-family:-apple-system,'Noto Sans JP',sans-serif;background:#F5F3F0;colo
     </div>
   </div>
 
+  <!-- MV ANALYTICS -->
+  <div class="panel" id="panel-mv">
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:1.5rem">
+      <div style="background:#fff;padding:1.2rem;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+        <h4 style="font-size:.7rem;color:#3A5A40;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:.08em">A/B テスト結果</h4>
+        <div style="font-size:.75rem;line-height:2" id="mvAbTest">読み込み中...</div>
+      </div>
+      <div style="background:#fff;padding:1.2rem;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+        <h4 style="font-size:.7rem;color:#3A5A40;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:.08em">MV エンゲージメント</h4>
+        <div style="font-size:.75rem;line-height:2" id="mvEngagement">読み込み中...</div>
+      </div>
+    </div>
+    <div style="background:#fff;padding:1.2rem;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+      <h4 style="font-size:.7rem;color:#78716C;margin-bottom:.8rem;text-transform:uppercase;letter-spacing:.08em">日別MV指標</h4>
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.75rem">
+        <thead><tr style="border-bottom:2px solid #E7E0D8">
+          <th style="text-align:left;padding:.4rem .5rem;font-weight:500;color:#78716C">日付</th>
+          <th style="text-align:right;padding:.4rem .5rem">表示</th>
+          <th style="text-align:right;padding:.4rem .5rem">再生</th>
+          <th style="text-align:right;padding:.4rem .5rem">完聴</th>
+          <th style="text-align:right;padding:.4rem .5rem">MVクリック</th>
+        </tr></thead>
+        <tbody id="mvDailyBody"></tbody>
+      </table></div>
+    </div>
+  </div>
+
   <!-- REQUESTS -->
   <div class="panel" id="panel-requests">
     <div style="background:#fff;padding:1rem;border-radius:4px;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,.05)">
@@ -377,7 +405,7 @@ if (savedKey) {
 function headers() { return {'Content-Type':'application/json','x-admin-key':adminKey}; }
 
 async function loadAll() {
-  loadOrders(); loadStats(); loadStoreConfig(); loadMenuStatus(); loadRequests(); loadAnalytics(); loadAnalyticsFull(); loadLineStatus();
+  loadOrders(); loadStats(); loadStoreConfig(); loadMenuStatus(); loadRequests(); loadAnalytics(); loadAnalyticsFull(); loadLineStatus(); loadMvAnalytics();
 }
 
 async function loadAnalytics() {
@@ -719,6 +747,51 @@ document.querySelectorAll('.order-filters button').forEach(btn => {
     renderOrders();
   });
 });
+
+// MV Analytics
+async function loadMvAnalytics() {
+  try {
+    const res = await fetch('/api/mv-analytics', {headers:{'x-admin-key':adminKey}});
+    const d = await res.json();
+    const ab = d.ab_test || {};
+    document.getElementById('mvAbTest').innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+        <div style="padding:.8rem;background:#EDF2EE;border-radius:6px;text-align:center">
+          <div style="font-size:.6rem;color:#78716C">Group A（MV表示）</div>
+          <div style="font-size:1.2rem;font-weight:700;color:#3A5A40">${ab.group_a_users || 0}人</div>
+          <div style="font-size:.7rem">CV: ${ab.group_a_checkouts || 0}件 (${ab.group_a_cv_rate || '0%'})</div>
+        </div>
+        <div style="padding:.8rem;background:#F5F0EA;border-radius:6px;text-align:center">
+          <div style="font-size:.6rem;color:#78716C">Group B（MV非表示）</div>
+          <div style="font-size:1.2rem;font-weight:700;color:#78716C">${ab.group_b_users || 0}人</div>
+          <div style="font-size:.7rem">CV: ${ab.group_b_checkouts || 0}件 (${ab.group_b_cv_rate || '0%'})</div>
+        </div>
+      </div>`;
+
+    const mv = d.mv_engagement || {};
+    document.getElementById('mvEngagement').innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center">
+        <div><div style="font-size:1.1rem;font-weight:700;color:#3A5A40">${mv.shown || 0}</div><div style="font-size:.6rem;color:#78716C">表示</div></div>
+        <div><div style="font-size:1.1rem;font-weight:700;color:#3A5A40">${mv.play || 0}</div><div style="font-size:.6rem;color:#78716C">再生</div></div>
+        <div><div style="font-size:1.1rem;font-weight:700;color:#3A5A40">${mv.complete || 0}</div><div style="font-size:.6rem;color:#78716C">完聴</div></div>
+      </div>
+      <div style="margin-top:.8rem;border-top:1px solid #E7E0D8;padding-top:.6rem;font-size:.75rem;line-height:2">
+        再生率: <strong>${mv.play_rate || '0%'}</strong> / 完聴率: <strong>${mv.completion_rate || '0%'}</strong><br>
+        MVページクリック: <strong>${mv.mv_page_click || 0}</strong><br>
+        平均試聴: <strong>${mv.avg_listen_seconds || 0}秒</strong> / 最長: <strong>${mv.max_listen_seconds || 0}秒</strong>
+      </div>`;
+
+    const daily = d.daily || [];
+    document.getElementById('mvDailyBody').innerHTML = daily.map(r => `
+      <tr style="border-bottom:1px solid #E7E0D8">
+        <td style="padding:.4rem .5rem">${r.date}</td>
+        <td style="padding:.4rem .5rem;text-align:right">${r.shown || 0}</td>
+        <td style="padding:.4rem .5rem;text-align:right">${r.play || 0}</td>
+        <td style="padding:.4rem .5rem;text-align:right">${r.complete || 0}</td>
+        <td style="padding:.4rem .5rem;text-align:right">${r.click || 0}</td>
+      </tr>`).join('');
+  } catch(e) { console.error('MV analytics error', e); }
+}
 </script>
 </body>
 </html>

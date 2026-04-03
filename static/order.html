@@ -161,7 +161,7 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--f
       <div class="sb-empty">ボックスサイズを<br>お選びください</div>
     </div>
     <div class="sb-line" id="sbSub" style="display:none"><span>小計</span><span id="valSub">¥0</span></div>
-    <div class="sb-line" id="sbTax" style="display:none"><span>税(10%)+箱代</span><span id="valTax">¥0</span></div>
+    <div class="sb-line" id="sbTax" style="display:none"><span>税(8%)+箱代</span><span id="valTax">¥0</span></div>
     <div class="sb-total" id="sbTotal" style="display:none"><span>合計</span><span id="valTotal">¥0</span></div>
     <div class="sb-actions">
       <button class="btn-primary" id="orderBtn" disabled onclick="submitSelfOrder()">レジでお会計する</button>
@@ -284,7 +284,7 @@ function updateSide(){
   sc.innerHTML=h;
 
   let sub=0;all.forEach(b=>b.items.forEach(id=>{sub+=MENU.find(m=>m.id===id)?.price||0;}));
-  const tax=Math.floor(sub*0.1);
+  const tax=Math.floor(sub*0.08);
   const boxC=all.length*200;
   const total=sub+tax+boxC;
   document.getElementById('valSub').textContent='¥'+sub.toLocaleString();

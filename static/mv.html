@@ -92,6 +92,15 @@ body{font-family:'Zen Maru Gothic',sans-serif;background:#000;color:#fff;overflo
 
 .mv-close:hover{color:#fff}
 
+/* LANGUAGE SELECT */
+.lang-overlay{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:25;background:rgba(0,0,0,.85);transition:opacity .6s}
+.lang-overlay.hidden{opacity:0;pointer-events:none}
+.lang-btns{display:flex;gap:1rem;margin-top:2rem;flex-wrap:wrap;justify-content:center;padding:0 1rem}
+.lang-btn{display:flex;flex-direction:column;align-items:center;gap:.4rem;padding:1rem 1.8rem;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:16px;cursor:pointer;transition:all .3s;color:#fff;font-family:inherit;min-width:90px}
+.lang-btn:hover{background:rgba(58,90,64,.4);border-color:#3A5A40;transform:translateY(-3px)}
+.lang-flag{font-size:1.8rem}
+.lang-label{font-size:.85rem;letter-spacing:.1em}
+
 @media(max-width:600px){
   .maki-left,.maki-right{width:110px;height:110px;bottom:1rem}
   .maki-left{left:1rem}.maki-right{right:1rem}
@@ -125,14 +134,35 @@ body{font-family:'Zen Maru Gothic',sans-serif;background:#000;color:#fff;overflo
 <div class="mv-progress" id="progress"></div>
 <div class="mv-cta" id="cta"><a href="/#menu">オーダーする</a></div>
 
-<div class="play-overlay" id="playOverlay" onclick="startMV()">
+<!-- LANGUAGE SELECT -->
+<div class="lang-overlay" id="langOverlay">
+  <div class="play-maki"><img src="/stamps/animated/16.apng" alt="まきちゃん"></div>
+  <div class="play-title">MAKIMAKI DAYS</div>
+  <div class="play-sub">Choose language / 言語を選んでください</div>
+  <div class="lang-btns">
+    <button class="lang-btn" onclick="chooseLang('ja')">
+      <span class="lang-flag">🇯🇵</span>
+      <span class="lang-label">日本語</span>
+    </button>
+    <button class="lang-btn" onclick="chooseLang('en')">
+      <span class="lang-flag">🇺🇸</span>
+      <span class="lang-label">English</span>
+    </button>
+    <button class="lang-btn" onclick="chooseLang('es')">
+      <span class="lang-flag">🇪🇸</span>
+      <span class="lang-label">Espanol</span>
+    </button>
+  </div>
+</div>
+
+<div class="play-overlay hidden" id="playOverlay" onclick="startMV()">
   <div class="play-maki"><img src="/stamps/animated/16.apng" alt="まきちゃん"></div>
   <div class="play-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
   <div class="play-title">MAKIMAKI DAYS</div>
-  <div class="play-sub">麻布十番 細巻き専門店</div>
+  <div class="play-sub" id="playSub">麻布十番 細巻き専門店</div>
 </div>
 
-<audio id="audio" preload="auto" src="/makimaki-days.mp3"></audio>
+<audio id="audio" preload="auto"></audio>
 
 <script>
 const A = '/stamps/animated/';
@@ -146,19 +176,21 @@ const CLIPS = {
 const BGS = ['/img1110.jpg','/img1111.jpg','/img1108.jpg','/img1113.jpg','/img1114.jpg','/img1107.jpg','/img1109.jpg','/img1117.jpg','/img1112.jpg'];
 BGS.forEach(s => { const i = new Image(); i.src = s; });
 
-const TIMELINE = [
+let selectedLang = 'ja';
+
+const TIMELINE_JA = [
   {t:0,    lyric:"Makimaki!", bg:0, maki:{p:'C',c:'jump'}, sushi:true},
   {t:2.6,  lyric:"Let's go!", bg:0, maki:{p:'L',c:'run'},
    info:{pos:'top', html:'<h3>Azabu-Juban, Tokyo</h3><p>麻布十番の細巻き専門店</p>'}},
   {t:5,    lyric:"Makimaki, Let's go!", bg:4, maki:{p:'R',c:'cheer'}, sushi:true, hideInfo:true,
-   info:{pos:'bottom', html:'<p>鮨めい乃のMaiがプロデュース</p>'}},
+   info:{pos:'bottom', html:'<p>鮨めい乃の幸後綿衣が手がける</p>'}},
   {t:8,    lyric:"", bg:1, hideMaki:true, hideInfo:true},
   {t:14.2, lyric:"十番の街　光るロゴ", bg:0, maki:{p:'R',c:'wave'},
    info:{pos:'top', html:'<h3>Location</h3><p>麻布十番駅 徒歩1分</p>'}},
   {t:16.7, lyric:"一本ずつ　巻くのがプロ", bg:4, maki:{p:'L',c:'cook'}, hideInfo:true,
    info:{pos:'bottom', html:'<p>一本ずつ、心を込めて巻き上げます</p>'}},
   {t:19.2, lyric:"旬の素材　光る彩り", bg:2, maki:{p:'R',c:'love'}, hideInfo:true,
-   info:{pos:'top', html:'<h3>Ingredients</h3><p>山幸の国産本マグロを使用</p>'}},
+   info:{pos:'top', html:'<h3>Ingredients</h3><p>やま幸の国産本マグロを使用</p>'}},
   {t:21.6, lyric:"手にするだけで　心踊り", bg:6, maki:{p:'L',c:'jump'}, hideInfo:true},
   {t:24.9, lyric:"MAKIMAKI!　どこでもパクり", bg:3, maki:{p:'C',c:'jump'}, sushi:true,
    info:{pos:'top', html:'<h3>Takeout</h3><p>どこでも手軽に、美味しいお鮨を</p>'}},
@@ -176,6 +208,78 @@ const TIMELINE = [
    info:{pos:'bottom', html:'<p>@maki_maki_tokyo</p>'}},
   {t:52,   lyric:"", bg:4, cta:true, maki:{p:'L',c:'wave'}, hideInfo:true},
 ];
+
+const TIMELINE_EN = [
+  {t:0,    lyric:"Makimaki!", bg:0, maki:{p:'C',c:'jump'}, sushi:true},
+  {t:2.8,  lyric:"Let's go!", bg:0, maki:{p:'L',c:'run'},
+   info:{pos:'top', html:'<h3>Azabu-Juban, Tokyo</h3><p>Premium Hosomaki Takeout</p>'}},
+  {t:5.0,  lyric:"Down in Juban, see the logo glow,", bg:4, maki:{p:'R',c:'wave'}, hideInfo:true},
+  {t:6.8,  lyric:"Rolled one by one by an expert pro!", bg:2, maki:{p:'L',c:'cook'},
+   info:{pos:'bottom', html:'<p>Each roll crafted with care</p>'}},
+  {t:9.3,  lyric:"Seasonal flavors, colors shining bright,", bg:3, maki:{p:'R',c:'cheer'}, hideInfo:true,
+   info:{pos:'top', html:'<h3>Ingredients</h3><p>Premium domestic bluefin tuna</p>'}},
+  {t:11.1, lyric:"Just holding it brings such a sweet delight!", bg:6, maki:{p:'L',c:'love'}, hideInfo:true, sushi:true},
+  {t:15.0, lyric:"MAKIMAKI!", bg:0, maki:{p:'C',c:'jump'}, sushi:true,
+   info:{pos:'top', html:'<h3>Takeout</h3><p>Take a bite anywhere!</p>'}},
+  {t:15.8, lyric:"Take a bite anywhere!", bg:4, maki:{p:'L',c:'cheer'}, hideInfo:true},
+  {t:17.1, lyric:"MAKIMAKI!", bg:3, maki:{p:'C',c:'jump'}, sushi:true,
+   info:{pos:'bottom', html:'<p>2-Box / 4-Box / 6-Box</p>'}},
+  {t:18.2, lyric:"Sparkling smiles we share!", bg:7, maki:{p:'R',c:'love'}, hideInfo:true},
+  {t:19.8, lyric:"At home or outside,", bg:1, maki:{p:'L',c:'wave'},
+   info:{pos:'top', html:'<h3>Online Order</h3><p>makimaki.tokyo</p>'}},
+  {t:20.7, lyric:"take a happy bite,", bg:5, maki:{p:'R',c:'cheer'}, hideInfo:true},
+  {t:21.7, lyric:"Let's roll up the best time,", bg:2, maki:{p:'C',c:'cheer'}, sushi:true},
+  {t:23.2, lyric:"feeling so right!", bg:6, maki:{p:'L',c:'jump'}},
+  {t:26.0, lyric:"It's a MAKIMAKI DAY!", bg:0, maki:{p:'C',c:'jump'}, sushi:true,
+   info:{pos:'top', html:'<h3>Open</h3><p>11:00 - 18:00</p>'}},
+  {t:31.0, lyric:"Freshly made, here you go.", bg:8, maki:{p:'R',c:'bow'}, hideInfo:true,
+   info:{pos:'bottom', html:'<p>@maki_maki_tokyo</p>'}},
+  {t:33.6, lyric:"Makimaki!", bg:0, maki:{p:'C',c:'wave'}, hideInfo:true},
+  {t:39.6, lyric:"Makimaki!", bg:4, maki:{p:'L',c:'wave'}},
+  {t:42,   lyric:"", bg:4, cta:true, maki:{p:'L',c:'wave'}, hideInfo:true},
+];
+
+const TIMELINE_ES = [
+  {t:0,    lyric:"Makimaki!", bg:0, maki:{p:'C',c:'jump'}, sushi:true},
+  {t:2.8,  lyric:"Let's go!", bg:0, maki:{p:'L',c:'run'},
+   info:{pos:'top', html:'<h3>Azabu-Juban, Tokyo</h3><p>Hosomaki Premium para llevar</p>'}},
+  {t:5.0,  lyric:"En el barrio de Juban, el logo brillando,", bg:4, maki:{p:'R',c:'wave'}, hideInfo:true},
+  {t:7.6,  lyric:"un experto uno a uno los va enrollando!", bg:2, maki:{p:'L',c:'cook'},
+   info:{pos:'bottom', html:'<p>Cada rollo hecho con dedicacion</p>'}},
+  {t:10.1, lyric:"Ingredientes frescos de un color sin igual,", bg:3, maki:{p:'R',c:'cheer'}, hideInfo:true,
+   info:{pos:'top', html:'<h3>Ingredientes</h3><p>Atun rojo japones premium</p>'}},
+  {t:12.4, lyric:"solo con tenerlo en la mano es genial!", bg:6, maki:{p:'L',c:'love'}, hideInfo:true, sushi:true},
+  {t:14.8, lyric:"MAKIMAKI!", bg:0, maki:{p:'C',c:'jump'}, sushi:true,
+   info:{pos:'top', html:'<h3>Para llevar</h3><p>Dale un buen bocado!</p>'}},
+  {t:16.0, lyric:"Dale un buen bocado!", bg:4, maki:{p:'L',c:'cheer'}, hideInfo:true},
+  {t:16.9, lyric:"MAKIMAKI!", bg:3, maki:{p:'C',c:'jump'}, sushi:true,
+   info:{pos:'bottom', html:'<p>Box de 2 / 4 / 6</p>'}},
+  {t:18.3, lyric:"Sonrie encantado!", bg:7, maki:{p:'R',c:'love'}, hideInfo:true},
+  {t:19.5, lyric:"En casa o la calle, que felicidad!", bg:1, maki:{p:'L',c:'wave'},
+   info:{pos:'top', html:'<h3>Pedidos Online</h3><p>makimaki.tokyo</p>'}},
+  {t:21.6, lyric:"Enrolla los buenos momentos, de verdad!", bg:2, maki:{p:'C',c:'cheer'}, hideInfo:true, sushi:true},
+  {t:24.6, lyric:"Es un MAKIMAKI DAY!", bg:0, maki:{p:'C',c:'jump'}, sushi:true,
+   info:{pos:'top', html:'<h3>Horario</h3><p>11:00 - 18:00</p>'}},
+  {t:30.0, lyric:"", bg:8, hideMaki:true, hideInfo:true},
+  {t:30.4, lyric:"Recien hechos para ti.", bg:6, maki:{p:'R',c:'bow'},
+   info:{pos:'bottom', html:'<p>@maki_maki_tokyo</p>'}},
+  {t:38.3, lyric:"Makimaki!", bg:0, maki:{p:'C',c:'wave'}, hideInfo:true},
+  {t:42,   lyric:"", bg:4, cta:true, maki:{p:'L',c:'wave'}, hideInfo:true},
+];
+
+let TIMELINE = TIMELINE_JA;
+
+function chooseLang(lang) {
+  selectedLang = lang;
+  TIMELINE = lang === 'es' ? TIMELINE_ES : lang === 'en' ? TIMELINE_EN : TIMELINE_JA;
+  audio.src = lang === 'es' ? '/makimaki-days-es.mp3' : lang === 'en' ? '/makimaki-days-en.mp3' : '/makimaki-days.mp3';
+  const subs = {ja:'麻布十番 細巻き専門店', en:'Azabu-Juban Hosomaki Takeout', es:'Hosomaki Premium en Azabu-Juban'};
+  document.getElementById('playSub').textContent = subs[lang];
+  document.getElementById('langOverlay').classList.add('hidden');
+  document.getElementById('playOverlay').classList.remove('hidden');
+  const ctas = {ja:'オーダーする', en:'Order Now', es:'Pedir ahora'};
+  document.querySelector('.mv-cta a').textContent = ctas[lang];
+}
 
 const audio = document.getElementById('audio');
 const lyricEl = document.getElementById('lyric');
@@ -306,9 +410,12 @@ audio.addEventListener('ended', () => {
   clearInterval(pInt);
   document.getElementById('cta').classList.add('show');
   showMaki('C','wave');
-  showInfo('top','<h3>makimaki</h3><p>麻布十番の細巻き専門テイクアウト店</p>');
+  const endInfo = {ja:'麻布十番の細巻き専門テイクアウト店', en:'Azabu-Juban Premium Hosomaki Takeout', es:'Hosomaki Premium para llevar en Azabu-Juban'};
+  showInfo('top', `<h3>makimaki</h3><p>${endInfo[selectedLang]}</p>`);
   lyricEl.classList.remove('active');
-  setTimeout(() => { lyricEl.textContent = 'また来てね♪'; lyricEl.classList.add('active'); }, 500);
+  const endTexts = {ja:'また来てね♪', en:'See you again!', es:'Vuelve pronto!'};
+  const endText = endTexts[selectedLang];
+  setTimeout(() => { lyricEl.textContent = endText; lyricEl.classList.add('active'); }, 500);
 });
 </script>
 </body>

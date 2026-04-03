@@ -243,7 +243,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--sans);background:var(--b
       <span>小計</span><span id="subtotalVal">¥0</span>
     </div>
     <div class="sidebar-subtotal" id="sidebarTax" style="display:none">
-      <span>消費税(10%)+箱代</span><span id="taxVal">¥0</span>
+      <span>消費税(8%)+箱代</span><span id="taxVal">¥0</span>
     </div>
     <div class="sidebar-total" id="sidebarTotal" style="display:none">
       <span>合計</span><span id="totalVal">¥0</span>
@@ -423,7 +423,7 @@ function updateSidebar() {
   // Calc totals
   let subtotal = 0;
   allBoxes.forEach(box => box.items.forEach(id => { subtotal += MENU.find(m=>m.id===id)?.price || 0; }));
-  const tax = Math.floor(subtotal * 0.1);
+  const tax = Math.floor(subtotal * 0.08);
   const boxCharge = allBoxes.length * 200;
   const total = subtotal + tax + boxCharge;
 
@@ -456,7 +456,7 @@ function clearAll() {
 function getTotal() {
   let subtotal = 0;
   completedBoxes.forEach(box => box.items.forEach(id => { subtotal += MENU.find(m=>m.id===id)?.price || 0; }));
-  return ((subtotal * 1.1) | 0) + completedBoxes.length * 200;
+  return ((subtotal * 1.08) | 0) + completedBoxes.length * 200;
 }
 
 function getOrderItems() {

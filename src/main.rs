@@ -15,6 +15,8 @@ struct AppState {
     square_token: Option<String>,
     square_location: Option<String>,
     admin_key: String,
+    line_channel_token: Option<String>,
+    line_channel_secret: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -148,11 +150,14 @@ async fn main() {
     let square_token = std::env::var("SQUARE_ACCESS_TOKEN").ok();
     let square_location = std::env::var("SQUARE_LOCATION_ID").ok();
     let admin_key = std::env::var("ADMIN_KEY").expect("ADMIN_KEY environment variable must be set");
+    let line_channel_token = std::env::var("LINE_CHANNEL_ACCESS_TOKEN").ok().filter(|s| !s.is_empty());
+    let line_channel_secret = std::env::var("LINE_CHANNEL_SECRET").ok().filter(|s| !s.is_empty());
 
     if square_token.is_some() { println!("Square payments enabled"); }
+    if line_channel_token.is_some() { println!("LINE bot enabled"); }
     println!("Admin key configured");
 
-    let state = Arc::new(AppState { db: Mutex::new(conn), square_token, square_location, admin_key });
+    let state = Arc::new(AppState { db: Mutex::new(conn), square_token, square_location, admin_key, line_channel_token, line_channel_secret });
 
     let app = Router::new()
         .route("/api/orders", post(create_order).get(list_orders))
@@ -170,10 +175,12 @@ async fn main() {
         .route("/api/requests/{id}/status", post(update_request_status))
         .route("/api/events", post(track_event).get(get_events))
         .route("/api/analytics", get(get_analytics))
+        .route("/api/mv-analytics", get(get_mv_analytics))
         .route("/api/cloudprnt", post(cloudprnt_poll))
         .route("/api/cloudprnt/job", get(cloudprnt_job))
         .route("/api/orders/{id}/cancel", post(cancel_order))
         .route("/api/square-webhook", post(square_webhook))
+        .route("/api/line-webhook", post(line_webhook))
         .route("/api/inventory", get(get_inventory))
         .route("/pos", get(pos_page))
         .route("/order", get(order_page))
@@ -268,7 +275,7 @@ async fn create_checkout(
 
     let id = uuid::Uuid::new_v4().to_string()[..8].to_string();
     let total: u32 = input.items.iter().map(|i| i.price * i.qty).sum();
-    let total_with_tax = ((total as f64) * 1.1).ceil() as u32 + 200; // +箱代
+    let total_with_tax = ((total as f64) * 1.08).ceil() as u32 + 200; // +箱代
     let items_json = serde_json::to_string(&input.items).unwrap_or_default();
     let now = chrono::Utc::now()
         .with_timezone(&chrono::FixedOffset::east_opt(9 * 3600).unwrap())
@@ -294,7 +301,7 @@ async fn create_checkout(
     }));
 
     for item in &input.items {
-        let unit_amount = ((item.price as f64) * 1.1).ceil() as u64;
+        let unit_amount = ((item.price as f64) * 1.08).ceil() as u64;
         sq_line_items.push(serde_json::json!({
             "name": item.name,
             "quantity": item.qty.to_string(),
@@ -620,6 +627,7 @@ async fn track_event(
         "section_view", "cart_add", "checkout_start", "checkout_submit",
         "square_redirect", "order_nopay", "order_complete",
         "box_select", "pos_order",
+        "mv_shown", "mv_play", "mv_pause", "mv_complete", "mv_click", "ab_group",
     ];
     if !ALLOWED.contains(&input.event.as_str()) {
         return StatusCode::BAD_REQUEST;
@@ -732,6 +740,101 @@ async fn get_analytics(
         "daily_events": daily,
         "daily_orders": order_daily,
         "popular_items": popular,
+    })))
+}
+
+// --- MV A/B Test Analytics ---
+async fn get_mv_analytics(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+) -> impl IntoResponse {
+    if !check_admin(&state, &headers) {
+        return (StatusCode::UNAUTHORIZED, Json(serde_json::json!({})));
+    }
+    let db = state.db.lock().unwrap();
+
+    // Group A (MV shown) vs Group B (no MV) conversion comparison
+    // Count users in each group
+    let group_a: i32 = db.query_row(
+        "SELECT COUNT(DISTINCT data) FROM events WHERE event='ab_group' AND data='A'", [], |r| r.get(0)
+    ).unwrap_or(0);
+    let group_b: i32 = db.query_row(
+        "SELECT COUNT(DISTINCT data) FROM events WHERE event='ab_group' AND data='B'", [], |r| r.get(0)
+    ).unwrap_or(0);
+
+    // MV events
+    let mv_shown: i32 = db.query_row("SELECT COUNT(*) FROM events WHERE event='mv_shown'", [], |r| r.get(0)).unwrap_or(0);
+    let mv_play: i32 = db.query_row("SELECT COUNT(*) FROM events WHERE event='mv_play'", [], |r| r.get(0)).unwrap_or(0);
+    let mv_pause: i32 = db.query_row("SELECT COUNT(*) FROM events WHERE event='mv_pause'", [], |r| r.get(0)).unwrap_or(0);
+    let mv_complete: i32 = db.query_row("SELECT COUNT(*) FROM events WHERE event='mv_complete'", [], |r| r.get(0)).unwrap_or(0);
+    let mv_click: i32 = db.query_row("SELECT COUNT(*) FROM events WHERE event='mv_click'", [], |r| r.get(0)).unwrap_or(0);
+
+    // Listen durations from mv_pause and mv_complete data
+    let mut listen_times: Vec<i32> = Vec::new();
+    let mut stmt = db.prepare("SELECT data FROM events WHERE event IN ('mv_pause','mv_complete') AND data LIKE '%s'").unwrap();
+    let rows = stmt.query_map([], |row| row.get::<_, String>(0)).unwrap();
+    for row in rows.flatten() {
+        if let Ok(secs) = row.trim_end_matches('s').parse::<i32>() {
+            listen_times.push(secs);
+        }
+    }
+    let avg_listen = if listen_times.is_empty() { 0 } else { listen_times.iter().sum::<i32>() / listen_times.len() as i32 };
+    let max_listen = listen_times.iter().max().copied().unwrap_or(0);
+
+    // Checkout events per group (approximate by timestamp correlation)
+    // Group A checkout = sessions with both mv_shown and checkout_start on same day
+    let a_checkouts: i32 = db.query_row(
+        "SELECT COUNT(*) FROM events WHERE event='checkout_start' AND SUBSTR(ts,1,10) IN (SELECT DISTINCT SUBSTR(ts,1,10) FROM events WHERE event='mv_shown')",
+        [], |r| r.get(0)
+    ).unwrap_or(0);
+    let b_checkouts: i32 = db.query_row(
+        "SELECT COUNT(*) FROM events WHERE event='checkout_start' AND SUBSTR(ts,1,10) NOT IN (SELECT DISTINCT SUBSTR(ts,1,10) FROM events WHERE event='mv_shown')",
+        [], |r| r.get(0)
+    ).unwrap_or(0);
+
+    // Daily MV metrics
+    let mut daily_mv: Vec<serde_json::Value> = Vec::new();
+    let mut stmt2 = db.prepare(
+        "SELECT SUBSTR(ts,1,10) as day, event, COUNT(*) FROM events WHERE event IN ('mv_shown','mv_play','mv_complete','mv_click','ab_group') GROUP BY day, event ORDER BY day"
+    ).unwrap();
+    let rows2 = stmt2.query_map([], |row| {
+        Ok((row.get::<_,String>(0)?, row.get::<_,String>(1)?, row.get::<_,i32>(2)?))
+    }).unwrap();
+    let mut day_map: std::collections::BTreeMap<String, std::collections::HashMap<String, i32>> = std::collections::BTreeMap::new();
+    for row in rows2.flatten() {
+        day_map.entry(row.0).or_default().insert(row.1, row.2);
+    }
+    for (day, events) in &day_map {
+        daily_mv.push(serde_json::json!({
+            "date": day,
+            "shown": events.get("mv_shown").unwrap_or(&0),
+            "play": events.get("mv_play").unwrap_or(&0),
+            "complete": events.get("mv_complete").unwrap_or(&0),
+            "click": events.get("mv_click").unwrap_or(&0),
+        }));
+    }
+
+    (StatusCode::OK, Json(serde_json::json!({
+        "ab_test": {
+            "group_a_users": group_a,
+            "group_b_users": group_b,
+            "group_a_checkouts": a_checkouts,
+            "group_b_checkouts": b_checkouts,
+            "group_a_cv_rate": if group_a > 0 { format!("{:.1}%", a_checkouts as f64 / group_a as f64 * 100.0) } else { "0%".to_string() },
+            "group_b_cv_rate": if group_b > 0 { format!("{:.1}%", b_checkouts as f64 / group_b as f64 * 100.0) } else { "0%".to_string() },
+        },
+        "mv_engagement": {
+            "shown": mv_shown,
+            "play": mv_play,
+            "pause": mv_pause,
+            "complete": mv_complete,
+            "mv_page_click": mv_click,
+            "play_rate": if mv_shown > 0 { format!("{:.1}%", mv_play as f64 / mv_shown as f64 * 100.0) } else { "0%".to_string() },
+            "completion_rate": if mv_play > 0 { format!("{:.1}%", mv_complete as f64 / mv_play as f64 * 100.0) } else { "0%".to_string() },
+            "avg_listen_seconds": avg_listen,
+            "max_listen_seconds": max_listen,
+        },
+        "daily": daily_mv,
     })))
 }
 
@@ -946,7 +1049,7 @@ async fn create_pos_order(
 
     let id = uuid::Uuid::new_v4().to_string()[..8].to_string();
     let total: u32 = input.items.iter().map(|i| i.price * i.qty).sum();
-    let total_with_tax = ((total as f64) * 1.1).ceil() as u32 + 200;
+    let total_with_tax = ((total as f64) * 1.08).ceil() as u32 + 200;
     let items_json = serde_json::to_string(&input.items).unwrap_or_default();
     let now = chrono::Utc::now()
         .with_timezone(&chrono::FixedOffset::east_opt(9 * 3600).unwrap())
@@ -987,7 +1090,7 @@ async fn create_terminal_checkout(
 
     let order_id = uuid::Uuid::new_v4().to_string()[..8].to_string();
     let total: u32 = input.items.iter().map(|i| i.price * i.qty).sum();
-    let total_with_tax = ((total as f64) * 1.1).ceil() as u32 + 200;
+    let total_with_tax = ((total as f64) * 1.08).ceil() as u32 + 200;
     let items_json = serde_json::to_string(&input.items).unwrap_or_default();
     let now = chrono::Utc::now()
         .with_timezone(&chrono::FixedOffset::east_opt(9 * 3600).unwrap())
@@ -1199,4 +1302,263 @@ async fn docs_page(
     } else {
         Html("<html><body style='font-family:sans-serif;display:flex;height:100vh;align-items:center;justify-content:center'><div style='text-align:center'><h2>makimaki docs</h2><p style='color:#999;margin:1rem 0'>認証が必要です。URLに ?key=xxx を付けてアクセスしてください。</p></div></body></html>").into_response()
     }
+}
+
+// --- LINE Messaging API Webhook ---
+async fn line_webhook(
+    State(state): State<Arc<AppState>>,
+    body: String,
+) -> impl IntoResponse {
+    let token = match &state.line_channel_token {
+        Some(t) => t.clone(),
+        None => return StatusCode::OK, // silently accept if not configured
+    };
+
+    let payload: serde_json::Value = match serde_json::from_str(&body) {
+        Ok(v) => v,
+        Err(_) => return StatusCode::BAD_REQUEST,
+    };
+
+    let events = match payload["events"].as_array() {
+        Some(e) => e.clone(),
+        None => return StatusCode::OK,
+    };
+
+    let client = reqwest::Client::new();
+
+    for event in &events {
+        let event_type = event["type"].as_str().unwrap_or("");
+
+        match event_type {
+            "follow" => {
+                // New friend added — send welcome message
+                if let Some(reply_token) = event["replyToken"].as_str() {
+                    let welcome = serde_json::json!({
+                        "replyToken": reply_token,
+                        "messages": [
+                            {
+                                "type": "flex",
+                                "altText": "makimakiへようこそ！",
+                                "contents": line_welcome_flex()
+                            }
+                        ]
+                    });
+                    let _ = client
+                        .post("https://api.line.me/v2/bot/message/reply")
+                        .header("Authorization", format!("Bearer {token}"))
+                        .json(&welcome)
+                        .send().await;
+                }
+            }
+            "message" => {
+                let reply_token = match event["replyToken"].as_str() {
+                    Some(t) => t,
+                    None => continue,
+                };
+                let msg_type = event["message"]["type"].as_str().unwrap_or("");
+                let text = event["message"]["text"].as_str().unwrap_or("").to_lowercase();
+
+                let reply = if msg_type == "text" && (text.contains("メニュー") || text.contains("menu")) {
+                    serde_json::json!({
+                        "replyToken": reply_token,
+                        "messages": [{
+                            "type": "flex",
+                            "altText": "makimaki メニュー",
+                            "contents": line_menu_flex()
+                        }]
+                    })
+                } else if msg_type == "text" && (text.contains("注文") || text.contains("order") || text.contains("予約")) {
+                    serde_json::json!({
+                        "replyToken": reply_token,
+                        "messages": [{
+                            "type": "flex",
+                            "altText": "オンライン注文",
+                            "contents": line_order_flex()
+                        }]
+                    })
+                } else if msg_type == "text" && (text.contains("アクセス") || text.contains("場所") || text.contains("行き方") || text.contains("access") || text.contains("map")) {
+                    serde_json::json!({
+                        "replyToken": reply_token,
+                        "messages": [{
+                            "type": "flex",
+                            "altText": "makimaki アクセス",
+                            "contents": line_access_flex()
+                        }]
+                    })
+                } else if msg_type == "text" && (text.contains("営業") || text.contains("時間") || text.contains("hours") || text.contains("open")) {
+                    serde_json::json!({
+                        "replyToken": reply_token,
+                        "messages": [{
+                            "type": "text",
+                            "text": "🕚 営業時間\n\n11:00 - 18:00\n定休日: 不定休\n\n📍 東京都港区麻布十番2-19-1\nオフィスエイトビル 1F\n（麻布十番駅 徒歩1分）"
+                        }]
+                    })
+                } else {
+                    // Default: show quick reply with options
+                    serde_json::json!({
+                        "replyToken": reply_token,
+                        "messages": [{
+                            "type": "text",
+                            "text": "makimakiへようこそ！🍣\n下のメニューからお選びください。",
+                            "quickReply": {
+                                "items": [
+                                    {"type":"action","action":{"type":"message","label":"📋 メニュー","text":"メニュー"}},
+                                    {"type":"action","action":{"type":"message","label":"🛒 注文する","text":"注文"}},
+                                    {"type":"action","action":{"type":"message","label":"📍 アクセス","text":"アクセス"}},
+                                    {"type":"action","action":{"type":"message","label":"🕚 営業時間","text":"営業時間"}}
+                                ]
+                            }
+                        }]
+                    })
+                };
+
+                let _ = client
+                    .post("https://api.line.me/v2/bot/message/reply")
+                    .header("Authorization", format!("Bearer {token}"))
+                    .json(&reply)
+                    .send().await;
+            }
+            _ => {}
+        }
+    }
+
+    StatusCode::OK
+}
+
+fn line_welcome_flex() -> serde_json::Value {
+    serde_json::json!({
+        "type": "bubble",
+        "hero": {
+            "type": "image",
+            "url": "https://makimaki.tokyo/sushi-original-2.jpg",
+            "size": "full",
+            "aspectRatio": "20:13",
+            "aspectMode": "cover"
+        },
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {"type":"text","text":"makimaki","weight":"bold","size":"xl","color":"#3A5A40"},
+                {"type":"text","text":"麻布十番の細巻き専門テイクアウト店","size":"xs","color":"#999999","margin":"sm"},
+                {"type":"separator","margin":"lg"},
+                {"type":"text","text":"ようこそ！makimaki公式LINEへ。\nメニューの確認やオンライン注文ができます。","size":"sm","color":"#555555","margin":"lg","wrap":true}
+            ]
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "spacing": "sm",
+            "contents": [
+                {"type":"button","style":"primary","color":"#3A5A40","action":{"type":"message","label":"📋 メニューを見る","text":"メニュー"}},
+                {"type":"button","style":"secondary","action":{"type":"message","label":"🛒 注文する","text":"注文"}},
+                {"type":"button","style":"secondary","action":{"type":"message","label":"📍 アクセス","text":"アクセス"}}
+            ]
+        }
+    })
+}
+
+fn line_menu_flex() -> serde_json::Value {
+    serde_json::json!({
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {"type":"text","text":"makimaki メニュー","weight":"bold","size":"lg","color":"#3A5A40"},
+                {"type":"separator","margin":"md"},
+                {"type":"text","text":"🔴 マグロ","weight":"bold","size":"sm","margin":"lg"},
+                {"type":"text","text":"赤身鉄火 ¥1,400 / 中とろ鉄火 ¥1,600\nネギトロ ¥1,400 / とろたく ¥1,400","size":"xs","color":"#666","wrap":true,"margin":"sm"},
+                {"type":"text","text":"🐟 シーフード","weight":"bold","size":"sm","margin":"lg"},
+                {"type":"text","text":"サーモン ¥900 / サーモンCC ¥900\nエビマヨパクチー ¥800 / いか大葉 ¥800\n生エビマヨ ¥900 / 小肌ガリ大葉 ¥900\nあなきゅう ¥900","size":"xs","color":"#666","wrap":true,"margin":"sm"},
+                {"type":"text","text":"🥒 野菜・その他","weight":"bold","size":"sm","margin":"lg"},
+                {"type":"text","text":"明太きゅうり ¥700 / ツナマヨ ¥700\n梅しそきゅう ¥650 / かっぱ ¥600\nわさびマヨきゅう ¥600 / 納豆白ねぎ ¥600\n梅かつお高菜 ¥600 / たまごマヨ ¥600\nたまごいなり ¥600 / かんぴょう ¥600\nおしんこ ¥500","size":"xs","color":"#666","wrap":true,"margin":"sm"},
+                {"type":"separator","margin":"lg"},
+                {"type":"text","text":"🎁 セットメニュー","weight":"bold","size":"sm","margin":"lg"},
+                {"type":"text","text":"makimaki Box (4本) ¥3,500\nまぐろBox (4本) ¥5,000","size":"xs","color":"#666","wrap":true,"margin":"sm"},
+                {"type":"text","text":"※価格は税別。箱代¥200","size":"xxs","color":"#999","margin":"md"}
+            ]
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {"type":"button","style":"primary","color":"#3A5A40","action":{"type":"uri","label":"🛒 オンラインで注文する","uri":"https://makimaki.tokyo/#menu"}}
+            ]
+        }
+    })
+}
+
+fn line_order_flex() -> serde_json::Value {
+    serde_json::json!({
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {"type":"text","text":"オンライン注文","weight":"bold","size":"lg","color":"#3A5A40"},
+                {"type":"text","text":"Webサイトからボックスを選んで\nお好みの巻きを詰められます。","size":"sm","color":"#666","wrap":true,"margin":"md"},
+                {"type":"separator","margin":"lg"},
+                {"type":"box","layout":"horizontal","margin":"lg","contents":[
+                    {"type":"text","text":"受付時間","size":"xs","color":"#999","flex":0},
+                    {"type":"text","text":"11:00 - 17:30","size":"xs","color":"#333","align":"end"}
+                ]},
+                {"type":"box","layout":"horizontal","margin":"sm","contents":[
+                    {"type":"text","text":"受取方法","size":"xs","color":"#999","flex":0},
+                    {"type":"text","text":"店頭受取（約15分）","size":"xs","color":"#333","align":"end"}
+                ]},
+                {"type":"box","layout":"horizontal","margin":"sm","contents":[
+                    {"type":"text","text":"お支払い","size":"xs","color":"#999","flex":0},
+                    {"type":"text","text":"カード決済 / 店頭払い","size":"xs","color":"#333","align":"end"}
+                ]}
+            ]
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "spacing": "sm",
+            "contents": [
+                {"type":"button","style":"primary","color":"#3A5A40","action":{"type":"uri","label":"注文ページを開く","uri":"https://makimaki.tokyo/#menu"}},
+                {"type":"button","style":"secondary","action":{"type":"uri","label":"電話で注文","uri":"tel:03-0000-0000"}}
+            ]
+        }
+    })
+}
+
+fn line_access_flex() -> serde_json::Value {
+    serde_json::json!({
+        "type": "bubble",
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                {"type":"text","text":"makimaki アクセス","weight":"bold","size":"lg","color":"#3A5A40"},
+                {"type":"separator","margin":"md"},
+                {"type":"box","layout":"horizontal","margin":"lg","contents":[
+                    {"type":"text","text":"住所","size":"xs","color":"#999","flex":0},
+                    {"type":"text","text":"東京都港区麻布十番2-19-1\nオフィスエイトビル 1F","size":"xs","color":"#333","align":"end","wrap":true}
+                ]},
+                {"type":"box","layout":"horizontal","margin":"md","contents":[
+                    {"type":"text","text":"最寄駅","size":"xs","color":"#999","flex":0},
+                    {"type":"text","text":"麻布十番駅 徒歩1分\n（南北線・大江戸線）","size":"xs","color":"#333","align":"end","wrap":true}
+                ]},
+                {"type":"box","layout":"horizontal","margin":"md","contents":[
+                    {"type":"text","text":"営業時間","size":"xs","color":"#999","flex":0},
+                    {"type":"text","text":"11:00 - 18:00","size":"xs","color":"#333","align":"end"}
+                ]},
+                {"type":"box","layout":"horizontal","margin":"md","contents":[
+                    {"type":"text","text":"定休日","size":"xs","color":"#999","flex":0},
+                    {"type":"text","text":"不定休","size":"xs","color":"#333","align":"end"}
+                ]}
+            ]
+        },
+        "footer": {
+            "type": "box",
+            "layout": "vertical",
+            "spacing": "sm",
+            "contents": [
+                {"type":"button","style":"primary","color":"#3A5A40","action":{"type":"uri","label":"📍 Google Mapsで見る","uri":"https://maps.google.com/?q=東京都港区麻布十番2-19-1+オフィスエイトビル1F"}}
+            ]
+        }
+    })
 }

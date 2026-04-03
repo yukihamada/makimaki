@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>まきちゃん 顔スタイル選定 — makimaki</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Zen Maru Gothic',sans-serif;background:#FDFBF8;color:#1C1917}
+.header{text-align:center;padding:3rem 2rem 2rem;background:#3A5A40;color:#fff}
+.header h1{font-size:1.6rem;font-weight:500}
+.header p{font-size:.85rem;opacity:.7;margin-top:.5rem;max-width:500px;margin-left:auto;margin-right:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem;max-width:1100px;margin:2rem auto;padding:0 1.5rem}
+.card{background:#fff;border:2px solid #E7E0D8;border-radius:16px;overflow:hidden;cursor:pointer;transition:all .3s}
+.card:hover{border-color:#3A5A40;transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.06)}
+.card.pick{border-color:#3A5A40;box-shadow:0 0 0 3px rgba(58,90,64,.2);background:#EDF2EE}
+.card img{width:100%;aspect-ratio:1;object-fit:contain;background:#f9f7f4;padding:1.5rem}
+.card-body{padding:1rem 1.2rem 1.2rem}
+.card-num{font-size:.6rem;letter-spacing:.15em;color:#3A5A40;font-weight:700}
+.card-title{font-size:1.05rem;font-weight:500;margin:.2rem 0}
+.card-desc{font-size:.78rem;color:#78716C;line-height:1.6}
+.back{text-align:center;padding:2rem;font-size:.85rem}
+.back a{color:#3A5A40;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>まきちゃん 顔スタイル選定</h1>
+  <p>体は海苔巻き断面（美味しそう版）で統一。<br>顔のタッチを8パターン用意しました。お好みをタップしてください。</p>
+</div>
+<div class="grid">
+  <div class="card" onclick="this.classList.toggle('pick')">
+    <img src="p1_sanrio.webp" alt="P1">
+    <div class="card-body">
+      <div class="card-num">P1</div>
+      <div class="card-title">サンリオ風</div>
+      <div class="card-desc">ちっちゃいドット目、線だけの口。ハローキティ的ミニマル。</div>
+    </div>
+  </div>
+  <div class="card" onclick="this.classList.toggle('pick')">
+    <img src="p2_emoji.webp" alt="P2">
+    <div class="card-body">
+      <div class="card-num">P2</div>
+      <div class="card-title">絵文字風</div>
+      <div class="card-desc">大きな黒丸目、にっこり口。スマホ絵文字のようなグラフィック感。</div>
+    </div>
+  </div>
+  <div class="card" onclick="this.classList.toggle('pick')">
+    <img src="p3_miffy.webp" alt="P3">
+    <div class="card-body">
+      <div class="card-num">P3</div>
+      <div class="card-title">ミッフィー風</div>
+      <div class="card-desc">点の目、バッテン口。ディック・ブルーナ的な太線ミニマル。</div>
+    </div>
+  </div>
+  <div class="card" onclick="this.classList.toggle('pick')">
+    <img src="p4_sumikko.webp" alt="P4">
+    <div class="card-body">
+      <div class="card-num">P4</div>
+      <div class="card-title">すみっコぐらし風</div>
+      <div class="card-desc">寄り目の小さな点目、ちょこんと口。ちょっと不安げでかわいい。</div>
+    </div>
+  </div>
+  <div class="card" onclick="this.classList.toggle('pick')">
+    <img src="p5_line.webp" alt="P5">
+    <div class="card-body">
+      <div class="card-num">P5</div>
+      <div class="card-title">LINEフレンズ風</div>
+      <div class="card-desc">丸いシンプル目にハイライト1点、やさしい微笑み。モダンでクリーン。</div>
+    </div>
+  </div>
+  <div class="card" onclick="this.classList.toggle('pick')">
+    <img src="p6_kanahei.webp" alt="P6">
+    <div class="card-body">
+      <div class="card-num">P6</div>
+      <div class="card-title">カナヘイ風</div>
+      <div class="card-desc">離れた小さな点目、三角口。手描きゆるふわ感。脱力系かわいい。</div>
+    </div>
+  </div>
+  <div class="card" onclick="this.classList.toggle('pick')">
+    <img src="p7_chiikawa.webp" alt="P7">
+    <div class="card-body">
+      <div class="card-num">P7</div>
+      <div class="card-title">ちいかわ風</div>
+      <div class="card-desc">大きめ楕円目、小さい瞳。開いた口でワクワク感。シンプル線画。</div>
+    </div>
+  </div>
+  <div class="card" onclick="this.classList.toggle('pick')">
+    <img src="p8_pokemon.webp" alt="P8">
+    <div class="card-body">
+      <div class="card-num">P8</div>
+      <div class="card-title">ポケモン風（シンプル版）</div>
+      <div class="card-desc">星ハイライトの丸目、自信ある微笑み。ピンクほっぺ。キャラ感強め。</div>
+    </div>
+  </div>
+</div>
+<div class="back"><a href="/maki-chan/">キャラ設定に戻る</a> &nbsp;|&nbsp; <a href="/">makimaki.tokyo</a></div>
+</body>
+</html>

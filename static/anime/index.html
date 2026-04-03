@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="まきちゃんアニメ「巻けば、大丈夫。」紙芝居。音声付き自動再生。">
+<meta property="og:title" content="巻けば、大丈夫。— まきちゃんアニメ">
+<meta property="og:image" content="https://makimaki.tokyo/anime/ep1_s3.webp">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<title>巻けば、大丈夫。— まきちゃんアニメ</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Zen Maru Gothic',sans-serif;background:#0a0a0a;color:#fff;overflow:hidden;height:100vh;width:100vw;user-select:none}
+
+.start-screen{position:fixed;inset:0;z-index:50;background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:opacity .8s}
+.start-screen.hidden{opacity:0;pointer-events:none}
+.start-screen img{width:120px;height:120px;object-fit:contain;margin-bottom:1.5rem;animation:bob 2s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.start-screen h1{font-size:clamp(1.8rem,5vw,2.5rem);font-weight:700;letter-spacing:.08em}
+.start-screen h1 span{color:#06C755}
+.start-screen p{font-size:.85rem;opacity:.4;margin-top:.8rem}
+.start-screen .play-hint{margin-top:2rem;font-size:.75rem;opacity:.3;animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:.3}50%{opacity:.6}}
+
+.theater{position:fixed;inset:0;display:flex;flex-direction:column}
+.stage{flex:1;position:relative;overflow:hidden;background:#111}
+.scene-img{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity .8s ease;transform:scale(1.02)}
+.scene-img.active{opacity:1;animation:slowZoom 8s ease-out forwards}
+@keyframes slowZoom{from{transform:scale(1.05)}to{transform:scale(1)}}
+
+.subtitle-bar{position:absolute;bottom:0;left:0;right:0;z-index:10;padding:1.2rem 1.5rem 1.5rem;background:linear-gradient(transparent,rgba(0,0,0,.88) 35%)}
+.subtitle-speaker{font-size:.65rem;letter-spacing:.15em;color:#06C755;font-weight:700;margin-bottom:.2rem;opacity:0;transform:translateY(8px);transition:all .4s}
+.subtitle-speaker.show{opacity:1;transform:translateY(0)}
+.subtitle-text{font-size:clamp(.95rem,2.8vw,1.25rem);font-weight:500;line-height:1.7;opacity:0;transform:translateY(12px);transition:all .5s .1s;max-width:700px}
+.subtitle-text.show{opacity:1;transform:translateY(0)}
+.subtitle-dir{font-size:.78rem;color:rgba(255,255,255,.45);font-style:italic;opacity:0;transform:translateY(8px);transition:all .4s;margin-top:.2rem}
+.subtitle-dir.show{opacity:1;transform:translateY(0)}
+
+.controls{position:fixed;top:1rem;right:1rem;z-index:20;display:flex;gap:.5rem}
+.ctrl-btn{background:rgba(255,255,255,.1);border:none;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:.9rem;backdrop-filter:blur(8px);transition:all .2s}
+.ctrl-btn:hover{background:rgba(255,255,255,.2)}
+
+.progress-bar{height:3px;background:rgba(255,255,255,.1);position:fixed;bottom:0;left:0;right:0;z-index:20}
+.progress-fill{height:100%;background:linear-gradient(90deg,#3A5A40,#06C755);transition:width .5s ease}
+
+.ep-nav{position:fixed;top:1rem;left:1rem;z-index:20;display:flex;gap:.4rem;flex-wrap:wrap}
+.ep-btn{background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.5);padding:.3rem .7rem;border-radius:12px;cursor:pointer;font-size:.65rem;font-family:inherit;backdrop-filter:blur(8px);transition:all .2s}
+.ep-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+.ep-btn.active{background:rgba(58,90,64,.6);color:#fff}
+
+.ep-title-card{position:fixed;inset:0;z-index:30;background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .6s}
+.ep-title-card.show{opacity:1}
+.ep-title-card .ep-num{font-size:.7rem;letter-spacing:.3em;color:#06C755;margin-bottom:.5rem}
+.ep-title-card h2{font-size:clamp(1.5rem,4vw,2rem);font-weight:700}
+.ep-title-card .ep-sub{font-size:.8rem;opacity:.4;margin-top:.5rem}
+</style>
+</head>
+<body>
+
+<div class="start-screen" id="startScreen" onclick="startPlay()">
+  <img src="/maki-chan/sanrio_welcome.webp" alt="まきちゃん">
+  <h1><span>巻けば、</span>大丈夫。</h1>
+  <p>まきちゃんアニメ — 紙芝居</p>
+  <div class="play-hint">タップして再生</div>
+</div>
+
+<div class="theater" style="display:none" id="theater">
+  <div class="stage" id="stage">
+    <div class="scene-img" id="sceneImg"></div>
+    <div class="subtitle-bar">
+      <div class="subtitle-speaker" id="speaker"></div>
+      <div class="subtitle-text" id="subtitleText"></div>
+      <div class="subtitle-dir" id="subtitleDir"></div>
+    </div>
+  </div>
+</div>
+
+<div class="ep-nav" id="epNav" style="display:none">
+  <button class="ep-btn active" onclick="jumpEp(0)">第1話</button>
+  <button class="ep-btn" onclick="jumpEp(1)">第2話</button>
+  <button class="ep-btn" onclick="jumpEp(2)">第3話</button>
+</div>
+
+<div class="controls" id="controls" style="display:none">
+  <button class="ctrl-btn" onclick="togglePause()" id="pauseBtn">⏸</button>
+  <button class="ctrl-btn" onclick="prevScene()">◀</button>
+  <button class="ctrl-btn" onclick="nextScene()">▶</button>
+  <button class="ctrl-btn" onclick="toggleMute()" id="muteBtn">🔊</button>
+  <button class="ctrl-btn" onclick="location.href='/'">✕</button>
+</div>
+
+<div class="progress-bar" id="progressBar" style="display:none"><div class="progress-fill" id="progressFill"></div></div>
+<div class="ep-title-card" id="epTitleCard"><div class="ep-num" id="epTitleNum"></div><h2 id="epTitleName"></h2><div class="ep-sub" id="epTitleSub"></div></div>
+
+<script>
+const EPISODES = [
+  {
+    title: '誕生', sub: '〜巻きすぎた一本〜',
+    scenes: [
+      {img:'ep1_s1',dir:'深夜2時の厨房。めいさんは今日も一人、巻きの練習を続けていた。',dur:4500},
+      {img:'ep1_s1',speaker:'めい',text:'499本目……あと1本で500本。今日こそ、完璧な一本を——',dur:4500},
+      {img:'ep1_s1',speaker:'めい',text:'ていうか500本巻いてどうすんだろう私。',dir:'（我に返る）',dur:3500},
+      {img:'ep1_s1',speaker:'めい',text:'……いや、巻く。ここでやめたら今日の499本が無駄になる。',dur:4000},
+      {img:'ep1_s2',dir:'気合を入れすぎた巻き簀が光速で回転。海苔巻きが——発光し始めた。',dur:4000},
+      {img:'ep1_s2',speaker:'めい',text:'え、光ってる。海苔巻き光ってる。火事？ 火事じゃないよね？',dur:4000},
+      {img:'ep1_s3',dir:'煙の中から、海苔巻きの体をした少女が現れた。カウンターにちょこんと座っている。',dur:4500},
+      {img:'ep1_s3',speaker:'めい',text:'……………………え？',dur:3000},
+      {img:'ep1_s4',speaker:'まき',text:'……巻きたい。',dur:3000},
+      {img:'ep1_s4',speaker:'めい',text:'いや「巻きたい」じゃなくて。あなた何？ 今どこから出てきた？',dur:4000},
+      {img:'ep1_s4',speaker:'まき',text:'巻きたい。',dur:2000},
+      {img:'ep1_s4',speaker:'めい',text:'会話って知ってる？ キャッチボールっていうんだけど。',dur:3500},
+      {img:'ep1_s4',speaker:'まき',text:'巻きたい。',dir:'（3回目）',dur:2500},
+      {img:'ep1_s4',speaker:'めい',text:'3回言ったね。もういいよ。わかったよ巻きたいんだね。',dur:3500},
+      {img:'ep1_s5',dir:'まきちゃん、冷蔵庫を開けて無言で鉄火巻きを3秒で巻き上げる。断面が宝石のように輝く。',dur:4500},
+      {img:'ep1_s6',speaker:'めい',text:'…………うま。ていうか3秒って何。私の499本何だったの。',dur:4500},
+      {img:'ep1_s6',speaker:'めい',text:'……まあいいか。明日から来て。',dur:3000},
+      {img:'ep1_s6',speaker:'まき',text:'巻いていい？',dir:'（満面の笑み）',dur:2500},
+      {img:'ep1_s6',speaker:'めい',text:'むしろそれだけして。レジは絶対触らないで。',dur:3000},
+      {img:'ep1_s6',speaker:'まき',text:'レジって何？',dur:2500},
+      {img:'ep1_s6',speaker:'めい',text:'……レジ知らないの逆にすごいな。',dir:'こうして、makimakiの日常が始まった。',dur:5000},
+    ]
+  },
+  {
+    title: 'はじめてのお届け', sub: '〜全ての道は品川に通ず〜',
+    scenes: [
+      {img:'ep2_s1',speaker:'めい',text:'3丁目の田中さんに届けて。まっすぐ行って右ね。簡単でしょ？',dur:4500},
+      {img:'ep2_s1',speaker:'まき',text:'まかせて！まっすぐ！右！',dir:'（ダッシュ）',dur:3000},
+      {img:'ep2_s1',speaker:'めい',text:'あ、ちょっと待って逆——行った。',dur:3000},
+      {img:'ep2_s1',text:'— 20分後 —',dur:2000},
+      {img:'ep2_s1',speaker:'まき',text:'めいさん、海が見えるんですけど。',dir:'（電話）',dur:3500},
+      {img:'ep2_s1',speaker:'めい',text:'麻布十番から海は見えません。あなた今どこ？',dur:3500},
+      {img:'ep2_s1',speaker:'まき',text:'わかんない。でもすごくきれい。',dur:3000},
+      {img:'ep2_s1',speaker:'めい',text:'観光してる場合じゃないのよ。',dur:3000},
+      {img:'ep2_s1',text:'— さらに10分後 —',dur:2000},
+      {img:'ep2_s1',speaker:'まき',text:'東京タワーの前にいます！',dur:3000},
+      {img:'ep2_s1',speaker:'めい',text:'すごいね逆方向に歩く才能は世界一だね。',dur:3500},
+      {img:'ep2_s1',text:'— さらに20分後 —',dur:2000},
+      {img:'ep2_s1',speaker:'まき',text:'品川に着きました。',dur:2500},
+      {img:'ep2_s1',speaker:'めい',text:'もう帰ってこなくていいよ。',dur:3000},
+      {img:'ep2_s1',speaker:'まき',text:'え、クビですか？',dur:2500},
+      {img:'ep2_s1',speaker:'めい',text:'クビじゃなくてGPS買って。',dur:3000},
+      {img:'ep2_s2',dir:'奇跡的に田中さん宅に到着。安堵のダッシュ——下駄がすっぽ抜ける——',dur:3500},
+      {img:'ep2_s2',text:'ズザザザザーーーッ！！',dur:2500},
+      {img:'ep2_s3',speaker:'まき',text:'寿司は……寿司は無事です！！！',dir:'（鼻血を出しながら、寿司BOXを頭上に掲げる）',dur:4500},
+      {img:'ep2_s3',speaker:'田中',text:'あなたが無事じゃないんだけど。救急車呼ぶ？',dur:3500},
+      {img:'ep2_s3',speaker:'まき',text:'救急車より先に一口どうぞ。',dur:3000},
+      {img:'ep2_s3',speaker:'田中',text:'いや先に手当て——（食べる）…………うっま。何これ。',dur:4500},
+      {img:'ep2_s3',speaker:'田中',text:'次もお届けでお願いします。',dur:3000},
+      {img:'ep2_s3',speaker:'めい',text:'やめて。次届くの品川経由で3時間後だから。',dir:'（電話越し）',dur:4500},
+      {img:'ep2_s3',speaker:'まき',text:'品川って何回でも行けるよ？',dur:3000},
+      {img:'ep2_s3',speaker:'めい',text:'それを特技って言わないの。',dur:4000},
+    ]
+  },
+  {
+    title: 'ゾーン', sub: '〜14万円のかっぱ巻き〜',
+    scenes: [
+      {img:'ep3_s1',dir:'昼のピーク。めいさんが急用で外出。まきちゃんが一人で店番。',dur:4000},
+      {img:'ep3_s1',speaker:'めい',text:'30分で戻るから。お会計だけお願いね。巻かなくていいから。',dur:4000},
+      {img:'ep3_s1',speaker:'まき',text:'お会計……お金の計算ってこと？',dur:3000},
+      {img:'ep3_s1',speaker:'めい',text:'その顔やめて。不安になるから。',dur:3000},
+      {img:'ep3_s1',speaker:'客A',text:'かっぱ巻き1本。600円ですよね。',dur:3000},
+      {img:'ep3_s1',speaker:'まき',text:'600円！はい！えーっと……',dir:'（電卓ポチポチ）',dur:3000},
+      {img:'ep3_s1',speaker:'まき',text:'……6万円になります。',dur:3000},
+      {img:'ep3_s1',speaker:'客A',text:'かっぱ巻きに6万は出せないかな。',dur:3000},
+      {img:'ep3_s1',speaker:'まき',text:'あっごめんなさい！えっと……',dir:'（電卓ポチポチ）',dur:3000},
+      {img:'ep3_s1',speaker:'まき',text:'14万円になります。',dur:2500},
+      {img:'ep3_s1',speaker:'客A',text:'増えてるが？',dur:2500},
+      {img:'ep3_s1',speaker:'客B',text:'ねえもう20分経ってるんだけど。後ろ8人並んでるんだけど。',dur:3500},
+      {img:'ep3_s1',speaker:'まき',text:'すみませんすみません……600たす……600かける……ええと……',dir:'（涙目）',dur:4000},
+      {img:'ep3_s1',speaker:'客C',text:'あのさ、もう会計いいからさ、中トロ鉄火1本追加で。',dur:3500},
+      {img:'ep3_s2',dir:'——その瞬間。まきちゃんの目が変わった。',dur:3500},
+      {img:'ep3_s2',speaker:'まき',text:'……任せろ。',dir:'（声が2オクターブ低い）',dur:3500},
+      {img:'ep3_s2',speaker:'客A',text:'え、急にどうした？ さっきまで泣いてたよね？',dur:3500},
+      {img:'ep3_s3',dir:'3秒。完璧な中トロ鉄火。断面が芸術。店内に謎の風が吹く。',dur:4000},
+      {img:'ep3_s3',speaker:'客全員',text:'おおおおお……',dir:'全員スマホで撮影。',dur:3000},
+      {img:'ep3_s3',speaker:'客A',text:'これ600円でいいの？ むしろ14万円の価値あるんだけど。',dur:4000},
+      {img:'ep3_s1',dir:'巻き終わった瞬間——通常モードに戻る。',dur:3000},
+      {img:'ep3_s1',speaker:'まき',text:'えっと……お会計ですよね。600えんは……ろっぴゃくえんは……',dir:'（また電卓）',dur:4000},
+      {img:'ep3_s1',speaker:'客A',text:'もういい。お釣りいらないから。お願いだからもう帰らせて。',dir:'（1万円札を置く）',dur:4500},
+      {img:'ep3_s1',speaker:'まき',text:'え、1万円！？ おつりは……えーっと……',dur:3000},
+      {img:'ep3_s1',speaker:'客A',text:'いらないって言ったよね！！',dur:3000},
+      {img:'ep3_s1',speaker:'めい',text:'ただいま——何この行列。あと何この売上。',dir:'（戻ってくる）',dur:4000},
+      {img:'ep3_s1',speaker:'まき',text:'めいさん！今日の売上、14万円です！',dur:3000},
+      {img:'ep3_s1',speaker:'めい',text:'絶対違うと思うけど見るのが怖い。',dur:4500},
+    ]
+  }
+];
+
+let currentEp=0,currentScene=-1,paused=false,muted=false,autoTimer=null;
+const synth=window.speechSynthesis;
+
+function startPlay(){
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('theater').style.display='';
+  document.getElementById('controls').style.display='';
+  document.getElementById('epNav').style.display='';
+  document.getElementById('progressBar').style.display='';
+  showEpTitle(0,()=>{currentScene=-1;nextScene();});
+}
+
+function showEpTitle(idx,cb){
+  const ep=EPISODES[idx];
+  const card=document.getElementById('epTitleCard');
+  document.getElementById('epTitleNum').textContent=`第${idx+1}話`;
+  document.getElementById('epTitleName').textContent=ep.title;
+  document.getElementById('epTitleSub').textContent=ep.sub;
+  card.classList.add('show');
+  speak(`第${idx+1}話。${ep.title}`);
+  setTimeout(()=>{card.classList.remove('show');if(cb)cb();},3500);
+}
+
+function nextScene(){
+  if(paused)return;
+  clearTimeout(autoTimer);
+  synth.cancel();
+  currentScene++;
+  const ep=EPISODES[currentEp];
+  if(currentScene>=ep.scenes.length){
+    if(currentEp<EPISODES.length-1){currentEp++;currentScene=-1;updateEpNav();showEpTitle(currentEp,()=>nextScene());}
+    else showEnd();
+    return;
+  }
+  showScene(ep.scenes[currentScene]);
+}
+
+function prevScene(){clearTimeout(autoTimer);synth.cancel();if(currentScene>0){currentScene-=2;nextScene();}}
+
+function showScene(s){
+  const imgEl=document.getElementById('sceneImg');
+  imgEl.classList.remove('active');
+  imgEl.style.backgroundImage=`url('/anime/${s.img}.webp')`;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>imgEl.classList.add('active')));
+
+  const spk=document.getElementById('speaker'),txt=document.getElementById('subtitleText'),dir=document.getElementById('subtitleDir');
+  spk.classList.remove('show');txt.classList.remove('show');dir.classList.remove('show');
+
+  setTimeout(()=>{
+    spk.textContent=s.speaker||'';
+    txt.innerHTML=(s.text||'').replace(/\n/g,'<br>');
+    dir.textContent=s.dir||'';
+    if(s.speaker)spk.classList.add('show');
+    if(s.text)txt.classList.add('show');
+    if(s.dir)dir.classList.add('show');
+  },300);
+
+  const speakText=s.text?(s.speaker?s.text.replace(/\n/g,''):s.text.replace(/\n/g,'')):s.dir||'';
+  if(speakText&&!muted)speak(speakText);
+
+  const ep=EPISODES[currentEp];
+  document.getElementById('progressFill').style.width=((currentScene+1)/ep.scenes.length*100)+'%';
+  autoTimer=setTimeout(()=>nextScene(),s.dur||4000);
+}
+
+function speak(text){
+  if(muted||!synth)return;synth.cancel();
+  const u=new SpeechSynthesisUtterance(text);u.lang='ja-JP';u.rate=1.15;u.pitch=1.0;
+  const voices=synth.getVoices();
+  const v=voices.find(v=>v.lang.startsWith('ja'))||voices[0];
+  if(v)u.voice=v;synth.speak(u);
+}
+if(synth)synth.getVoices();
+if(synth)synth.onvoiceschanged=()=>synth.getVoices();
+
+function togglePause(){paused=!paused;document.getElementById('pauseBtn').textContent=paused?'▶':'⏸';if(!paused)nextScene();else{clearTimeout(autoTimer);synth.cancel();}}
+function toggleMute(){muted=!muted;document.getElementById('muteBtn').textContent=muted?'🔇':'🔊';if(muted)synth.cancel();}
+function jumpEp(idx){clearTimeout(autoTimer);synth.cancel();currentEp=idx;currentScene=-1;paused=false;document.getElementById('pauseBtn').textContent='⏸';updateEpNav();showEpTitle(idx,()=>nextScene());}
+function updateEpNav(){document.querySelectorAll('.ep-btn').forEach((b,i)=>b.classList.toggle('active',i===currentEp));}
+
+function showEnd(){
+  const imgEl=document.getElementById('sceneImg');imgEl.classList.remove('active');
+  imgEl.style.backgroundImage="url('/maki-chan/sanrio_welcome.webp')";imgEl.style.backgroundSize='contain';imgEl.style.backgroundRepeat='no-repeat';
+  requestAnimationFrame(()=>imgEl.classList.add('active'));
+  const txt=document.getElementById('subtitleText'),spk=document.getElementById('speaker'),dir=document.getElementById('subtitleDir');
+  spk.classList.remove('show');dir.classList.remove('show');
+  setTimeout(()=>{txt.innerHTML='巻けば、大丈夫。<br><br><a href="/" style="color:#06C755;font-size:.8rem">makimaki.tokyo</a>';txt.classList.add('show');},500);
+  speak('巻けば、大丈夫。');
+}
+
+document.addEventListener('click',e=>{if(e.target.closest('.controls')||e.target.closest('.ep-nav')||e.target.closest('.start-screen'))return;if(document.getElementById('theater').style.display!=='none')nextScene();});
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' ')nextScene();if(e.key==='ArrowLeft')prevScene();if(e.key==='p')togglePause();if(e.key==='m')toggleMute();});
+</script>
+</body>
+</html>

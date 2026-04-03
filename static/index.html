@@ -3,22 +3,67 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="麻布十番駅徒歩1分。鮨めい乃のMaiプロデュース、山幸の国産本マグロを使った細巻き専門テイクアウト店。2本Box〜オンライン予約受付中。">
+<meta name="description" content="麻布十番駅徒歩1分。鮨めい乃の幸後綿衣が手がける、やま幸の国産本マグロを使った細巻き専門テイクアウト店。2本Box〜オンライン予約受付中。">
 <meta property="og:title" content="makimaki — 麻布十番の細巻き専門店">
 <meta property="og:description" content="どこでも手軽に美味しいお鮨を。国産本マグロの細巻き専門テイクアウト店。オンライン予約受付中。">
-<meta property="og:image" content="https://makimaki.tokyo/sushi-original-2.jpg">
+<meta property="og:image" content="https://makimaki.tokyo/makimaki-logo-green.jpg">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://makimaki.tokyo">
 <meta property="og:site_name" content="makimaki">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="makimaki — 麻布十番の細巻き専門店">
 <meta name="twitter:description" content="どこでも手軽に美味しいお鮨を。国産本マグロの細巻き専門テイクアウト店。オンライン予約受付中。">
-<meta name="twitter:image" content="https://makimaki.tokyo/sushi-original-2.jpg">
+<meta name="twitter:image" content="https://makimaki.tokyo/makimaki-logo-green.jpg">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>makimaki — 麻布十番の細巻き専門店 | テイクアウト予約</title>
-<rect fill='%233A5A40' width='100' height='100' rx='12'/><circle cx='28' cy='38' r='12' fill='white'/><circle cx='50' cy='38' r='12' fill='white'/><circle cx='72' cy='38' r='12' fill='white'/><circle cx='28' cy='62' r='12' fill='white'/><circle cx='50' cy='62' r='12' fill='white'/><circle cx='72' cy='62' r='12' fill='white'/></svg>">
+<!-- Structured Data for Google -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Restaurant",
+  "name": "makimaki",
+  "description": "麻布十番の細巻き専門テイクアウト店。やま幸の国産本マグロを使用。鮨めい乃の幸後綿衣が手がける。",
+  "url": "https://makimaki.tokyo",
+  "telephone": "",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "麻布十番2-19-1 オフィスエイトビル 1F",
+    "addressLocality": "港区",
+    "addressRegion": "東京都",
+    "postalCode": "106-0045",
+    "addressCountry": "JP"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 35.6536,
+    "longitude": 139.7369
+  },
+  "openingHoursSpecification": {
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+    "opens": "11:00",
+    "closes": "18:00"
+  },
+  "servesCuisine": ["Sushi", "Japanese", "Hosomaki"],
+  "priceRange": "¥600〜¥5,000",
+  "image": "https://makimaki.tokyo/makimaki-logo-green.jpg",
+  "sameAs": [
+    "https://www.instagram.com/maki_maki_tokyo/",
+    "https://line.me/R/ti/p/@061xfqki"
+  ],
+  "hasMenu": {
+    "@type": "Menu",
+    "url": "https://makimaki.tokyo/#menu"
+  },
+  "acceptsReservations": "true",
+  "orderAction": {
+    "@type": "OrderAction",
+    "target": "https://makimaki.tokyo/#menu"
+  }
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@300;400;500;700&family=Zen+Old+Mincho:wght@400;500&display=swap" rel="stylesheet">
@@ -32,8 +77,8 @@
   --serif:'Zen Maru Gothic','Zen Old Mincho',serif;--sans:'Zen Maru Gothic',-apple-system,sans-serif;
   --ease:cubic-bezier(.22,1,.36,1);
 }
-html{scroll-behavior:smooth;font-size:16px}
-body{font-family:var(--sans);background:var(--bg);color:var(--fg);font-weight:300;line-height:1.8;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+html{scroll-behavior:smooth;font-size:16px;overflow-x:hidden}
+body{font-family:var(--sans);background:var(--bg);color:var(--fg);font-weight:300;line-height:1.8;-webkit-font-smoothing:antialiased;overflow-x:hidden;max-width:100vw}
 
 /* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1.5rem 3rem;display:flex;justify-content:space-between;align-items:center;transition:all .5s var(--ease)}
@@ -58,7 +103,7 @@ nav.scrolled .nav-ham span{background:var(--fg)}
 
 @media(max-width:768px){
   nav{padding:1.2rem 1.5rem}nav.scrolled{padding:.8rem 1.5rem}
-  .nav-links{display:none;position:fixed;inset:0;background:rgba(28,25,23,.98);flex-direction:column;justify-content:center;align-items:center;gap:2.5rem;z-index:100}
+  .nav-links{display:none;position:fixed;inset:0;background:#1C1917;flex-direction:column;justify-content:center;align-items:center;gap:2.5rem;z-index:100}
   .nav-links.show{display:flex}.nav-links.show a{color:#fff;font-size:1.2rem;letter-spacing:.25em;font-weight:400}
   .nav-ham{display:flex;z-index:101}
   .nav-ham.open span:nth-child(1){transform:rotate(45deg) translate(4px,4px)}
@@ -100,14 +145,14 @@ nav.scrolled .nav-ham span{background:var(--fg)}
 section{padding:7rem 3rem;max-width:1100px;margin:0 auto}
 .section-label{font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);font-weight:400;margin-bottom:.8rem;display:block}
 .section-title{font-family:var(--serif);font-size:clamp(1.8rem,4.5vw,3rem);font-weight:300;line-height:1.35;margin-bottom:1.5rem}
-.section-text{max-width:520px;color:var(--fg-muted);font-size:.9rem;line-height:2}
+.section-text{max-width:520px;color:var(--fg-muted);font-size:.9rem;line-height:2;overflow-wrap:break-word;word-break:auto-phrase}
 
 /* CONCEPT */
 .concept{display:grid;grid-template-columns:5fr 6fr;gap:5rem;align-items:center}
 .concept-visual{aspect-ratio:3/4;background:url('/img1111.jpg') center/cover;position:relative;overflow:hidden}
 
 /* TAKEOUT */
-.takeout{background:var(--warm);padding:5rem 3rem;text-align:center;max-width:100%;margin:0}
+.takeout{background:var(--warm);padding:5rem 1.5rem;text-align:center;max-width:100%;margin:0}
 .takeout-inner{max-width:800px;margin:0 auto}
 .takeout-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:3rem;margin-top:3rem}
 .takeout-step{text-align:center}
@@ -238,7 +283,7 @@ section{padding:7rem 3rem;max-width:1100px;margin:0 auto}
 .access-info dd a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent-light);transition:border-color .3s}
 
 /* FOOTER */
-footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color:#fff}
+footer{text-align:center;padding:4rem 1.5rem 2.5rem;background:var(--accent);color:#fff}
 .footer-logo{margin-bottom:1.2rem}
 .footer-logo img{height:28px}
 .footer-links{display:flex;justify-content:center;gap:2rem;margin-bottom:1.5rem}
@@ -273,6 +318,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
       <li><a href="#menu">Menu</a></li>
       <li><a href="#order" data-ja="Order" data-en="Order">Order</a></li>
       <li><a href="#access">Access</a></li>
+      <li><a href="https://line.me/R/ti/p/@061xfqki" target="_blank" rel="noopener" style="color:#06C755!important">LINE</a></li>
     </ul>
     <button class="lang-sw" id="langSwitch">EN</button>
     <div class="nav-ham" id="hamburger"><span></span><span></span><span></span></div>
@@ -280,13 +326,21 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
 </nav>
 
 <!-- HERO -->
-<div class="parallax hero">
+<div class="parallax hero" style="min-height:100vh">
   <div class="parallax-bg"></div>
   <div class="parallax-overlay"></div>
-  <div class="parallax-content">
-    <span class="hero-badge" data-ja="テイクアウト専門" data-en="Takeout Only" style="margin:0 0 1.2rem;font-size:.5rem;padding:.3rem .8rem;opacity:.6">テイクアウト専門</span>
-    <h1 class="hero-title" data-ja="どこでも美味しい、<br>細巻き専門店。" data-en="Hosomaki sushi,<br>delicious anywhere." style="font-family:var(--serif);font-size:clamp(1.6rem,4vw,2.8rem);font-weight:400;color:#fff;line-height:1.5">どこでも美味しい、<br>細巻き専門店。</h1>
-    <a href="#menu" class="hero-cta" data-ja="ご予約はこちら" data-en="Order Now" style="margin-top:2.5rem;padding:.8rem 3rem;font-size:.95rem;margin-left:0">ご予約はこちら</a>
+  <div class="parallax-content" style="justify-content:space-between;height:100%;padding-top:28vh;padding-bottom:10vh">
+    <div style="text-align:center">
+      <h1 class="hero-title" style="opacity:0;transform:translateY(30px);animation:fadeUp 1s var(--ease) .2s forwards"><img src="/makimaki-logo-green.jpg" alt="MAKIMAKI" style="height:clamp(60px,12vw,100px);border-radius:8px;display:block;margin:0 auto"></h1>
+      <p style="margin-top:1.5rem;font-size:clamp(.65rem,1.5vw,.8rem);color:rgba(255,255,255,.5);font-weight:300;letter-spacing:.25em;opacity:0;transform:translateY(20px);animation:fadeUp .8s var(--ease) .6s forwards" data-ja="麻布十番 — 細巻き専門テイクアウト" data-en="Azabu-Juban — Hosomaki Takeout">麻布十番 — 細巻き専門テイクアウト</p>
+    </div>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;opacity:0;transform:translateY(20px);animation:fadeUp .8s var(--ease) 1.1s forwards">
+      <a href="#menu" style="padding:.8rem 3rem;background:var(--accent);color:#fff;text-decoration:none;font-size:.9rem;letter-spacing:.12em;transition:background .3s;border-radius:2px" data-ja="ご予約はこちら" data-en="Order Now">ご予約はこちら</a>
+      <a href="https://line.me/R/ti/p/@061xfqki" target="_blank" rel="noopener" style="padding:.8rem 1.5rem;background:#06C755;color:#fff;text-decoration:none;font-size:.85rem;letter-spacing:.08em;transition:all .3s;border-radius:2px;display:flex;align-items:center;gap:.5rem">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.349 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+        LINE
+      </a>
+    </div>
   </div>
 </div>
 
@@ -297,7 +351,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
     <div class="reveal rd1">
       <span class="section-label">Concept</span>
       <h2 class="section-title" data-ja="どんな場面でも、<br>美味しいお鮨を。" data-en="Delicious sushi,<br>for every moment.">どんな場面でも、<br>美味しいお鮨を。</h2>
-      <p class="section-text" data-ja="自宅でも、旅の途中でも、お土産としても。どんな場面でも手軽に美味しくて、食べやすいお鮨をつくりたい — そんな想いから、MAKIMAKIを始めました。<br><br>より多くの方の幸せな時間に寄り添える、身近で美味しい細巻き専門店。厳選した素材と海苔を、一本ずつ丁寧に巻き上げます。" data-en="At home, on a journey, or as a gift. We wanted to make sushi that's easy to eat and delicious — anywhere, anytime. That's why we started MAKIMAKI.<br><br>A hosomaki specialty shop that brings a little happiness to every moment. Selected ingredients and nori, each roll carefully crafted one by one.">自宅でも、旅の途中でも、お土産としても。どんな場面でも手軽に美味しくて、食べやすいお鮨をつくりたい — そんな想いから、MAKIMAKIを始めました。<br><br>より多くの方の幸せな時間に寄り添える、身近で美味しい細巻き専門店。厳選した素材と海苔を、一本ずつ丁寧に巻き上げます。</p>
+      <p class="section-text" data-ja="自宅でも、旅の途中でも、お土産としても。どんな場面でも手軽に美味しくて、食べやすいお鮨をつくりたい — そんな想いから、MAKIMAKIが生まれました。<br><br>より多くの方の幸せな時間に寄り添える、身近で美味しい細巻き専門店。厳選した素材と海苔を、一本ずつ丁寧に巻き上げます。" data-en="At home, on a journey, or as a gift. We wanted to make sushi that's easy to eat and delicious — anywhere, anytime. That's why MAKIMAKI was born.<br><br>A hosomaki specialty shop that brings a little happiness to every moment. Selected ingredients and nori, each roll carefully crafted one by one.">自宅でも、旅の途中でも、お土産としても。どんな場面でも手軽に美味しくて、食べやすいお鮨をつくりたい — そんな想いから、MAKIMAKIが生まれました。<br><br>より多くの方の幸せな時間に寄り添える、身近で美味しい細巻き専門店。厳選した素材と海苔を、一本ずつ丁寧に巻き上げます。</p>
     </div>
   </div>
 </section>
@@ -305,7 +359,7 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
 <!-- TAKEOUT -->
 <div class="takeout">
   <div class="takeout-inner">
-    <img src="/maki-chan-welcome.webp" alt="まきちゃん" class="reveal" style="width:80px;height:80px;margin:0 auto .5rem;display:block">
+    <img src="/maki-chan-welcome-v2.webp" alt="まきちゃん" class="reveal" style="width:80px;height:80px;margin:0 auto .5rem;display:block">
     <span class="section-label reveal">How to Order</span>
     <h2 class="section-title reveal" style="text-align:center" data-ja="3つのステップで、<br>巻きたてをお持ち帰り。" data-en="Three simple steps<br>to fresh hosomaki.">3つのステップで、<br>巻きたてをお持ち帰り。</h2>
     <div class="takeout-steps">
@@ -325,36 +379,29 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
         <div class="takeout-step-desc" data-ja="専用パッケージで<br>巻きたてをお届けします。" data-en="Packed in our special box,<br>ready to enjoy.">専用パッケージで<br>巻きたてをお届けします。</div>
       </div>
     </div>
-    <div class="takeout-img reveal"><img src="/takeout-box.webp" alt="makimaki hosomaki box"></div>
+    <div class="takeout-img reveal"><img src="/takeout-box-v2.webp" alt="makimaki hosomaki box"></div>
     <a href="#menu" class="order-cta reveal" style="margin-top:2.5rem;display:inline-block" data-ja="ご注文はこちら" data-en="Order Now">ご注文はこちら</a>
   </div>
 </div>
 
 <!-- KODAWARI -->
-<div style="background:var(--warm);padding:5rem 3rem;text-align:center">
+<div style="background:var(--warm);padding:5rem 1.5rem;text-align:center">
   <div style="max-width:700px;margin:0 auto">
     <span class="section-label reveal" data-ja="こだわり" data-en="Our Commitment">こだわり</span>
-    <h2 class="section-title reveal" style="text-align:center" data-ja="山幸の国産本マグロ。" data-en="Yamako's Domestic Bluefin Tuna.">山幸の国産本マグロ。</h2>
-    <p class="section-text reveal" style="max-width:560px;margin:0 auto;text-align:center" data-ja="makimakiのマグロは、築地で信頼を積み重ねてきたマグロの山幸さんから仕入れる国産本マグロ。赤身の深い旨味、中トロのとろける脂 — 素材の良さを、細巻きという形でまっすぐにお届けします。" data-en="Our tuna comes from Yamako — a trusted name in Tsukiji for premium domestic bluefin. The deep umami of lean akami, the melting richness of chutoro — delivered simply and honestly through hosomaki.">makimakiのマグロは、築地で信頼を積み重ねてきたマグロの山幸さんから仕入れる国産本マグロ。赤身の深い旨味、中トロのとろける脂 — 素材の良さを、細巻きという形でまっすぐにお届けします。</p>
-    <div class="reveal rd1" style="margin-top:2.5rem;padding:1.5rem 2rem;background:var(--white);display:inline-block;border-radius:4px;border:1px solid var(--border)">
-      <p style="font-family:var(--serif);font-size:1rem;font-weight:400;color:var(--fg);line-height:1.8" data-ja="麻布十番 <strong>鮨めい乃</strong> のMaiがプロデュース。<br>本格寿司店のクオリティを、もっと気軽に。" data-en="Produced by <strong>Mai</strong> of <strong>Sushi Meino</strong>, Azabu-Juban.<br>Fine sushi quality, made accessible.">麻布十番 <strong>鮨めい乃</strong> のMaiがプロデュース。<br>本格寿司店のクオリティを、もっと気軽に。</p>
+    <h2 class="section-title reveal" style="text-align:center" data-ja="やま幸の国産本マグロ。" data-en="Yamako's Domestic Bluefin Tuna.">やま幸の国産本マグロ。</h2>
+    <p class="section-text reveal" style="max-width:560px;margin:0 auto;text-align:center" data-ja="makimakiのマグロは、築地で信頼を積み重ねてきたマグロのやま幸さんから仕入れる国産本マグロ。赤身の深い旨味、中トロのとろける脂——素材の良さを、細巻きという形でまっすぐにお届けします。" data-en="Our tuna comes from Yamako — a trusted name in Tsukiji for premium domestic bluefin. The deep umami of lean akami, the melting richness of chutoro — delivered simply and honestly through hosomaki.">makimakiのマグロは、築地で信頼を積み重ねてきたマグロのやま幸さんから仕入れる国産本マグロ。赤身の深い旨味、中トロのとろける脂——素材の良さを、細巻きという形でまっすぐにお届けします。</p>
+    <div class="reveal rd1" style="margin-top:2.5rem;padding:1.2rem 1.5rem;background:var(--white);display:block;max-width:480px;margin-left:auto;margin-right:auto;border-radius:4px;border:1px solid var(--border)">
+      <p style="font-family:var(--serif);font-size:.95rem;font-weight:400;color:var(--fg);line-height:1.8" data-ja="麻布十番 <strong>鮨めい乃</strong> の幸後綿衣が手がける細巻き専門店。本格寿司店のクオリティを、もっと気軽に。" data-en="A hosomaki specialty by <strong>Mei Kogo</strong> of <strong>Sushi Meino</strong>, Azabu-Juban. Fine sushi quality, made accessible.">麻布十番 <strong>鮨めい乃</strong> の幸後綿衣が手がける細巻き専門店。本格寿司店のクオリティを、もっと気軽に。</p>
     </div>
   </div>
 </div>
 
-<!-- PHOTO: COUNTER -->
-<div class="parallax photo-div p3">
-  <div class="parallax-bg"></div>
-  <div class="parallax-overlay"></div>
-  <div class="parallax-content"><p data-ja="ひとつひとつ、<br>心を込めて。" data-en="Each one,<br>with all our heart.">ひとつひとつ、<br>心を込めて。</p></div>
-</div>
-
 <!-- MENU + ORDER -->
 <section id="menu" class="menu-sec">
-  <img src="/maki-chan-heart.webp" alt="まきちゃん" class="reveal" style="width:70px;height:70px;margin:0 auto .5rem;display:block">
+  <img src="/maki-chan-heart-v2.webp" alt="まきちゃん" class="reveal" style="width:70px;height:70px;margin:0 auto .5rem;display:block">
   <span class="section-label reveal">Menu</span>
   <h2 class="section-title reveal" data-ja="ボックスを選んで、<br>お好みの巻きを詰めて。" data-en="Choose a box,<br>fill it with your favorites.">ボックスを選んで、<br>お好みの巻きを詰めて。</h2>
-  <p class="section-text reveal" data-ja="1本＝6カット。お好きなボックスサイズを選び、中身をお選びください。<br>価格は税別です。箱代 ¥200を頂戴しております。" data-en="1 roll = 6 cuts. Pick your box size, then choose your rolls.<br>Prices exclude tax. Box charge ¥200.">1本＝6カット。お好きなボックスサイズを選び、中身をお選びください。<br>価格は税別です。箱代 ¥200を頂戴しております。</p>
+  <p class="section-text reveal" data-ja="1本＝6カット。お好きなボックスサイズを選び、中身をお選びください。<br>価格は税別です。箱代 ¥200を頂戴しております。<br>お醤油・ガリ・お箸付き。" data-en="1 roll = 6 cuts. Pick your box size, then choose your rolls.<br>Prices exclude tax. Box charge ¥200.<br>Soy sauce, ginger &amp; chopsticks included.">1本＝6カット。お好きなボックスサイズを選び、中身をお選びください。<br>価格は税別です。箱代 ¥200を頂戴しております。<br>お醤油・ガリ・お箸付き。</p>
 
   <!-- SET MENU -->
   <h3 class="menu-cat-title reveal" data-ja="セットメニュー" data-en="Set Menu">セットメニュー</h3>
@@ -452,23 +499,51 @@ footer{text-align:center;padding:4rem 3rem 2.5rem;background:var(--accent);color
   </div>
 </section>
 
-<!-- MUSIC -->
-<div style="text-align:center;padding:4rem 2rem;background:var(--warm)">
+<!-- INSTAGRAM -->
+<div style="text-align:center;padding:5rem 2rem;background:var(--bg)">
+  <span class="section-label reveal">Instagram</span>
+  <h2 class="section-title reveal" style="text-align:center" data-ja="日々の巻きたてをお届け。" data-en="Fresh rolls, every day.">日々の巻きたてをお届け。</h2>
+  <p class="section-text reveal" style="max-width:400px;margin:0 auto 2rem;text-align:center" data-ja="最新のメニューやお店の様子は<br>Instagramでチェック。" data-en="Check our latest menu and<br>shop updates on Instagram.">最新のメニューやお店の様子は<br>Instagramでチェック。</p>
+  <a href="https://www.instagram.com/maki_maki_tokyo/" target="_blank" rel="noopener" class="reveal" style="display:inline-flex;align-items:center;gap:.6rem;padding:.7rem 2rem;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff;text-decoration:none;font-size:.85rem;border-radius:30px;transition:all .3s;box-shadow:0 4px 15px rgba(220,39,67,.2)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C16.67.014 16.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+    @maki_maki_tokyo
+  </a>
+</div>
+
+<!-- LINE CTA -->
+<div style="text-align:center;padding:5rem 2rem;background:linear-gradient(135deg,#06C755 0%,#04a648 100%);color:#fff">
+  <p style="font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;opacity:.7;margin-bottom:.8rem">Official LINE</p>
+  <h2 style="font-family:var(--serif);font-size:clamp(1.4rem,3vw,2rem);font-weight:400;margin-bottom:.6rem" data-ja="LINE公式アカウント" data-en="Official LINE Account">LINE公式アカウント</h2>
+  <p style="font-size:.85rem;opacity:.85;max-width:400px;margin:0 auto 1.5rem;line-height:1.8" data-ja="友だち追加で最新メニュー・<br>お得な情報をお届けします。" data-en="Add us on LINE for the latest menu<br>and special offers.">友だち追加で最新メニュー・<br>お得な情報をお届けします。</p>
+  <a href="https://line.me/R/ti/p/@061xfqki" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:.6rem;padding:.8rem 2.5rem;background:#fff;color:#06C755;text-decoration:none;font-size:.95rem;font-weight:500;border-radius:30px;transition:all .3s;box-shadow:0 4px 20px rgba(0,0,0,.15)">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="#06C755"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.349 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+    <span data-ja="友だち追加" data-en="Add Friend">友だち追加</span>
+  </a>
+  <p style="font-size:.65rem;opacity:.5;margin-top:1rem">@061xfqki</p>
+</div>
+
+<!-- MUSIC (A/B test: 50% see this) -->
+<div id="mvSection" style="display:none;text-align:center;padding:4rem 2rem;background:var(--warm)">
   <p style="font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin-bottom:.8rem">Music</p>
-  <p style="font-family:var(--serif);font-size:1.3rem;font-weight:400;margin-bottom:1.2rem">MAKIMAKI DAYS</p>
-  <a href="/mv.html" style="display:inline-block;padding:.6rem 2rem;background:var(--accent);color:#fff;text-decoration:none;font-size:.8rem;letter-spacing:.12em;border-radius:2px;transition:background .3s">音楽を聴く</a>
+  <p style="font-family:var(--serif);font-size:1.3rem;font-weight:400;margin-bottom:.5rem">MAKIMAKI DAYS</p>
+  <p style="font-size:.75rem;color:var(--fg-muted);margin-bottom:1.2rem" data-ja="makimaki公式ソング" data-en="Official makimaki song">makimaki公式ソング</p>
+  <audio id="mvPreview" preload="none" src="/makimaki-days.mp3"></audio>
+  <button onclick="togglePreview()" id="previewBtn" style="display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 2rem;background:var(--accent);color:#fff;border:none;font-size:.8rem;letter-spacing:.12em;border-radius:2px;cursor:pointer;font-family:var(--sans);transition:all .3s">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="white" id="previewIcon"><path d="M8 5v14l11-7z"/></svg>
+    <span id="previewLabel" data-ja="試聴する" data-en="Listen">試聴する</span>
+  </button>
+  <a href="/mv.html" style="display:inline-block;margin-left:.8rem;padding:.6rem 1.5rem;border:1px solid var(--accent);color:var(--accent);text-decoration:none;font-size:.8rem;letter-spacing:.12em;border-radius:2px;transition:all .3s" data-ja="MVを見る" data-en="Watch MV">MVを見る</a>
 </div>
 
 <footer>
-  <div class="footer-logo"><img src="/logo-white.png" alt="makimaki"></div>
+  <div class="footer-logo"><img src="/makimaki-logo-white.png" alt="makimaki" style="height:40px"></div>
   <div class="footer-links">
     <a href="https://www.instagram.com/maki_maki_tokyo/" target="_blank">Instagram</a>
     <a href="https://line.me/R/ti/p/@061xfqki" target="_blank">LINE</a>
-    <a href="#concept">Concept</a>
     <a href="#menu">Menu</a>
     <a href="#access">Access</a>
   </div>
-  <p class="footer-copy">&copy; 2026 makimaki. All rights reserved.</p>
+  <p class="footer-copy"><a href="/mv.html" style="color:inherit;text-decoration:none">&copy;</a> 2026 makimaki</p>
 </footer>
 
 <!-- CART BAR -->
@@ -802,7 +877,7 @@ function openModal() {
   });
   const allLines = [...setLines, ...boxLines];
   const subtotal = allLines.reduce((s,b) => s+b.price, 0);
-  const tax = Math.floor(subtotal * 0.1);
+  const tax = Math.floor(subtotal * 0.08);
   const totalBoxes = completedBoxes.length + Object.values(setQty).reduce((s,q)=>s+q,0);
   const boxCharge = totalBoxes * 200;
   const total = subtotal + tax + boxCharge;
@@ -812,7 +887,7 @@ function openModal() {
     <h2>${isJa?'ご注文':'Your Order'}</h2>
     <ul class="modal-items">
       ${allLines.map(b => `<li><span style="font-size:.8rem">${b.label}</span><span>&yen;${b.price.toLocaleString()}</span></li>`).join('')}
-      <li style="color:var(--fg-muted);font-size:.8rem"><span>${isJa?'消費税 (10%)':'Tax (10%)'}</span><span>&yen;${tax.toLocaleString()}</span></li>
+      <li style="color:var(--fg-muted);font-size:.8rem"><span>${isJa?'消費税 (8%)':'Tax (8%)'}</span><span>&yen;${tax.toLocaleString()}</span></li>
       <li style="color:var(--fg-muted);font-size:.8rem"><span>${isJa?'箱代':'Box charge'} &times;${totalBoxes}</span><span>&yen;${boxCharge.toLocaleString()}</span></li>
     </ul>
     <div class="modal-total">${isJa?'合計':'Total'} &yen;${total.toLocaleString()}</div>
@@ -831,7 +906,7 @@ function openModal() {
       </div>
       <div class="form-group">
         <label>${isJa?'備考（任意）':'Note (optional)'}</label>
-        <textarea id="oNote" placeholder="${isJa?'わさび抜き など':'No wasabi, etc.'}"></textarea>
+        <textarea id="oNote" placeholder="${isJa?'お箸の本数、ご要望など':'Number of chopsticks, requests, etc.'}"></textarea>
       </div>
       <button type="submit" class="modal-submit" style="background:var(--accent)">${isJa?'カード決済で注文する':'Pay & Order with Card'}</button>
     </form>`;
@@ -850,7 +925,7 @@ function generateTimeSlots() {
 
   // Today's slots: 11:00-18:00 in 30min steps
   for (let h = 11; h <= 18; h++) {
-    for (let m = 0; m < 60; m += 30) {
+    for (let m = 0; m < 60; m += 10) {
       if (h === 18 && m > 0) break; // 18:00 is last
       if (h < roundedHour || (h === roundedHour && m < roundedMin)) continue;
       const t = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
@@ -859,7 +934,7 @@ function generateTimeSlots() {
   }
   // Tomorrow's slots: always show 11:00-18:00
   for (let h = 11; h <= 18; h++) {
-    for (let m = 0; m < 60; m += 30) {
+    for (let m = 0; m < 60; m += 10) {
       if (h === 18 && m > 0) break;
       const t = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
       slots.push(`<option value="${lang==='ja'?'明日':'Tomorrow'} ${t}">${lang==='ja'?'明日':'Tomorrow'} ${t}</option>`);
@@ -952,7 +1027,7 @@ if (location.search.includes('paid=1')) {
     document.getElementById('modalContent').innerHTML = `
       <button class="modal-close" onclick="closeModal()">&times;</button>
       <div class="success-msg">
-        <img src="/maki-chan-bye.webp" alt="まきちゃん" style="width:100px;height:100px;margin:0 auto .5rem;display:block">
+        <img src="/maki-chan-bye-v2.webp" alt="まきちゃん" style="width:100px;height:100px;margin:0 auto .5rem;display:block">
         <h3 style="color:var(--accent)">${isJa?'ご注文ありがとうございます':'Thank you for your order!'}</h3>
         <p style="font-size:.95rem;line-height:1.9;margin-bottom:1.5rem">${isJa?'お支払いが完了しました。<br>受取時間に合わせて巻きたてをご用意してお待ちしております。':'Payment complete.<br>Your fresh rolls will be ready at your selected time.'}</p>
         <div style="background:var(--accent-bg,#EDF2EE);padding:1.2rem;border-radius:4px;text-align:left;font-size:.82rem;line-height:1.9;margin-bottom:1rem">
@@ -963,9 +1038,14 @@ if (location.search.includes('paid=1')) {
           <a href="https://maps.google.com/?q=東京都港区麻布十番2-19-1+オフィスエイトビル1F" target="_blank" style="color:var(--accent);font-size:.75rem">${isJa?'Google Mapsで見る':'View on Google Maps'}</a>
         </div>
         <p style="font-size:.78rem;color:#78716C;line-height:1.8">${isJa?'お気をつけてお越しくださいませ。<br>巻きたてのお鮨を楽しんでいただけたら幸いです。':'We look forward to seeing you.<br>Enjoy your freshly rolled sushi!'}</p>
-        <div style="margin-top:1.5rem;display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap">
+        <a href="https://line.me/R/ti/p/@061xfqki" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:.5rem;margin:1.5rem auto .8rem;padding:.7rem 2rem;background:#06C755;color:#fff;text-decoration:none;font-size:.85rem;border-radius:30px;max-width:280px;transition:all .3s">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.349 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+          ${isJa?'LINE友だち追加':'Add us on LINE'}
+        </a>
+        <p style="font-size:.65rem;color:#999;margin-bottom:.8rem">${isJa?'新メニュー・お得情報をお届け':'Get updates on new menu items'}</p>
+        <div style="display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap">
           <a href="https://www.instagram.com/maki_maki_tokyo/" target="_blank" style="font-size:.7rem;color:var(--accent);text-decoration:none;border:1px solid var(--accent);padding:.4rem 1rem;border-radius:2px">Instagram</a>
-          <a href="https://line.me/R/ti/p/@061xfqki" target="_blank" style="font-size:.7rem;color:var(--accent);text-decoration:none;border:1px solid var(--accent);padding:.4rem 1rem;border-radius:2px">LINE</a>
+          <a href="https://g.page/r/makimaki-azabujuban/review" target="_blank" style="font-size:.7rem;color:var(--accent);text-decoration:none;border:1px solid var(--accent);padding:.4rem 1rem;border-radius:2px">${isJa?'レビューを書く':'Write a Review'}</a>
         </div>
       </div>`;
     document.getElementById('modalBg').classList.add('show');
@@ -1124,9 +1204,57 @@ openModal = function() {
   _origOpen();
 };
 
+// MV A/B TEST
+const mvGroup = localStorage.getItem('mv_ab') || (Math.random() < 0.5 ? 'A' : 'B');
+localStorage.setItem('mv_ab', mvGroup);
+if (mvGroup === 'A') {
+  document.getElementById('mvSection').style.display = '';
+  trk('mv_shown');
+}
+trk('ab_group', mvGroup);
+
+let mvPlaying = false, mvListenStart = 0, mvTotalListenMs = 0;
+function togglePreview() {
+  const audio = document.getElementById('mvPreview');
+  const icon = document.getElementById('previewIcon');
+  const label = document.getElementById('previewLabel');
+  if (mvPlaying) {
+    audio.pause();
+    mvPlaying = false;
+    icon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+    label.textContent = lang === 'ja' ? '試聴する' : 'Listen';
+    // Track listen duration
+    if (mvListenStart) mvTotalListenMs += Date.now() - mvListenStart;
+    trk('mv_pause', Math.round(mvTotalListenMs/1000)+'s');
+  } else {
+    audio.play();
+    mvPlaying = true;
+    mvListenStart = Date.now();
+    icon.innerHTML = '<rect x="6" y="4" width="4" height="16" fill="white"/><rect x="14" y="4" width="4" height="16" fill="white"/>';
+    label.textContent = lang === 'ja' ? '再生中' : 'Playing';
+    trk('mv_play');
+  }
+}
+document.getElementById('mvPreview')?.addEventListener('ended', () => {
+  mvPlaying = false;
+  if (mvListenStart) mvTotalListenMs += Date.now() - mvListenStart;
+  document.getElementById('previewIcon').innerHTML = '<path d="M8 5v14l11-7z"/>';
+  document.getElementById('previewLabel').textContent = lang === 'ja' ? '試聴する' : 'Listen';
+  trk('mv_complete', Math.round(mvTotalListenMs/1000)+'s');
+});
+
+// Track MV link click
+document.querySelector('a[href="/mv.html"]')?.addEventListener('click', () => trk('mv_click'));
+
 // INIT
 renderCompletedBoxes();
 updateCart();
+
+// Force scroll to top on page load (prevent browser restoring scroll to #menu)
+if (!location.hash && !location.search.includes('paid=1')) {
+  history.scrollRestoration = 'manual';
+  window.scrollTo(0, 0);
+}
 </script>
 </body>
 </html>

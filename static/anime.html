@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="まきちゃんアニメ「巻けば、大丈夫。」全12話のストーリー。麻布十番の海苔巻き少女の爆笑日常コメディ。">
+<meta property="og:title" content="まきちゃんアニメ「巻けば、大丈夫。」">
+<meta property="og:image" content="https://makimaki.tokyo/maki-chan/sanrio_welcome.webp">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<title>巻けば、大丈夫。— まきちゃんアニメ</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--accent:#3A5A40;--bg:#FDFBF8;--fg:#1C1917;--muted:#78716C;--border:#E7E0D8;--warm:#F5F0EA}
+body{font-family:'Zen Maru Gothic',sans-serif;background:var(--bg);color:var(--fg);font-weight:400}
+
+/* HERO */
+.hero{text-align:center;padding:5rem 2rem 4rem;background:#111;color:#fff;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 120%,rgba(58,90,64,.3),transparent 70%)}
+.hero-chars{display:flex;justify-content:center;gap:1rem;margin-bottom:2rem}
+.hero-chars img{width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.4));animation:bob 2s ease-in-out infinite}
+.hero-chars img:nth-child(2){animation-delay:.3s}
+.hero-chars img:nth-child(3){animation-delay:.6s}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.hero h1{font-size:clamp(1.8rem,5vw,2.8rem);font-weight:700;letter-spacing:.08em}
+.hero h1 span{color:#06C755}
+.hero .sub{font-size:.85rem;opacity:.5;margin-top:.5rem}
+.hero .tagline{margin-top:1.2rem;font-size:1.1rem;opacity:.8;font-weight:300}
+
+/* INTRO */
+.intro{max-width:680px;margin:0 auto;padding:4rem 2rem;text-align:center}
+.intro p{font-size:.95rem;line-height:2.2;color:var(--muted)}
+.intro strong{color:var(--fg)}
+
+/* CHARACTERS */
+.chars{background:var(--warm);padding:4rem 2rem}
+.chars-inner{max-width:900px;margin:0 auto}
+.chars h2{text-align:center;font-size:1.4rem;font-weight:700;margin-bottom:2rem;letter-spacing:.05em}
+.char-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1.5rem}
+.char-card{background:#fff;border-radius:16px;padding:1.5rem;text-align:center;border:1px solid var(--border)}
+.char-card img{width:100px;height:100px;object-fit:contain;margin-bottom:.8rem}
+.char-name{font-size:1rem;font-weight:700}
+.char-type{font-size:.65rem;color:var(--accent);letter-spacing:.1em;margin:.2rem 0 .5rem}
+.char-desc{font-size:.75rem;color:var(--muted);line-height:1.6}
+
+/* EPISODES */
+.episodes{max-width:760px;margin:0 auto;padding:4rem 2rem}
+.episodes h2{font-size:1.4rem;font-weight:700;margin-bottom:.5rem}
+.episodes>p{font-size:.85rem;color:var(--muted);margin-bottom:2.5rem}
+
+.ep{margin-bottom:3rem;position:relative}
+.ep-header{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;cursor:pointer}
+.ep-num{width:48px;height:48px;background:var(--accent);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;flex-shrink:0}
+.ep-title{font-size:1.1rem;font-weight:700}
+.ep-title small{display:block;font-size:.7rem;font-weight:400;color:var(--muted);margin-top:.1rem}
+
+.ep-img{float:right;width:120px;height:120px;object-fit:contain;margin:0 0 .5rem 1rem;shape-outside:circle()}
+
+/* Script format */
+.script{background:#fff;border:1px solid var(--border);border-radius:12px;padding:1.5rem;font-size:.85rem;line-height:2}
+.script .scene{font-size:.7rem;color:var(--accent);letter-spacing:.1em;font-weight:700;margin:1rem 0 .3rem;text-transform:uppercase}
+.script .scene:first-child{margin-top:0}
+.script .dir{color:var(--muted);font-style:italic;font-size:.8rem}
+.script .line{margin:.2rem 0}
+.script .line b{color:var(--accent)}
+.script .punchline{background:var(--warm);margin:.5rem -.5rem;padding:.5rem;border-radius:6px;font-weight:500}
+.script .sfx{color:#E53E3E;font-size:.75rem;font-weight:700;letter-spacing:.05em}
+.script .beat{text-align:center;color:var(--muted);font-size:.75rem;margin:.8rem 0;letter-spacing:.2em}
+.script .end{text-align:center;margin-top:1rem;font-size:.7rem;color:var(--accent);letter-spacing:.15em;font-weight:700}
+
+.more-btn{display:block;width:100%;padding:.8rem;background:none;border:2px dashed var(--border);color:var(--muted);font-size:.85rem;cursor:pointer;font-family:inherit;border-radius:8px;transition:all .3s;margin-top:.5rem}
+.more-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+.back{text-align:center;padding:3rem 2rem;background:var(--accent);color:#fff}
+.back a{color:#fff;text-decoration:none;opacity:.7;font-size:.85rem}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-chars">
+    <img src="/maki-chan/sanrio_welcome.webp" alt="">
+    <img src="/maki-chan/sanrio_cook.webp" alt="">
+    <img src="/maki-chan/sanrio_run.webp" alt="">
+  </div>
+  <h1><span>巻けば、</span>大丈夫。</h1>
+  <div class="sub">まきちゃんアニメ — 全12話</div>
+  <div class="tagline">麻布十番の海苔巻き少女、爆笑90秒コメディ</div>
+</div>
+
+<!-- INTRO -->
+<div class="intro">
+  <p>ある日、麻布十番の寿司店で<strong>気合を入れすぎた一本</strong>が巻かれた。<br>
+  その海苔巻きから生まれたのが、<strong>まきちゃん</strong>。<br><br>
+  巻く才能は天才的。<strong>それ以外は壊滅的。</strong><br>
+  お釣りは毎回間違える。下駄で走れば転ぶ。<br>
+  寝ぼけたら自分を海苔で巻いている。<br><br>
+  でも、彼女が巻いた一本は、なぜかみんなを笑顔にする。<br>
+  <strong>「巻けば、大丈夫。」</strong></p>
+</div>
+
+<!-- CHARACTERS -->
+<div class="chars">
+  <div class="chars-inner">
+    <h2>登場キャラクター</h2>
+    <div class="char-grid">
+      <div class="char-card">
+        <img src="/maki-chan/sanrio_welcome.webp" alt="まきちゃん">
+        <div class="char-name">まきちゃん</div>
+        <div class="char-type">主人公 / 海苔巻き</div>
+        <div class="char-desc">海苔巻きから生まれた少女。巻く以外の全てが壊滅的。口癖は「巻きたい…」。感動すると体の海苔がパリッと鳴る。</div>
+      </div>
+      <div class="char-card">
+        <img src="/maki-chan/sanrio_cook.webp" alt="めいさん">
+        <div class="char-name">めいさん</div>
+        <div class="char-type">店主 / ツッコミ</div>
+        <div class="char-desc">まきちゃんを生み出した張本人。毎日「なんで生まれた」と思いつつ、まきちゃんの巻きの腕だけは認めている。</div>
+      </div>
+      <div class="char-card">
+        <img src="/maki-chan/sanrio_think.webp" alt="おむすびくん">
+        <div class="char-name">おむすびくん</div>
+        <div class="char-type">ライバル / おにぎり</div>
+        <div class="char-desc">隣町のおにぎり屋から生まれた三角形。「三角の方が効率的」が口癖。まきちゃんに対抗心を燃やすが、なぜか毎回負ける。</div>
+      </div>
+      <div class="char-card">
+        <img src="/maki-chan/sanrio_sleep.webp" alt="きゅうりさん">
+        <div class="char-name">きゅうりさん</div>
+        <div class="char-type">親友 / 食材</div>
+        <div class="char-desc">まきちゃんに毎朝「いい色してるね」と言われる。最初は困惑していたが、今ではまんざらでもない。冷静なツッコミ役。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EPISODES -->
+<div class="episodes">
+  <h2>全12話 ストーリー</h2>
+  <p>各話90秒。YouTube Shorts / TikTok / Instagram Reels 配信。</p>
+
+  <!-- EP 1 -->
+  <div class="ep">
+    <div class="ep-header">
+      <div class="ep-num">1</div>
+      <div class="ep-title">誕生 〜巻きすぎた一本〜<small>Birth — The Roll That Went Too Far</small></div>
+    </div>
+    <img src="/maki-chan/sanrio_welcome.webp" alt="" class="ep-img">
+    <div class="script">
+      <div class="scene">深夜の厨房</div>
+      <div class="dir">めいさん、閉店後に一人で巻きの練習中。</div>
+      <div class="line"><b>めい：</b>もう500本目…。今日こそ、完璧な一本を…</div>
+      <div class="dir">気合を入れすぎて巻き簀を光速で回転。海苔巻きが発光し始める。</div>
+      <div class="line sfx">ゴゴゴゴゴ…… ポンッ！！</div>
+      <div class="dir">煙の中から、海苔巻きの体をした少女が現れる。</div>
+      <div class="punchline"><b>まき：</b>……巻きたい。</div>
+      <div class="line"><b>めい：</b>いや、まず自己紹介して？</div>
+      <div class="line"><b>まき：</b>巻きたい。</div>
+      <div class="line"><b>めい：</b>聞いてる？ あなた何？</div>
+      <div class="line"><b>まき：</b>（巻き簀を見つけて目がキリッ）</div>
+      <div class="dir">無言で冷蔵庫を開け、完璧な鉄火巻きを3秒で巻く。</div>
+      <div class="line"><b>めい：</b>……っ！！ うま。</div>
+      <div class="punchline"><b>めい：</b>……まあいいか。明日から来て。<br><b>まき：</b>（満面の笑み）巻いていい？<br><b>めい：</b>むしろそれしかしないで。レジは絶対触らないで。</div>
+      <div class="end">— 第1話 おわり —</div>
+    </div>
+  </div>
+
+  <!-- EP 2 -->
+  <div class="ep">
+    <div class="ep-header">
+      <div class="ep-num">2</div>
+      <div class="ep-title">はじめてのお届け 〜寿司は死守〜<small>First Delivery — Protect the Sushi at All Costs</small></div>
+    </div>
+    <img src="/maki-chan/sanrio_run.webp" alt="" class="ep-img">
+    <div class="script">
+      <div class="scene">店前</div>
+      <div class="line"><b>めい：</b>3丁目の田中さんにこれ届けて。まっすぐ行って右。</div>
+      <div class="line"><b>まき：</b>まかせて！（ダッシュ）</div>
+      <div class="beat">— 20分後 —</div>
+      <div class="line"><b>まき：</b>（電話）めいさん、海が見えるんですけど。</div>
+      <div class="line"><b>めい：</b>麻布十番から海は見えません。</div>
+      <div class="beat">— さらに10分後 —</div>
+      <div class="line"><b>まき：</b>（電話）東京タワーの前にいます。</div>
+      <div class="line"><b>めい：</b>逆方向に歩いてる才能ある？</div>
+      <div class="dir">やっと田中さん宅前に到着。安堵のダッシュ→下駄がすっぽ抜ける→</div>
+      <div class="line sfx">ズザザザザーーーッ</div>
+      <div class="dir">顔面から地面にスライディング。でも両手は寿司BOXを頭上に掲げたまま。</div>
+      <div class="punchline"><b>まき：</b>（鼻血出しながら）寿司は……寿司は無事です！！！</div>
+      <div class="line"><b>田中：</b>あなたが無事じゃないんですけど。</div>
+      <div class="line"><b>まき：</b>お客様、一口どうぞ。</div>
+      <div class="line"><b>田中：</b>（食べる）…………うっま。</div>
+      <div class="punchline"><b>田中：</b>次もお届けでお願いします。<br><b>めい：</b>（電話越しに）やめて。</div>
+      <div class="end">— 第2話 おわり —</div>
+    </div>
+  </div>
+
+  <!-- EP 3 -->
+  <div class="ep">
+    <div class="ep-header">
+      <div class="ep-num">3</div>
+      <div class="ep-title">ゾーン 〜レジと巻き簀の間〜<small>The Zone — Between the Register and the Rolling Mat</small></div>
+    </div>
+    <img src="/maki-chan/sanrio_cook.webp" alt="" class="ep-img">
+    <div class="script">
+      <div class="scene">昼のピーク</div>
+      <div class="dir">めいさんが急用で外出。まきちゃんが一人で店番。</div>
+      <div class="line"><b>客A：</b>2本BOXで。1400円ですよね。</div>
+      <div class="line"><b>まき：</b>はい！えーっと……（電卓ポチポチ）……14万円になります。</div>
+      <div class="line"><b>客A：</b>家買えるが？</div>
+      <div class="line"><b>まき：</b>あっ！1400……えっと消費税が……（指を折って数え始める）</div>
+      <div class="line"><b>客B：</b>（後ろで並んでる）ねえ、もう30分経つんだけど。</div>
+      <div class="dir">パニックのまきちゃん。しかし客Cが一言——</div>
+      <div class="line"><b>客C：</b>あの、中トロ鉄火を1本追加で。</div>
+      <div class="line sfx">ッッッ———キリッ</div>
+      <div class="dir">BGMが和太鼓に切り替わる。まきちゃんの目が変わる。巻き簀を構える。</div>
+      <div class="punchline"><b>まき：</b>（低い声で）……任せろ。</div>
+      <div class="dir">神速の巻き。3秒で完璧な中トロ鉄火。断面が芸術。客全員スマホで撮影。</div>
+      <div class="line"><b>客全員：</b>おおおお……</div>
+      <div class="dir">巻き終わった瞬間、通常モードに戻る。</div>
+      <div class="punchline"><b>まき：</b>えっと……あ、お会計ですよね。1400えんは……</div>
+      <div class="line"><b>客A：</b>（札を置いて）お釣りいらないです。もう帰ります。</div>
+      <div class="end">— 第3話 おわり —</div>
+    </div>
+  </div>
+
+  <!-- EP 4 -->
+  <div class="ep">
+    <div class="ep-header">
+      <div class="ep-num">4</div>
+      <div class="ep-title">食材会議 〜ネタだけに〜<small>Ingredient Meeting — Pun Intended</small></div>
+    </div>
+    <img src="/maki-chan/sanrio_think.webp" alt="" class="ep-img">
+    <div class="script">
+      <div class="scene">早朝の冷蔵庫前</div>
+      <div class="dir">まきちゃん、毎朝の日課。食材に話しかける。</div>
+      <div class="line"><b>まき：</b>マグロさん、おはよう。今日もいい赤だね。</div>
+      <div class="line"><b>まき：</b>きゅうりさん、シャキッとしてる。気合入ってるね。</div>
+      <div class="line"><b>まき：</b>サーモンさん……ちょっと顔色悪くない？大丈夫？</div>
+      <div class="dir">新人バイトの大学生・たけし、ドン引き。</div>
+      <div class="line"><b>たけし：</b>あの……ネタに話しかけてますけど。</div>
+      <div class="punchline"><b>まき：</b>ネタだけに。</div>
+      <div class="line"><b>たけし：</b>…………。</div>
+      <div class="line"><b>まき：</b>ネタだけに。（2回言う）</div>
+      <div class="line"><b>たけし：</b>聞こえてます。</div>
+      <div class="scene">その日の営業</div>
+      <div class="dir">たけしが巻いた寿司と、まきちゃんが話しかけてから巻いた寿司を食べ比べ。</div>
+      <div class="line"><b>めい：</b>……なんでまきちゃんの方がおいしいの。</div>
+      <div class="line"><b>まき：</b>だって、きゅうりさんが「今日はいけるよ」って言ってたから。</div>
+      <div class="punchline"><b>たけし：</b>（翌朝、冷蔵庫の前で）……お、おはようございます、マグロさん。<br><b>まき：</b>（陰から見て号泣）仲間が増えた……！！</div>
+      <div class="end">— 第4話 おわり —</div>
+    </div>
+  </div>
+
+  <!-- EP 5 -->
+  <div class="ep">
+    <div class="ep-header">
+      <div class="ep-num">5</div>
+      <div class="ep-title">VS おむすびくん 〜丸と三角の戦い〜<small>VS Omusubi-kun — Round vs Triangle</small></div>
+    </div>
+    <img src="/maki-chan/sanrio_heart.webp" alt="" class="ep-img">
+    <div class="script">
+      <div class="scene">店の前</div>
+      <div class="dir">三角形のおにぎりボディのキャラが仁王立ち。</div>
+      <div class="line"><b>おむすび：</b>俺はおむすびくん。隣町のおにぎり屋「むすび堂」から生まれた。</div>
+      <div class="line"><b>まき：</b>わあ！同じ米仲間だね！</div>
+      <div class="line"><b>おむすび：</b>仲間じゃない。勝負しに来た。三角形の方が合理的で、持ちやすくて、コンビニにも置いてある。お前は所詮、丸いだけ。</div>
+      <div class="line"><b>まき：</b>丸いのは……コロコロして楽しいよ？</div>
+      <div class="line"><b>おむすび：</b>それメリットじゃないだろ。</div>
+      <div class="scene">対決</div>
+      <div class="dir">商店街の人たちが審査員。お互い最高の一品を作る。</div>
+      <div class="dir">おむすびくん：完璧な三角形、具材が均等、美しい海苔。</div>
+      <div class="dir">まきちゃん：ゾーン発動。3秒で巻く。断面が宝石。</div>
+      <div class="line"><b>審査員：</b>……両方うまい。引き分け。</div>
+      <div class="line"><b>おむすび：</b>くっ……認めん。</div>
+      <div class="dir">しかし帰り道、おむすびくんがまきちゃんの鉄火巻きを食べてしまう。</div>
+      <div class="punchline"><b>おむすび：</b>（背中を向けて）……おい。<br><b>まき：</b>ん？<br><b>おむすび：</b>……来週も来る。勝負だ。（顔が赤い）<br><b>めい：</b>あの人、ツンデレでは。</div>
+      <div class="end">— 第5話 おわり —</div>
+    </div>
+  </div>
+
+  <!-- EP 6 -->
+  <div class="ep">
+    <div class="ep-header">
+      <div class="ep-num">6</div>
+      <div class="ep-title">雨の日 〜しなしなパニック〜<small>Rainy Day — The Soggy Crisis</small></div>
+    </div>
+    <img src="/maki-chan/sanrio_cry.webp" alt="" class="ep-img">
+    <div class="script">
+      <div class="scene">朝・大雨</div>
+      <div class="dir">まきちゃんの海苔ボディが湿気でしなしなになっている。</div>
+      <div class="line"><b>まき：</b>体が……しなしな……（べろーん）</div>
+      <div class="line"><b>めい：</b>あんた海苔だもんね。</div>
+      <div class="line"><b>まき：</b>海苔って言わないで！！（泣）ちゃんと「まきちゃん」って……</div>
+      <div class="line"><b>めい：</b>海苔巻きから生まれた海苔ボディの海苔の人。</div>
+      <div class="line"><b>まき：</b>全部海苔じゃん！！</div>
+      <div class="dir">客が来ない。まきちゃん、カウンターに突っ伏す。体がさらにしなる。</div>
+      <div class="line"><b>まき：</b>もう……誰も来ない……私の存在意義……</div>
+      <div class="scene">閉店間際</div>
+      <div class="dir">ドアが開く。ずぶ濡れの女性。</div>
+      <div class="line"><b>客：</b>あの……まだ開いてます？雨の中わざわざ来ちゃったんですけど。</div>
+      <div class="line"><b>まき：</b>え……わざわざ？</div>
+      <div class="line"><b>客：</b>先週食べた鉄火巻きが忘れられなくて。雨でも食べたくて。</div>
+      <div class="line sfx">パリッッッッ！！！！</div>
+      <div class="punchline"><b>まき：</b>（体の海苔が一瞬で復活、パリパリに）いらっしゃいませえええ！！！！<br><b>めい：</b>感情で乾燥するの怖いんだけど。</div>
+      <div class="end">— 第6話 おわり —</div>
+    </div>
+  </div>
+
+  <!-- EP 7 -->
+  <div class="ep">
+    <div class="ep-header">
+      <div class="ep-num">7</div>
+      <div class="ep-title">自分巻き 〜おはようございます私です〜<small>Self-Roll — Good Morning, It's Me</small></div>
+    </div>
+    <img src="/maki-chan/sanrio_sleep.webp" alt="" class="ep-img">
+    <div class="script">
+      <div class="scene">朝7:00 まきちゃんの部屋</div>
+      <div class="line"><b>まき：</b>ん……んん……（寝ぼけ眼）</div>
+      <div class="line"><b>まき：</b>あれ……体が動かない……</div>
+      <div class="dir">見下ろすと、布団の代わりに海苔で自分を巻いている。手巻き寿司状態。</div>
+      <div class="line"><b>まき：</b>……また巻いちゃった。</div>
+      <div class="dir">そのまま出勤。ころころ転がって店に到着。</div>
+      <div class="line"><b>めい：</b>おはよう……って何その状態。</div>
+      <div class="line"><b>まき：</b>おはようございます。本日のおすすめは私です。</div>
+      <div class="line"><b>めい：</b>商品じゃないから。ほどいて。</div>
+      <div class="line"><b>まき：</b>手が出ないのでほどけません。</div>
+      <div class="scene">そのまま営業開始</div>
+      <div class="dir">手巻き状態のまま、口で巻き簀を咥えて巻こうとする。</div>
+      <div class="line"><b>めい：</b>やめて。衛生的に。</div>
+      <div class="punchline"><b>客：</b>（店に入ってくる）あの……メニューの「本日のおすすめ」って……<br><b>まき：</b>（転がって登場）私です。<br><b>客：</b>（帰る）<br><b>めい：</b>営業妨害。</div>
+      <div class="end">— 第7話 おわり —</div>
+    </div>
+  </div>
+
+  <!-- EP 8 -->
+  <div class="ep">
+    <div class="ep-header">
+      <div class="ep-num">8</div>
+      <div class="ep-title">100人目 〜超ゾーン〜<small>Customer #100 — Ultra Zone</small></div>
+    </div>
+    <div class="script">
+      <div class="scene">開店から3ヶ月目</div>
+      <div class="line"><b>めい：</b>今日で累計100人目のお客さんが来るかも。</div>
+      <div class="line"><b>まき：</b>100人目……！特別な一本を巻く……！！</div>
+      <div class="dir">気合が入りすぎて朝から3回転ぶ。</div>
+      <div class="scene">100人目 来店</div>
+      <div class="dir">普通のサラリーマン。</div>
+      <div class="line"><b>客：</b>えっと、かっぱ巻き1本で。</div>
+      <div class="line"><b>まき：</b>（心の中：かっぱ巻き……！！600円の……！！ これに全てを懸ける……！！）</div>
+      <div class="line sfx">ドドドドドドドド</div>
+      <div class="dir">通常のゾーンを超えた「超ゾーン」に突入。体の断面が輝き出す。店内に風が吹く。BGMがオーケストラに。</div>
+      <div class="dir">かっぱ巻きなのに。</div>
+      <div class="line"><b>めい：</b>かっぱ巻きにそこまでやる！？</div>
+      <div class="dir">完成。断面が翡翠のように美しい。きゅうりがダイヤモンドカット。</div>
+      <div class="line"><b>客：</b>（食べる）……なんだこれ。かっぱ巻きってこんな味だっけ。泣きそう。</div>
+      <div class="punchline"><b>まき：</b>（先に号泣してる）</div>
+      <div class="line"><b>客：</b>いや僕より先に泣かないでくれる？</div>
+      <div class="end">— 第8話 おわり —</div>
+    </div>
+  </div>
+
+  <!-- EP 9 -->
+  <div class="ep">
+    <div class="ep-header">
+      <div class="ep-num">9</div>
+      <div class="ep-title">おむまき 〜禁断のコラボ〜<small>Omumaki — The Forbidden Collab</small></div>
+    </div>
+    <div class="script">
+      <div class="scene">日曜・定休日</div>
+      <div class="dir">おむすびくんが店に来る。手にはおにぎりの具材。</div>
+      <div class="line"><b>おむすび：</b>勝負じゃない。……実験だ。</div>
+      <div class="line"><b>まき：</b>実験？</div>
+      <div class="line"><b>おむすび：</b>海苔巻きの中におにぎりを入れたらどうなるか。</div>
+      <div class="line"><b>めい：</b>炭水化物 in 炭水化物。</div>
+      <div class="scene">試作</div>
+      <div class="line"><b>1回目：</b>おにぎりが大きすぎて巻けない。「三角が入るわけないだろ」「丸に合わせろ」</div>
+      <div class="line"><b>2回目：</b>巻けたけど直径15cm。「これもう恵方巻き」</div>
+      <div class="line"><b>3回目：</b>小さいおにぎりを具として入れる。巻いた瞬間——</div>
+      <div class="line"><b>まき＆おむすび：</b>（食べる）</div>
+      <div class="line"><b>まき＆おむすび：</b>……………</div>
+      <div class="punchline"><b>まき＆おむすび：</b>（同時に）うまくない。<br><b>めい：</b>知ってた。<br><b>おむすび：</b>……来週また来る。<br><b>まき：</b>……うん。<br><b>めい：</b>だから仲いいじゃん。</div>
+      <div class="end">— 第9話 おわり —</div>
+    </div>
+  </div>
+
+  <!-- EP 10 -->
+  <div class="ep">
+    <div class="ep-header">
+      <div class="ep-num">10</div>
+      <div class="ep-title">迷子 〜全ての道は巻きに通ず〜<small>Lost — All Roads Lead to Maki</small></div>
+    </div>
+    <div class="script">
+      <div class="scene">配達中</div>
+      <div class="line"><b>まき：</b>（Google Maps見ながら）えっと、右に……あれ？左？</div>
+      <div class="beat">— 10分後 —</div>
+      <div class="dir">六本木にいる。</div>
+      <div class="beat">— 20分後 —</div>
+      <div class="dir">渋谷にいる。</div>
+      <div class="beat">— 30分後 —</div>
+      <div class="dir">なぜか品川にいる。</div>
+      <div class="line"><b>めい：</b>（電話）どうやって徒歩で品川まで行ったの。物理法則どうなってるの。</div>
+      <div class="scene">道を聞く</div>
+      <div class="line"><b>まき：</b>（花屋で）すみません、麻布十番はどちらですか？あと巻きます？</div>
+      <div class="line"><b>花屋：</b>花束を……巻く？</div>
+      <div class="line"><b>まき：</b>（八百屋で）麻布十番どっちですか？あと巻きます？</div>
+      <div class="line"><b>八百屋：</b>野菜を……巻く？</div>
+      <div class="line"><b>まき：</b>（交番で）麻布十番どっちですか？あと巻k</div>
+      <div class="line"><b>警官：</b>巻きません。左です。</div>
+      <div class="punchline"><b>まき：</b>（やっと店に戻る。嗅覚で。）海苔の匂いがした。<br><b>めい：</b>GPS使って。<br><b>まき：</b>GPSより海苔の方が正確。<br><b>めい：</b>それはそう。</div>
+      <div class="end">— 第10話 おわり —</div>
+    </div>
+  </div>
+
+  <!-- EP 11 -->
+  <div class="ep">
+    <div class="ep-header">
+      <div class="ep-num">11</div>
+      <div class="ep-title">クリスマス 〜海苔の恩返し〜<small>Christmas — The Nori's Gift</small></div>
+    </div>
+    <div class="script">
+      <div class="scene">12月24日 閉店後</div>
+      <div class="dir">カップルの注文が殺到した一日が終わる。</div>
+      <div class="line"><b>まき：</b>今日、カップルすごかったね。みんな幸せそうだった。</div>
+      <div class="line"><b>めい：</b>まきちゃんは？予定は？</div>
+      <div class="line"><b>まき：</b>……えっと。（体の海苔がちょっとしなる）</div>
+      <div class="line"><b>めい：</b>あ、ごめん聞かなかったことに</div>
+      <div class="line"><b>まき：</b>大丈夫！巻けば大丈夫！一人クリスマスも……巻けば……</div>
+      <div class="dir">目が泳いでいる。明らかに大丈夫じゃない。</div>
+      <div class="scene">店の電気を消そうとした瞬間</div>
+      <div class="line sfx">ガチャ</div>
+      <div class="dir">おむすびくんが入ってくる。手にケーキ（三角形）。後ろにたけし。</div>
+      <div class="line"><b>おむすび：</b>……別に。余っただけだ。（顔が赤い）</div>
+      <div class="line"><b>たけし：</b>マグロさんときゅうりさんからも伝言で「メリークリスマス」だそうです。</div>
+      <div class="line"><b>まき：</b>え……え……</div>
+      <div class="line"><b>めい：</b>（小さいプレゼント箱を出す）はい、新しい下駄。鼻緒が切れない特注。</div>
+      <div class="punchline"><b>まき：</b>（大号泣。体の海苔がパリッパリに。断面がクリスマスカラーに輝く）<br><b>おむすび：</b>うわ、光った。<br><b>めい：</b>感情で発光するのやめて。近所迷惑。</div>
+      <div class="end">— 第11話 おわり —</div>
+    </div>
+  </div>
+
+  <!-- EP 12 -->
+  <div class="ep">
+    <div class="ep-header">
+      <div class="ep-num">12</div>
+      <div class="ep-title">巻けば、大丈夫。<small>If You Roll, It'll Be Alright.</small></div>
+    </div>
+    <img src="/maki-chan/sanrio_bye.webp" alt="" class="ep-img">
+    <div class="script">
+      <div class="scene">1周年の朝</div>
+      <div class="dir">全てがうまくいかない一日。</div>
+      <div class="line"><b>まき：</b>（朝）また自分巻いちゃった。</div>
+      <div class="line"><b>まき：</b>（出勤途中）両方の下駄の鼻緒が切れた。</div>
+      <div class="line"><b>まき：</b>（レジ）お釣り全部間違えた。3人連続。</div>
+      <div class="line"><b>まき：</b>（配達）品川に着いた。（また）</div>
+      <div class="line"><b>まき：</b>（雨が降る）体がしなしな……</div>
+      <div class="dir">カウンターに突っ伏す。</div>
+      <div class="line"><b>まき：</b>……私、本当に役に立ってるのかな。巻くこと以外、何もできないのに。</div>
+      <div class="beat">— 沈黙 —</div>
+      <div class="dir">ドアが開く。常連の田中さん。その後ろに列。雨の中、傘をさして並んでいる。</div>
+      <div class="line"><b>田中：</b>1周年おめでとう。今日はまきちゃんの寿司食べに来た。</div>
+      <div class="line"><b>客B：</b>私も。あの鉄火巻きが忘れられなくて。</div>
+      <div class="line"><b>客C：</b>子どもがまきちゃんに会いたいって。</div>
+      <div class="dir">まきちゃんの目に涙が溜まる。巻き簀を手に取る。</div>
+      <div class="line sfx">パリッ</div>
+      <div class="dir">体の海苔が、今日一番の音を立てる。</div>
+      <div class="punchline"><b>まき：</b>（涙を拭いて、笑顔で）——いらっしゃいませ。今日も、心を込めて巻きます。</div>
+      <div class="dir">ゾーンに入る。でも今日のゾーンは静かで、優しい。一本一本、丁寧に巻く。</div>
+      <div class="beat">— ナレーション —</div>
+      <div class="line"><b>まき：</b>（モノローグ）お釣りは間違えるし、道にも迷う。雨の日はしなしなだし、寝ぼけたら自分を巻いちゃう。でも——</div>
+      <div class="punchline"><b>まき：</b>巻けば、大丈夫。</div>
+      <div class="dir">カメラが引いていく。麻布十番の小さな店。緑の暖簾。雨が上がり、虹がかかる。</div>
+      <div class="line"><b>めい：</b>（小声で）……生まれてきてくれて、ありがとう。</div>
+      <div class="line"><b>まき：</b>え？何か言った？</div>
+      <div class="line"><b>めい：</b>何も。はい次の注文。</div>
+      <div class="end">— 最終話 おわり —</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="back">
+  <a href="/maki-chan/">まきちゃんについて</a> &nbsp;&nbsp; <a href="/">makimaki.tokyo</a>
+</div>
+
+</body>
+</html>

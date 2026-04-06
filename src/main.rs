@@ -9,6 +9,8 @@ use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use tower_http::services::ServeDir;
+use tower_http::trace::TraceLayer;
+use encoding_rs::SHIFT_JIS;
 
 struct AppState {
     db: Mutex<Connection>,
@@ -135,6 +137,7 @@ fn init_db(conn: &Connection) {
     conn.execute_batch("ALTER TABLE orders ADD COLUMN paid INTEGER DEFAULT 0").ok();
     conn.execute_batch("ALTER TABLE orders ADD COLUMN stripe_session TEXT DEFAULT ''").ok();
     conn.execute_batch("ALTER TABLE orders ADD COLUMN printed INTEGER DEFAULT 0").ok();
+    conn.execute_batch("ALTER TABLE orders ADD COLUMN receipt_printed INTEGER DEFAULT 0").ok();
     // Default store config
     conn.execute("INSERT OR IGNORE INTO store_config (key, value) VALUES ('open', '1')", []).ok();
     conn.execute("INSERT OR IGNORE INTO store_config (key, value) VALUES ('notice', '')", []).ok();
@@ -152,6 +155,13 @@ fn check_admin(state: &AppState, headers: &HeaderMap) -> bool {
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "info,tower_http=info".into())
+        )
+        .init();
+
     let db_path = std::env::var("DB_PATH").unwrap_or_else(|_| "makimaki.db".to_string());
     let conn = Connection::open(&db_path).expect("Failed to open DB");
     conn.execute_batch("PRAGMA journal_mode=WAL;").ok();
@@ -188,9 +198,12 @@ async fn main() {
         .route("/api/mv-analytics", get(get_mv_analytics))
         .route("/api/ai-fix", post(create_ai_fix))
         .route("/api/ai-fix-history", get(list_ai_fixes))
-        .route("/api/cloudprnt", post(cloudprnt_poll))
+        .route("/api/cloudprnt", post(cloudprnt_poll).get(cloudprnt_get_job))
         .route("/api/cloudprnt/job", get(cloudprnt_job))
+        .route("/api/cloudprnt/receipt", post(cloudprnt_receipt_poll))
+        .route("/api/cloudprnt/receipt/job", get(cloudprnt_receipt_job))
         .route("/api/orders/{id}/cancel", post(cancel_order))
+        .route("/api/admin/reset-print-queue", post(reset_print_queue))
         .route("/api/square-webhook", post(square_webhook))
         .route("/api/line-webhook", post(line_webhook))
         .route("/api/inventory", get(get_inventory))
@@ -201,7 +214,8 @@ async fn main() {
         .route("/admin", get(admin_page))
         .route("/guide", get(guide_page))
         .fallback_service(ServeDir::new("static"))
-        .with_state(state);
+        .with_state(state)
+        .layer(TraceLayer::new_for_http());
 
     let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
     let addr = format!("0.0.0.0:{port}");
@@ -861,16 +875,451 @@ async fn get_mv_analytics(
 }
 
 // --- Star CloudPRNT ---
-// The printer POSTs to /api/cloudprnt periodically.
-// If there's an unprinted order, respond with jobReady=true.
-// Printer then GETs /api/cloudprnt/job to fetch receipt data.
+// Star CloudPRNT v3 protocol:
+// 1. Printer POSTs {} → server returns {"jobReady":true,"mediaTypes":["text/plain"]}
+// 2. Printer POSTs {"clientAction":"GetJob","mediaType":"text/plain"} → server returns receipt text
+// 3. Printer POSTs {"clientAction":"DeleteJob"} → server confirms
+
+#[derive(Deserialize, Default)]
+struct CloudPRNTRequest {
+    #[serde(rename = "clientAction")]
+    client_action: Option<String>,
+    #[serde(rename = "mediaType")]
+    media_type: Option<String>,
+}
 
 async fn cloudprnt_poll(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    body: axum::body::Bytes,
+) -> impl IntoResponse {
+    let body_str = String::from_utf8_lossy(&body).to_string();
+    let req: CloudPRNTRequest = serde_json::from_slice(&body).unwrap_or_default();
+    let ua = headers.get("user-agent").and_then(|v| v.to_str().ok()).unwrap_or("-");
+    println!("[CloudPRNT] body={} UA={}", body_str, ua);
+
+    let db = state.db.lock().unwrap();
+
+    let enabled: String = db.query_row(
+        "SELECT value FROM store_config WHERE key='printer_enabled'", [], |r| r.get(0)
+    ).unwrap_or("0".into());
+    if enabled != "1" {
+        return (StatusCode::OK, [(axum::http::header::CONTENT_TYPE, "application/json")],
+            serde_json::json!({"jobReady": false}).to_string()).into_response();
+    }
+
+    match req.client_action.as_deref() {
+        Some("GetJob") => {
+            // Return receipt text for oldest unprinted order
+            let result = db.query_row(
+                "SELECT id,name,phone,pickup_time,items,note,total,paid,created_at FROM orders WHERE printed=0 AND paid=1 AND status='new' ORDER BY created_at ASC LIMIT 1",
+                [], |row| {
+                    let items_str: String = row.get(4)?;
+                    Ok((
+                        row.get::<_,String>(0)?, row.get::<_,String>(1)?,
+                        row.get::<_,String>(2)?, row.get::<_,String>(3)?,
+                        items_str, row.get::<_,String>(5)?,
+                        row.get::<_,u32>(6)?, row.get::<_,i32>(7)?,
+                        row.get::<_,String>(8)?,
+                    ))
+                }
+            );
+            match result {
+                Ok((id, name, phone, pickup_time, items_str, note, total, paid, created_at)) => {
+                    let items: Vec<OrderItem> = serde_json::from_str(&items_str).unwrap_or_default();
+                    let today_date = &created_at[..10];
+                    let today_sales: u32 = db.query_row(
+                        "SELECT COALESCE(SUM(total),0) FROM orders WHERE paid=1 AND substr(created_at,1,10)=?1",
+                        rusqlite::params![today_date], |r| r.get(0)
+                    ).unwrap_or(0);
+                    let order_count: u32 = db.query_row(
+                        "SELECT COUNT(*) FROM orders WHERE paid=1 AND substr(created_at,1,10)=?1",
+                        rusqlite::params![today_date], |r| r.get(0)
+                    ).unwrap_or(0);
+                    let _ = db.execute("UPDATE orders SET printed=1 WHERE id=?1", rusqlite::params![id]);
+                    println!("[CloudPRNT] serving job #{}", id);
+                    let receipt = build_order_receipt(&id, &name, &phone, &pickup_time, &items, &note, total, paid, &created_at, today_sales, order_count);
+                    (StatusCode::OK, [(axum::http::header::CONTENT_TYPE, "text/plain; charset=shift_jis")], receipt).into_response()
+                }
+                Err(_) => (StatusCode::NO_CONTENT, [(axum::http::header::CONTENT_TYPE, "text/plain")], "".to_string()).into_response()
+            }
+        }
+        Some("DeleteJob") => {
+            (StatusCode::OK, [(axum::http::header::CONTENT_TYPE, "application/json")],
+                "{}".to_string()).into_response()
+        }
+        _ => {
+            // Regular poll — find oldest unprinted order id to use as jobToken
+            let unprinted: i32 = db.query_row("SELECT COUNT(*) FROM orders WHERE printed=0 AND paid=1 AND status='new'", [], |r| r.get(0)).unwrap_or(0);
+            println!("[CloudPRNT] poll: unprinted_paid={}", unprinted);
+            let job_id: Option<String> = db.query_row(
+                "SELECT id FROM orders WHERE printed=0 AND paid=1 AND status='new' ORDER BY created_at ASC LIMIT 1",
+                [], |r| r.get(0)
+            ).ok();
+            let has_unprinted = job_id.is_some();
+            let mut resp = serde_json::json!({"jobReady": has_unprinted, "mediaTypes": ["text/plain"]});
+            if let Some(token) = job_id {
+                resp["jobToken"] = serde_json::Value::String(token);
+            }
+            (StatusCode::OK, [(axum::http::header::CONTENT_TYPE, "application/json")],
+                resp.to_string()).into_response()
+        }
+    }
+}
+
+fn sjis(s: &str) -> Vec<u8> {
+    let (enc, _, _) = SHIFT_JIS.encode(s);
+    enc.into_owned()
+}
+
+const ESC_BOLD_ON:   &[u8] = &[0x1B, 0x45, 0x01];
+const ESC_BOLD_OFF:  &[u8] = &[0x1B, 0x45, 0x00];
+const ESC_BIG:       &[u8] = &[0x1B, 0x21, 0x30]; // double-width + double-height
+const ESC_NORMAL:    &[u8] = &[0x1B, 0x21, 0x00];
+const ESC_FEED_CUT:  &[u8] = &[0x1B, 0x64, 0x02, 0x1B, 0x69]; // feed 2 + partial cut (Star ESC i)
+const ESC_CENTER:    &[u8] = &[0x1B, 0x61, 0x01]; // center align
+const ESC_LEFT:      &[u8] = &[0x1B, 0x61, 0x00]; // left align
+
+const STAFF_MESSAGES: &[&str] = &[
+    // 感謝・ねぎらい
+    "今日もありがとう！水分補給忘れずに！",
+    "お疲れ様！あと少し、一緒に頑張ろう！",
+    "完璧な一本、ありがとう！",
+    "今日の頑張りは明日の笑顔につながる！",
+    "今日も麻布十番をおいしくしてくれてありがとう！",
+    "あなたの仕事が誰かを幸せにしてる！",
+    "今日も最高の仕事してくれてありがとう！",
+    "あなたのおかげで今日も美味しい一日！",
+    "毎日ありがとう、本当に助かってます！",
+    "地道な仕事が一番かっこいい！",
+    // 元気・テンションアップ
+    "あなたの笑顔が最高のスパイス！",
+    "麻布十番No.1まき師、それがあなた！",
+    "今日も全力で最高のmakimakiを！",
+    "あなたがいるから、makimakiが輝く！",
+    "巻いて、巻いて、また巻いて！",
+    "makimakiファミリー最高！",
+    "細巻きへの愛がお客様に伝わってます！",
+    "今日も最高の一日にしよう！",
+    "あなたのパワー、全開でいこう！",
+    "今日もキッチンに神が降りてる！",
+    "この調子！最高すぎる！",
+    "あなたのスピード、神がかってる！",
+    "今日のあなた、輝いてます！",
+    // チームワーク
+    "今日の注文もチームワークで乗り越えよう！",
+    "チームがあるから怖いものなし！",
+    "みんなで作るmakimaki、最高！",
+    "一人じゃないよ、チームがついてる！",
+    "横の人に「ありがとう」って言ってみて！",
+    // 体調・ケア
+    "休憩は取れてますか？無理しないで！",
+    "今日は何食べた？ちゃんと食べてね！",
+    "立ち仕事お疲れ様、足のばしてね！",
+    "深呼吸して！ゆっくりでいい！",
+    "無理は禁物、ペース大事！",
+    // 哲学・ユーモア
+    "一本の細巻きに、愛を込めて！",
+    "今日も宇宙一の細巻きを！",
+    "のりの向こうにお客様の笑顔がある！",
+    "細巻きは人生の縮図だ！",
+    "ご飯の一粒一粒に感謝を！",
+    "巻くことは、愛することだ！",
+    "完璧な巻きは、完璧な一日をつくる！",
+    "海苔は裏切らない！",
+    "シャリの温度に魂を込めろ！",
+    "今日の具材も絶好調！",
+    // 季節・天気っぽい
+    "雨でも晴れでも、美味しさは変わらない！",
+    "今日も麻布十番に旨い風が吹いてる！",
+    "どんな日も、makimakiで笑顔に！",
+    // ちょっとおもしろい
+    "今日の注文数、記録更新を狙え！",
+    "伝説のまき師の一日が、また始まる！",
+    "巻き続ける限り、負けはない！",
+    "この一本で、誰かが幸せになる！",
+    "今日もまき散らしていこう！",
+    "あなたの巻きは芸術品！",
+    "食べた人が「また来たい」と思う一本を！",
+    "今日も麻布十番に伝説を刻もう！",
+    // もっと感謝
+    "あなたなしではmakimakiは成り立たない！",
+    "今日も来てくれてありがとう！",
+    "あなたの存在がチームの宝！",
+    "見えないところで支えてくれてありがとう！",
+    "今日も笑顔で仕事してくれてありがとう！",
+    "あなたの丁寧さが伝わってます！",
+    "毎日毎日、本当にお疲れ様！",
+    "あなたのおかげで今日も回ってる！",
+    "黙って頑張るあなたが一番かっこいい！",
+    "今日の仕事ぶり、神でした！",
+    "あなたの仕事に誇りを持っていい！",
+    "細かいところまで気を配ってくれてありがとう！",
+    // もっとユーモア
+    "もし細巻きがしゃべれたら「ありがとう」って言うはず！",
+    "今日もサーモン様がお待ちかね！",
+    "まぐろも、あなたの手なら本望！",
+    "のりが巻かれることを望んでいる！",
+    "ご飯粒「俺たち、最高の仲間と出会えた」",
+    "包丁「今日も切れ味抜群でいくぞ！」",
+    "今日も酢飯の神降臨！",
+    "シャリの気持ちになって巻いてみて！",
+    "きゅうりも泣いて喜んでる！",
+    "今日もたくあんがいい仕事してる！",
+    "具材たちが「よろしく頼むぞ」と言ってる！",
+    "あなたの手、海苔に認められてます！",
+    "今日の細巻き、芥川賞レベル！",
+    "ミシュランの覆面調査員が来てるかも！",
+    "食べログ星5確定の一本！",
+    "今日のあなた、もはや職人の域！",
+    "この一本、インスタ映えしすぎ！",
+    "世界のどこを探してもここだけの味！",
+    // 哲学・深め
+    "一本の細巻きに込められた想い、半端ない！",
+    "食は命、その命を作るあなたは偉大だ！",
+    "手から生まれるものには、魂が宿る！",
+    "丁寧に生きること、それが美しい細巻きを生む！",
+    "今日も食べる人のことを想いながら！",
+    "料理は愛情、その愛情を形にしてる！",
+    "細巻きひとつに、人生が凝縮されている！",
+    "今日も「おいしい」を世界に届けよう！",
+    "あなたの仕事は、人の記憶に残る！",
+    "何年後かにお客さんが「あそこの細巻き最高だった」って言う！",
+    // スポーツ・燃える系
+    "今日も全力プレーで行こう！",
+    "ラストスパート、もうひと踏ん張り！",
+    "今日の試合、あなたがMVP！",
+    "諦めなければ、細巻きは必ず完成する！",
+    "練習は裏切らない！今日もその成果を出して！",
+    "今日も己の限界を超えていけ！",
+    "プロは言い訳しない、ただ巻く！",
+    "今日の仕事ぶりでチームを引っ張れ！",
+    "ここが正念場！いけ！",
+    "あなたの底力、まだまだ出せる！",
+    // 天気・季節感
+    "今日みたいないい日は、いい細巻きができる！",
+    "季節が変わっても、美味しさは変わらない！",
+    "暑くても寒くても、makimakiは最高！",
+    "今日の気候も美味しさの一部！",
+    // 短くてキャッチー
+    "最高！",
+    "ありがとう！",
+    "いつもありがとう！",
+    "今日もよろしく！",
+    "お疲れ！",
+    "がんばれ！",
+    "いいぞ！",
+    "さすが！",
+    "神！",
+    "完璧！",
+    "ナイス！",
+    "最強！",
+    "最高の一日を！",
+    "愛してる（お店として）！",
+    "今日もよろしくお願いします！",
+    // 麻布十番・地域ネタ
+    "麻布十番の誇り、それがあなた！",
+    "麻布十番で一番働いてるのはあなた！",
+    "六本木ヒルズも霞む、あなたの輝き！",
+    "港区最高の職人がここにいる！",
+    "麻布十番の伝説、作り続けてください！",
+    "このあたりで一番美味しいもの作ってるの、あなたです！",
+    // 食材へのリスペクト
+    "今日のまぐろ、特上でした！",
+    "サーモンが最高のコンディションで届いてます！",
+    "のりの香りが今日も最高！",
+    "酢飯の炊き加減、完璧！",
+    "今日の食材たちに感謝！",
+    // 週・時間帯ネタ
+    "週の始まり、最高のスタートを！",
+    "週の真ん中、あとちょっと！",
+    "週末が近い、ラストスパート！",
+    "今日も朝から全力！",
+    "ランチの主役は、あなたの細巻き！",
+    "夜の部もよろしくお願いします！",
+    // お客さんのために
+    "このレシートを見たお客さんが笑顔になってる！",
+    "お客さんの「また来ます！」のために！",
+    "次に来た時も来てくれるように、魂込めて！",
+    "お客さんの記憶に残る一本を！",
+    "遠くから来てくれたお客さんのために！",
+    "初めて来たお客さんをリピーターに！",
+];
+
+fn build_order_receipt(id: &str, name: &str, _phone: &str, pickup_time: &str, items: &[OrderItem], note: &str, total: u32, _paid: i32, created_at: &str, today_sales: u32, order_count: u32) -> Vec<u8> {
+    let mut out: Vec<u8> = Vec::new();
+
+    // ===== 1枚目: 厨房用 =====
+    let msg_idx = id.bytes().fold(0usize, |a, b| a.wrapping_add(b as usize)) % STAFF_MESSAGES.len();
+    let staff_msg = STAFF_MESSAGES[msg_idx];
+
+    out.extend_from_slice(&sjis("[厨房用]\n"));
+    out.extend_from_slice(&sjis(&format!("#{} {} 様\n", &id[..6], name)));
+
+    out.extend_from_slice(ESC_BOLD_ON);
+    out.extend_from_slice(ESC_BIG);
+    out.extend_from_slice(&sjis(&format!("{}\n", pickup_time)));
+    out.extend_from_slice(ESC_NORMAL);
+    out.extend_from_slice(ESC_BOLD_OFF);
+
+    out.extend_from_slice(&sjis("---------------------\n"));
+    for item in items {
+        let line_total = item.price * item.qty;
+        out.extend_from_slice(ESC_BOLD_ON);
+        out.extend_from_slice(&sjis(&format!("{} x{}  \\{}\n", item.name, item.qty, line_total)));
+        out.extend_from_slice(ESC_BOLD_OFF);
+    }
+    out.extend_from_slice(&sjis("---------------------\n"));
+    out.extend_from_slice(&sjis(&format!("合計 \\{}  カード済\n", total)));
+    if !note.is_empty() {
+        out.extend_from_slice(&sjis(&format!("備考: {}\n", note)));
+    }
+    out.extend_from_slice(&sjis("---------------------\n"));
+    out.extend_from_slice(&sjis(&format!("本日 {}件  \\{}\n", order_count, today_sales)));
+    out.extend_from_slice(&sjis("---------------------\n"));
+    out.extend_from_slice(ESC_BOLD_ON);
+    out.extend_from_slice(&sjis(&format!("{}\n", staff_msg)));
+    out.extend_from_slice(ESC_BOLD_OFF);
+
+    // カット（厨房用ここまで）
+    out.extend_from_slice(ESC_FEED_CUT);
+
+    // ===== 2枚目: お客様用 =====
+    out.extend_from_slice(ESC_CENTER);
+
+    // ドット区切り
+    out.extend_from_slice(&sjis(". . . . . . . . . . . .\n"));
+
+    // ロゴ — スペース空き文字でブランド感
+    out.extend_from_slice(ESC_BOLD_ON);
+    out.extend_from_slice(&sjis("m a k i m a k i\n"));
+    out.extend_from_slice(ESC_BOLD_OFF);
+    out.extend_from_slice(&sjis("細巻き専門店\n"));
+    out.extend_from_slice(&sjis("麻布十番 2-19-1\n"));
+
+    out.extend_from_slice(&sjis(". . . . . . . . . . . .\n\n"));
+
+    // 名前・日時（センター）
+    out.extend_from_slice(&sjis(&format!("{} 様\n", name)));
+    out.extend_from_slice(&sjis(&format!("{}\n\n", created_at)));
+
+    // お受取時間ラベル
+    out.extend_from_slice(&sjis("お受取時間\n"));
+    out.extend_from_slice(ESC_BOLD_ON);
+    out.extend_from_slice(ESC_BIG);
+    out.extend_from_slice(&sjis(&format!("{}\n", pickup_time)));
+    out.extend_from_slice(ESC_NORMAL);
+    out.extend_from_slice(ESC_BOLD_OFF);
+
+    // 商品（左揃え）
+    out.extend_from_slice(ESC_LEFT);
+    out.extend_from_slice(&sjis(". . . . . . . . . . . .\n"));
+    for item in items {
+        let line_total = item.price * item.qty;
+        out.extend_from_slice(&sjis(&format!("{}  x{}\n", item.name, item.qty)));
+        out.extend_from_slice(ESC_CENTER);
+        out.extend_from_slice(&sjis(&format!("¥{}\n", line_total)));
+        out.extend_from_slice(ESC_LEFT);
+    }
+    out.extend_from_slice(&sjis(". . . . . . . . . . . .\n"));
+
+    // 合計（センター）
+    out.extend_from_slice(ESC_CENTER);
+    out.extend_from_slice(ESC_BOLD_ON);
+    out.extend_from_slice(&sjis(&format!("合 計  ¥{}\n", total)));
+    out.extend_from_slice(ESC_BOLD_OFF);
+    out.extend_from_slice(&sjis("お支払  カード\n"));
+    if !note.is_empty() {
+        out.extend_from_slice(&sjis(&format!("\n備考: {}\n", note)));
+    }
+
+    // フッター
+    out.extend_from_slice(&sjis("\nまた来てね。\n"));
+    out.extend_from_slice(&sjis("see you soon.\n\n"));
+    out.extend_from_slice(&sjis(". . . . . . . . . . . .\n"));
+
+    out.extend_from_slice(ESC_LEFT); // 左揃えに戻す
+    // カット（お客様用ここまで）
+    out.extend_from_slice(ESC_FEED_CUT);
+    out
+}
+
+// GET /api/cloudprnt?mediaType=text/plain — printer fetches job after jobReady=true
+async fn cloudprnt_get_job(
+    State(state): State<Arc<AppState>>,
+) -> impl IntoResponse {
+    let db = state.db.lock().unwrap();
+    println!("[CloudPRNT] GET job request");
+    let result = db.query_row(
+        "SELECT id,name,phone,pickup_time,items,note,total,paid,created_at FROM orders WHERE printed=0 AND paid=1 AND status='new' ORDER BY created_at ASC LIMIT 1",
+        [], |row| {
+            let items_str: String = row.get(4)?;
+            Ok((row.get::<_,String>(0)?, row.get::<_,String>(1)?, row.get::<_,String>(2)?,
+                row.get::<_,String>(3)?, items_str, row.get::<_,String>(5)?,
+                row.get::<_,u32>(6)?, row.get::<_,i32>(7)?, row.get::<_,String>(8)?))
+        }
+    );
+    match result {
+        Ok((id, name, phone, pickup_time, items_str, note, total, paid, created_at)) => {
+            let items: Vec<OrderItem> = serde_json::from_str(&items_str).unwrap_or_default();
+            let today_date = &created_at[..10];
+            let today_sales: u32 = db.query_row(
+                "SELECT COALESCE(SUM(total),0) FROM orders WHERE paid=1 AND substr(created_at,1,10)=?1",
+                rusqlite::params![today_date], |r| r.get(0)
+            ).unwrap_or(0);
+            let order_count: u32 = db.query_row(
+                "SELECT COUNT(*) FROM orders WHERE paid=1 AND substr(created_at,1,10)=?1",
+                rusqlite::params![today_date], |r| r.get(0)
+            ).unwrap_or(0);
+            let _ = db.execute("UPDATE orders SET printed=1 WHERE id=?1", rusqlite::params![id]);
+            println!("[CloudPRNT] GET serving job #{}", id);
+            let receipt = build_order_receipt(&id, &name, &phone, &pickup_time, &items, &note, total, paid, &created_at, today_sales, order_count);
+            (StatusCode::OK, [(axum::http::header::CONTENT_TYPE, "text/plain; charset=shift_jis")], receipt).into_response()
+        }
+        Err(_) => (StatusCode::NO_CONTENT, [(axum::http::header::CONTENT_TYPE, "text/plain")], "".to_string()).into_response()
+    }
+}
+
+// Manual test GET endpoint
+async fn cloudprnt_job(
+    State(state): State<Arc<AppState>>,
+) -> impl IntoResponse {
+    let db = state.db.lock().unwrap();
+    let result = db.query_row(
+        "SELECT id,name,phone,pickup_time,items,note,total,paid,created_at FROM orders WHERE printed=0 AND paid=1 AND status='new' ORDER BY created_at ASC LIMIT 1",
+        [], |row| {
+            let items_str: String = row.get(4)?;
+            Ok((row.get::<_,String>(0)?, row.get::<_,String>(1)?, row.get::<_,String>(2)?,
+                row.get::<_,String>(3)?, items_str, row.get::<_,String>(5)?,
+                row.get::<_,u32>(6)?, row.get::<_,i32>(7)?, row.get::<_,String>(8)?))
+        }
+    );
+    match result {
+        Ok((id, name, phone, pickup_time, items_str, note, total, paid, created_at)) => {
+            let items: Vec<OrderItem> = serde_json::from_str(&items_str).unwrap_or_default();
+            let today_date = &created_at[..10];
+            let today_sales: u32 = db.query_row(
+                "SELECT COALESCE(SUM(total),0) FROM orders WHERE paid=1 AND substr(created_at,1,10)=?1",
+                rusqlite::params![today_date], |r| r.get(0)
+            ).unwrap_or(0);
+            let order_count: u32 = db.query_row(
+                "SELECT COUNT(*) FROM orders WHERE paid=1 AND substr(created_at,1,10)=?1",
+                rusqlite::params![today_date], |r| r.get(0)
+            ).unwrap_or(0);
+            let _ = db.execute("UPDATE orders SET printed=1 WHERE id=?1", rusqlite::params![id]);
+            let receipt = build_order_receipt(&id, &name, &phone, &pickup_time, &items, &note, total, paid, &created_at, today_sales, order_count);
+            (StatusCode::OK, [(axum::http::header::CONTENT_TYPE, "text/plain; charset=shift_jis")], receipt).into_response()
+        }
+        Err(_) => (StatusCode::NO_CONTENT, "").into_response()
+    }
+}
+
+// --- Receipt Printer (customer-facing, prints when paid) ---
+async fn cloudprnt_receipt_poll(
     State(state): State<Arc<AppState>>,
 ) -> impl IntoResponse {
     let db = state.db.lock().unwrap();
 
-    // Check if printer is enabled
     let enabled: String = db.query_row(
         "SELECT value FROM store_config WHERE key='printer_enabled'", [], |r| r.get(0)
     ).unwrap_or("0".into());
@@ -878,9 +1327,10 @@ async fn cloudprnt_poll(
         return Json(serde_json::json!({"jobReady": false}));
     }
 
-    // Check for unprinted orders
+    // Ready when paid but receipt not yet printed
     let has_unprinted: bool = db.query_row(
-        "SELECT COUNT(*) FROM orders WHERE printed=0 AND status='new'", [], |r| r.get::<_,i32>(0)
+        "SELECT COUNT(*) FROM orders WHERE paid=1 AND receipt_printed=0",
+        [], |r| r.get::<_,i32>(0)
     ).unwrap_or(0) > 0;
 
     Json(serde_json::json!({
@@ -889,14 +1339,13 @@ async fn cloudprnt_poll(
     }))
 }
 
-async fn cloudprnt_job(
+async fn cloudprnt_receipt_job(
     State(state): State<Arc<AppState>>,
 ) -> impl IntoResponse {
     let db = state.db.lock().unwrap();
 
-    // Get oldest unprinted order
     let result = db.query_row(
-        "SELECT id,name,phone,pickup_time,items,note,total,paid,created_at FROM orders WHERE printed=0 AND status='new' ORDER BY created_at ASC LIMIT 1",
+        "SELECT id,name,phone,pickup_time,items,note,total,created_at FROM orders WHERE paid=1 AND receipt_printed=0 ORDER BY created_at ASC LIMIT 1",
         [],
         |row| {
             let items_str: String = row.get(4)?;
@@ -908,64 +1357,77 @@ async fn cloudprnt_job(
                 items_str,
                 row.get::<_,String>(5)?,  // note
                 row.get::<_,u32>(6)?,     // total
-                row.get::<_,i32>(7)?,     // paid
-                row.get::<_,String>(8)?,  // created_at
+                row.get::<_,String>(7)?,  // created_at
             ))
         }
     );
 
     match result {
-        Ok((id, name, phone, pickup_time, items_str, note, total, paid, created_at)) => {
+        Ok((id, name, _phone, pickup_time, items_str, note, total, created_at)) => {
             let items: Vec<OrderItem> = serde_json::from_str(&items_str).unwrap_or_default();
 
-            // Mark as printed
-            let _ = db.execute("UPDATE orders SET printed=1 WHERE id=?1", rusqlite::params![id]);
+            let _ = db.execute("UPDATE orders SET receipt_printed=1 WHERE id=?1", rusqlite::params![id]);
 
-            // Generate receipt text (Star line mode compatible)
-            let mut receipt = String::new();
-            receipt.push_str("================================\n");
-            receipt.push_str("        makimaki\n");
-            receipt.push_str("     細巻き専門店\n");
-            receipt.push_str("================================\n\n");
-            receipt.push_str(&format!("注文番号: #{}\n", id));
-            receipt.push_str(&format!("受付時間: {}\n", created_at));
-            receipt.push_str(&format!("受取時間: {}\n\n", pickup_time));
-            receipt.push_str(&format!("お名前: {}\n", name));
-            receipt.push_str(&format!("電話: {}\n\n", phone));
-            receipt.push_str("--------------------------------\n");
+            // Customer receipt
+            let mut out: Vec<u8> = Vec::new();
 
+            // Header — centered store name
+            out.extend_from_slice(ESC_BOLD_ON);
+            out.extend_from_slice(&sjis("      makimaki\n"));
+            out.extend_from_slice(ESC_BOLD_OFF);
+            out.extend_from_slice(&sjis("    細巻き専門店\n"));
+            out.extend_from_slice(&sjis("  麻布十番 2-19-1\n"));
+            out.extend_from_slice(&sjis("--------------------------\n"));
+            out.extend_from_slice(&sjis(&format!("{}\n", created_at)));
+            out.extend_from_slice(&sjis(&format!("{} 様\n", name)));
+
+            // Pickup time — BIG + BOLD
+            out.extend_from_slice(&sjis("お受取時間\n"));
+            out.extend_from_slice(ESC_BOLD_ON);
+            out.extend_from_slice(ESC_BIG);
+            out.extend_from_slice(&sjis(&format!("{}\n", pickup_time)));
+            out.extend_from_slice(ESC_NORMAL);
+            out.extend_from_slice(ESC_BOLD_OFF);
+
+            // Items
+            out.extend_from_slice(&sjis("--------------------------\n"));
             for item in &items {
                 let line_total = item.price * item.qty;
-                receipt.push_str(&format!(
-                    "{} x{}\n    ¥{}\n",
-                    item.name, item.qty, line_total
-                ));
+                out.extend_from_slice(&sjis(&format!("{} x{}\n", item.name, item.qty)));
+                out.extend_from_slice(&sjis(&format!("              ¥{}\n", line_total)));
             }
-
-            receipt.push_str("--------------------------------\n");
-            receipt.push_str(&format!("合計: ¥{}\n", total));
-            receipt.push_str(&format!("決済: {}\n\n", if paid != 0 { "カード済" } else { "未払い" }));
-
+            out.extend_from_slice(&sjis("--------------------------\n"));
+            out.extend_from_slice(ESC_BOLD_ON);
+            out.extend_from_slice(&sjis(&format!("合計（税込）  ¥{}\n", total)));
+            out.extend_from_slice(ESC_BOLD_OFF);
+            out.extend_from_slice(&sjis("お支払い      カード\n"));
             if !note.is_empty() {
-                // Format box info nicely if present
-                let display_note = note.replace(" / ", "\n  ");
-                receipt.push_str(&format!("備考:\n  {}\n\n", display_note));
+                out.extend_from_slice(&sjis(&format!("備考: {}\n", note.replace(" / ", " / "))));
             }
-
-            receipt.push_str("================================\n");
-            receipt.push_str("   ありがとうございます\n");
-            receipt.push_str("================================\n\n\n\n");
+            out.extend_from_slice(&sjis("--------------------------\n"));
+            out.extend_from_slice(&sjis("  ありがとうございました!\n"));
+            out.extend_from_slice(&sjis("  Thank you!\n"));
+            out.extend_from_slice(ESC_FEED_CUT);
 
             (
                 StatusCode::OK,
-                [(axum::http::header::CONTENT_TYPE, "text/plain; charset=utf-8")],
-                receipt,
+                [(axum::http::header::CONTENT_TYPE, "text/plain; charset=shift_jis")],
+                out,
             ).into_response()
         }
-        Err(_) => {
-            (StatusCode::NO_CONTENT, "").into_response()
-        }
+        Err(_) => (StatusCode::NO_CONTENT, "").into_response()
     }
+}
+
+async fn reset_print_queue(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+) -> impl IntoResponse {
+    if !check_admin(&state, &headers) { return (StatusCode::UNAUTHORIZED, "unauthorized"); }
+    let db = state.db.lock().unwrap();
+    let n = db.execute("UPDATE orders SET printed=1, receipt_printed=1 WHERE printed=0 OR receipt_printed=0", []).unwrap_or(0);
+    println!("[Admin] reset-print-queue: {} orders cleared", n);
+    (StatusCode::OK, "ok")
 }
 
 // --- Cancel & Refund ---
@@ -1150,19 +1612,22 @@ async fn create_terminal_checkout(
         }
     });
 
-    // If no device_id provided, try to get the first available terminal
+    // If no device_id provided, get it from /v2/devices/codes (Terminal API requires this ID)
     if input.device_id.is_none() || input.device_id.as_deref() == Some("") {
-        // List device codes to find the terminal
         let client = reqwest::Client::new();
         if let Ok(resp) = client
-            .get("https://connect.squareup.com/v2/devices")
+            .get("https://connect.squareup.com/v2/devices/codes")
             .header("Authorization", format!("Bearer {square_token}"))
             .send().await
         {
             if let Ok(body) = resp.json::<serde_json::Value>().await {
-                if let Some(devices) = body["devices"].as_array() {
-                    if let Some(device) = devices.first() {
-                        if let Some(did) = device["id"].as_str() {
+                if let Some(codes) = body["device_codes"].as_array() {
+                    // Find first PAIRED Terminal API device code
+                    if let Some(code) = codes.iter().find(|c| {
+                        c["status"].as_str() == Some("PAIRED") &&
+                        c["product_type"].as_str() == Some("TERMINAL_API")
+                    }) {
+                        if let Some(did) = code["device_id"].as_str() {
                             checkout_payload["checkout"]["device_options"]["device_id"] = serde_json::Value::String(did.to_string());
                         }
                     }

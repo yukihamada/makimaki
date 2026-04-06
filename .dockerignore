@@ -5,3 +5,6 @@ target/
 *.db
 *.db-wal
 *.db-shm
+voice-work/
+.env
+.env.*

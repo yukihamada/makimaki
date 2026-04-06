@@ -25,10 +25,10 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--accent:#3A5A40;--accent-light:#5A7A60;--bg:#FDFBF8;--fg:#1C1917;--muted:#78716C;--border:#E7E0D8;--white:#FFF;--warn:#DC2626;--serif:'Zen Old Mincho',serif;--sans:'Zen Kaku Gothic New',sans-serif}
-html,body{height:100%;overflow:hidden;font-family:var(--sans);background:var(--bg);color:var(--fg)}
+html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--fg)}
 
 /* LAYOUT: 3-column on iPad landscape */
-.pos-layout{display:grid;grid-template-columns:200px 1fr 340px;height:100vh}
+.pos-layout{display:grid;grid-template-columns:200px 1fr 340px;height:100vh;overflow:hidden}
 
 /* LEFT: Tabs */
 .pos-tabs{background:var(--fg);color:var(--white);display:flex;flex-direction:column;padding:.5rem}
@@ -56,14 +56,15 @@ html,body{height:100%;overflow:hidden;font-family:var(--sans);background:var(--b
 .box-btn-sub{font-size:.7rem;color:var(--muted);margin-top:.3rem}
 
 /* Item grid */
-.item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.8rem}
-.item-btn{padding:1rem .8rem;border:1px solid var(--border);background:var(--white);border-radius:6px;cursor:pointer;transition:all .2s;position:relative;text-align:center}
+.item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.8rem}
+.item-btn{padding:.6rem .5rem .8rem;border:1px solid var(--border);background:var(--white);border-radius:8px;cursor:pointer;transition:all .2s;position:relative;text-align:center;overflow:hidden}
 .item-btn:active{transform:scale(.96)}
-.item-btn.picked{border-color:var(--accent);background:#EDF2EE}
-.item-btn-name{font-family:var(--serif);font-size:.95rem}
-.item-btn-en{font-size:.6rem;color:var(--muted);margin-top:.1rem}
-.item-btn-price{font-size:.8rem;color:var(--accent);margin-top:.4rem}
-.item-btn-badge{position:absolute;top:-.4rem;right:-.4rem;min-width:22px;height:22px;padding:0 5px;background:var(--accent);color:#fff;border-radius:11px;font-size:.7rem;display:none;align-items:center;justify-content:center;font-weight:700}
+.item-btn.picked{border-color:var(--accent);background:#EDF2EE;box-shadow:0 0 0 2px var(--accent)}
+.item-btn-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:5px;margin-bottom:.4rem;display:block}
+.item-btn-name{font-family:var(--serif);font-size:.9rem;line-height:1.2}
+.item-btn-en{font-size:.58rem;color:var(--muted);margin-top:.1rem}
+.item-btn-price{font-size:.78rem;color:var(--accent);margin-top:.3rem;font-weight:500}
+.item-btn-badge{position:absolute;top:.3rem;right:.3rem;min-width:22px;height:22px;padding:0 5px;background:var(--accent);color:#fff;border-radius:11px;font-size:.7rem;display:none;align-items:center;justify-content:center;font-weight:700}
 .item-btn.picked .item-btn-badge{display:flex}
 
 /* Progress */
@@ -138,15 +139,17 @@ html,body{height:100%;overflow:hidden;font-family:var(--sans);background:var(--b
   .item-grid{grid-template-columns:repeat(3,1fr)}
 }
 @media(max-width:700px){
-  .pos-layout{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
-  .pos-tabs{flex-direction:row;overflow-x:auto;padding:.3rem}
+  .pos-layout{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;height:auto;overflow:visible}
+  .pos-tabs{flex-direction:row;overflow-x:auto;padding:.3rem;position:sticky;top:0;z-index:10}
   .pos-tab{padding:.5rem .8rem;margin:0 .2rem 0 0}
   .pos-logo{display:none}
   .pos-tab-spacer{display:none}
   .pos-status{display:none}
-  .pos-sidebar{max-height:35vh}
+  .pos-main{overflow-y:visible}
+  .pos-sidebar{max-height:none}
 }
 </style>
+<script src="https://enabler-analytics.fly.dev/t.js" defer></script>
 </head>
 <body>
 
@@ -249,10 +252,7 @@ html,body{height:100%;overflow:hidden;font-family:var(--sans);background:var(--b
       <span>合計</span><span id="totalVal">¥0</span>
     </div>
     <div class="sidebar-actions">
-      <div class="pay-row">
-        <button class="pay-btn pay-cash" onclick="payCash()" id="payCashBtn" disabled>現金</button>
-        <button class="pay-btn pay-card" onclick="payCard()" id="payCardBtn" disabled>カード</button>
-      </div>
+      <button class="pay-btn pay-card" onclick="payCard()" id="payCardBtn" disabled style="width:100%">カードで支払う</button>
       <button class="clear-btn" onclick="clearAll()">注文クリア</button>
     </div>
   </div>
@@ -268,20 +268,6 @@ html,body{height:100%;overflow:hidden;font-family:var(--sans);background:var(--b
   </div>
 </div>
 
-<!-- Cash Overlay -->
-<div class="pos-overlay" id="cashOverlay">
-  <div class="pos-overlay-content">
-    <h2>現金決済</h2>
-    <p>合計: <strong id="cashTotal">¥0</strong></p>
-    <div class="cash-presets" id="cashPresets"></div>
-    <input type="number" class="cash-input" id="cashInput" placeholder="お預かり金額" oninput="calcChange()">
-    <div>おつり: <span class="cash-change" id="cashChange">¥0</span></div>
-    <div style="margin-top:1rem;display:flex;gap:.8rem;justify-content:center">
-      <button onclick="closeCash()" style="padding:.7rem 2rem;border:1px solid var(--border);background:var(--white);border-radius:6px;cursor:pointer;font-size:.9rem">キャンセル</button>
-      <button onclick="confirmCash()" id="confirmCashBtn" style="padding:.7rem 2rem;background:var(--accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.9rem" disabled>確定</button>
-    </div>
-  </div>
-</div>
 
 <script>
 // ===================== CONFIG =====================
@@ -356,6 +342,7 @@ function renderPicker() {
     return `
     <div class="item-btn ${orders.length ? 'picked' : ''}" onclick="posPick('${item.id}')">
       <div class="item-btn-badge">${orders.join(',')}</div>
+      <img class="item-btn-img" src="/menu/${item.id}.webp" alt="${item.jp}" loading="lazy" onerror="this.style.display='none'">
       <div class="item-btn-name">${item.jp}</div>
       <div class="item-btn-en">${item.name}</div>
       <div class="item-btn-price">&yen;${item.price.toLocaleString()}</div>
@@ -399,7 +386,6 @@ function updateSidebar() {
     document.getElementById('sidebarSubtotal').style.display = 'none';
     document.getElementById('sidebarTax').style.display = 'none';
     document.getElementById('sidebarTotal').style.display = 'none';
-    document.getElementById('payCashBtn').disabled = true;
     document.getElementById('payCardBtn').disabled = true;
     return;
   }
@@ -435,7 +421,6 @@ function updateSidebar() {
   document.getElementById('sidebarTotal').style.display = allBoxes.length > 0 ? 'flex' : 'none';
 
   const canPay = allBoxes.length > 0;
-  document.getElementById('payCashBtn').disabled = !canPay;
   document.getElementById('payCardBtn').disabled = !canPay;
 }
 
